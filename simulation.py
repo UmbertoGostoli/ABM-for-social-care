@@ -38,11 +38,6 @@ class Sim:
         
          # Demographic outputs
         self.pops = []
-        self.children = []
-        self.students = []
-        self.unemployed = []
-        self.employed = []
-        self.retired = []
         self.unskilledPop = []
         self.skilledPop = []
         self.lowerclassPop = []
@@ -981,6 +976,7 @@ class Sim:
     
     def enterWorkForce(self, person):
         person.status = 'unemployed'
+        person.income = 0
         person.marketWage = self.marketWage(person)
         person.education = self.p['educationLevels'][person.classRank]
         self.finalIncome = self.p['incomeFinalLevels'][person.classRank]
@@ -1472,6 +1468,7 @@ class Sim:
                     
                     self.findNewHouse(peopleToMove, destination)
                     continue
+                
                 # 2nd case: one living alone and the other living with parents
                 # If in the same town: move in the house of independent partner
                 # If in different towns: move in the house of independent partner
@@ -1515,7 +1512,10 @@ class Sim:
                                 repetitions = peopleToMove.count(i)
                                 if repetitions > 1:
                                     print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses 1')
-                                    
+                            
+                            self.totalRelocations += 1
+                            self.marriageRelocations += 1
+                            
                             self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
                             continue
                         
@@ -1528,7 +1528,10 @@ class Sim:
                                 repetitions = peopleToMove.count(i)
                                 if repetitions > 1:
                                     print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses (2)')
-                        
+                                
+                            self.totalRelocations += 1
+                            self.marriageRelocations += 1
+                    
                             self.findNewHouse(peopleToMove, destination)
                             continue
                     else:
@@ -1555,7 +1558,10 @@ class Sim:
                                     repetitions = peopleToMove.count(i)
                                     if repetitions > 1:
                                         print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses 2')    
-                                    
+                                        
+                                self.totalRelocations += 1
+                                self.marriageRelocations += 1   
+                    
                                 self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
                                 continue   
                             else:
@@ -1569,6 +1575,9 @@ class Sim:
                                     repetitions = peopleToMove.count(i)
                                     if repetitions > 1:
                                         print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses (3)')
+                                
+                                self.totalRelocations += 1
+                                self.marriageRelocations += 1
                                     
                                 self.findNewHouse(peopleToMove, destination)
                                 continue
@@ -1583,7 +1592,10 @@ class Sim:
                                 repetitions = peopleToMove.count(i)
                                 if repetitions > 1:
                                     print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses (4)')
-                                    
+                            
+                            self.totalRelocations += 1
+                            self.marriageRelocations += 1
+                    
                             self.findNewHouse(peopleToMove, destination)
                             continue
                 # 3rd case: both living alone
@@ -1628,7 +1640,10 @@ class Sim:
                                     repetitions = peopleToMove.count(i)
                                     if repetitions > 1:
                                         print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses 3')        
-                                    
+                                
+                                self.totalRelocations += 1
+                                self.marriageRelocations += 1
+                                
                                 self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
                                 continue    
                         else:
@@ -1639,7 +1654,10 @@ class Sim:
                                     repetitions = peopleToMove.count(i)
                                     if repetitions > 1:
                                         print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses (5)')
-                                    
+                                
+                                self.totalRelocations += 1
+                                self.marriageRelocations += 1
+                                
                                 self.findNewHouse(peopleToMove, a.house.town)
                                 continue
                     # If different town: move into house of higher income partner
@@ -1673,7 +1691,10 @@ class Sim:
                                 repetitions = peopleToMove.count(i)
                                 if repetitions > 1:
                                     print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses 4')      
-                                    
+                             
+                            self.totalRelocations += 1
+                            self.marriageRelocations += 1
+                            
                             self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
                             continue        
                         else:
@@ -1687,6 +1708,9 @@ class Sim:
                                 if repetitions > 1:
                                     print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in Join Spouses (6)')
                         
+                            self.totalRelocations += 1
+                            self.marriageRelocations += 1
+                    
                             self.findNewHouse(peopleToMove, a.house.town)
                             continue
                         
@@ -1746,6 +1770,9 @@ class Sim:
                         print('ERROR: ' + str(member.id) + ' not among his house occupants in size Relocation!')
                         print(member.dead)
                 
+                self.totalRelocations += 1
+                self.sizeRelocations += 1
+                
                 self.findNewHouse(peopleToMove, person.house.town)
                 
     def relocatingPensioners(self):
@@ -1774,7 +1801,10 @@ class Sim:
                                 repetitions = peopleToMove.count(i)
                                 if repetitions > 1:
                                     print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in relocatingPensioners')
-                                    
+                            
+                            self.totalRelocations += 1
+                            self.retiredRelocations += 1
+                            
                             self.movePeopleIntoChosenHouse(c.house, person.house, peopleToMove)
                             
                             
@@ -1897,9 +1927,112 @@ class Sim:
         # Year
         self.times.append(self.year)
         
-        # Population
+        # Population stats
         currentPop = len(self.pop.livingPeople)
         self.pops.append(currentPop)
+        unskilled = [x for x in self.pop.livingPeople if x.classRank == 1]
+        self.unskilledPop.append(len(unskilled))
+        skilled = [x for x in self.pop.livingPeople if x.classRank == 2]
+        self.skilledPop.append(len(skilled))
+        lowerclass = [x for x in self.pop.livingPeople if x.classRank == 3]
+        self.lowerclassPop.append(len(lowerclass))
+        middelclass = [x for x in self.pop.livingPeople if x.classRank == 4]
+        self.middleclassPop.append(len(middelclass))
+        upperclass = [x for x in self.pop.livingPeople if x.classRank == 5]
+        self.upperclassPop.append(len(upperclass))
+        
+        tally_1to2 = 0
+        tally_1to3 = 0
+        tally_1to4 = 0
+        tally_1to5 = 0
+        tally_2to1 = 0
+        tally_2to3 = 0
+        tally_2to4 = 0
+        tally_2to5 = 0
+        tally_3to1 = 0
+        tally_3to2 = 0
+        tally_3to4 = 0
+        tally_3to5 = 0
+        tally_4to1 = 0
+        tally_4to2 = 0
+        tally_4to3 = 0
+        tally_4to5 = 0
+        tally_5to1 = 0
+        tally_5to2 = 0
+        tally_5to3 = 0
+        tally_5to4 = 0
+        
+        workingPop = [x for x in self.pop.livingPeople if x.age > 24]
+        for person in workingPop:
+            if person.father != None:
+                
+                if person.classRank == 2 and person.father.classRank == 1:
+                    tally_1to2 += 1
+                if person.classRank == 3 and person.father.classRank == 1:
+                    tally_1to3 += 1
+                if person.classRank == 4 and person.father.classRank == 1:
+                    tally_1to4 += 1
+                if person.classRank == 5 and person.father.classRank == 1:
+                    tally_1to5 += 1
+                    
+                if person.classRank == 1 and person.father.classRank == 2:
+                    tally_2to1 += 1
+                if person.classRank == 3 and person.father.classRank == 2:
+                    tally_2to3 += 1
+                if person.classRank == 4 and person.father.classRank == 2:
+                    tally_2to4 += 1
+                if person.classRank == 5 and person.father.classRank == 2:
+                    tally_2to5 += 1
+                    
+                if person.classRank == 1 and person.father.classRank == 3:
+                    tally_3to1 += 1
+                if person.classRank == 2 and person.father.classRank == 3:
+                    tally_3to2 += 1
+                if person.classRank == 4 and person.father.classRank == 3:
+                    tally_3to4 += 1
+                if person.classRank == 5 and person.father.classRank == 3:
+                    tally_3to5 += 1
+                    
+                if person.classRank == 1 and person.father.classRank == 4:
+                    tally_4to1 += 1
+                if person.classRank == 2 and person.father.classRank == 4:
+                    tally_4to2 += 1
+                if person.classRank == 3 and person.father.classRank == 4:
+                    tally_4to3 += 1
+                if person.classRank == 5 and person.father.classRank == 4:
+                    tally_4to5 += 1
+                    
+                if person.classRank == 1 and person.father.classRank == 5:
+                    tally_5to1 += 1
+                if person.classRank == 2 and person.father.classRank == 5:
+                    tally_5to2 += 1
+                if person.classRank == 3 and person.father.classRank == 5:
+                    tally_5to3 += 1
+                if person.classRank == 4 and person.father.classRank == 5:
+                    tally_5to4 += 1
+                    
+        self.socialMobility_1to2.append(tally_1to2)
+        self.socialMobility_1to3.append(tally_1to3)
+        self.socialMobility_1to4.append(tally_1to4)
+        self.socialMobility_1to5.append(tally_1to5)
+        self.socialMobility_2to1.append(tally_2to1)
+        self.socialMobility_2to3.append(tally_2to3)
+        self.socialMobility_2to4.append(tally_2to4)
+        self.socialMobility_2to5.append(tally_2to5)
+        self.socialMobility_3to1.append(tally_3to1)
+        self.socialMobility_3to2.append(tally_3to2)
+        self.socialMobility_3to4.append(tally_3to4)
+        self.socialMobility_3to5.append(tally_3to5)
+        self.socialMobility_4to1.append(tally_4to1)
+        self.socialMobility_4to2.append(tally_4to2)
+        self.socialMobility_4to3.append(tally_4to3)
+        self.socialMobility_4to5.append(tally_4to5)
+        self.socialMobility_5to1.append(tally_5to1)
+        self.socialMobility_5to2.append(tally_5to2)
+        self.socialMobility_5to3.append(tally_5to3)
+        self.socialMobility_5to4.append(tally_5to4)
+        
+        
         
         ## Check for double-included houses by converting to a set and back again
         self.map.occupiedHouses = list(set(self.map.occupiedHouses))
