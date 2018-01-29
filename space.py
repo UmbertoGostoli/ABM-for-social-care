@@ -58,6 +58,7 @@ class House:
         self.town = town
         self.x = hx
         self.y = hy
+        self.rank = None
         self.icon = None
         self.id = House.counter
         House.counter += 1

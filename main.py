@@ -18,9 +18,9 @@ def init_params():
     p['numRepeats'] = 1
     
     # The basics: starting population and year, etc.
-    p['initialPop'] = 500
+    p['initialPop'] = 1000
     p['startYear'] = 1860
-    p['endYear'] = 2050
+    p['endYear'] = 1890 # 2050
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
@@ -30,7 +30,7 @@ def init_params():
     p['initialClassShares'] = [0.25, 0.2, 0.3, 0.2, 0.05]
     
     # doDeath function parameters
-    p['mortalityBias'] = 0.91 # After 1950
+    p['mortalityBias'] = 0.85 # After 1950
     p['baseDieProb'] = 0.0001
     p['babyDieProb'] = 0.005
     p['maleAgeScaling'] = 14.0
@@ -65,7 +65,7 @@ def init_params():
     p['retiredHours'] = 60.0
     p['studentHours'] = 12.0
     p['unemployedHours'] = 24.0
-    p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0]
+    p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     p['networkDistanceParam'] = 1.0
     p['employedHours'] = 12.0
     
@@ -77,10 +77,11 @@ def init_params():
     p['incomeFinalLevels'] = [10.0, 15.0, 20.0, 27.0, 40.0]
     p['incomeGrowthRate'] = [0.5, 0.4, 0.35, 0.3, 0.25]
     p['educationCosts'] = [0.0, 0.0, 0.0, 0.0]
-    p['eduWageSensitivity'] = 0.5
-    p['eduRankSensitivity'] = 0.5
-    p['exponentIncome'] = 0.5
-    p['exponentRank'] = 0.5
+    p['eduWageSensitivity'] = 1.0
+    p['eduRankSensitivity'] = 1.0
+    p['costantIncome'] = 1.0
+    p['costantEdu'] = 1.0
+    p['exoIncEdu'] = 0.5
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
     p['workingAge'] = [16, 18, 20, 22, 24]
     
@@ -92,24 +93,36 @@ def init_params():
     
     # doMarriages function parameters
     p['baseEncounters'] = 3
-    p['baseMarriageProb'] = 0.5
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
-    p['betaGeo'] = 0.5
-    p['betaSoc'] = 0.5
-    p['expGeo'] = 0.5
-    p['expSoc'] = 0.5
+    p['betaGeo'] = 2.0
+    p['betaSoc'] = 2.0
+    p['constantGeo'] = 1.0
+    p['constantSoc'] = 1.0
+    p['expGeo'] = 0.3
+    p['expSoc'] = 0.3
+    
        # Optional: for male subset
     p['basicMaleMarriageProb'] =  0.25
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0 ]
     
     # jobMarket, updateWork and unemploymentRate functions parameters
-    p['firedCoefficient'] = 0.8
-    p['wageVar'] = 0.02
-    p['minIncreaseEmployed'] = 0.1
+    p['unemploymentClassBias'] = 0.75
+    p['unemploymentAgeBias'] = [1.0, 0.55, 0.35, 0.25, 0.2, 0.2]
+    p['numberAgeBands'] = 6
+    p['jobMobilitySlope'] = 0.004
+    p['jobMobilityIntercept'] = 0.05
+    p['ageBiasParam'] = [7.0, 3.0, 1.0, 0.5, 0.35, 0.15]
+    p['firingParam'] = 0.2
+
+    
+    p['wageVar'] = 0.04
+    
+    p['minIncreaseEmployed'] = 0.0 # 0.05
     p['maxDecreaseUnemployed'] = -0.1
     p['workDiscountingTime'] = 0.9
     p['initialUnemployment'] = [0.25, 0.2, 0.15, 0.1, 0.1]
     p['unemploymentAgeBandParam'] = 0.3
+    p['classWeightParam'] = 1.0
     
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
@@ -127,9 +140,10 @@ def init_params():
     
     # computeRelocationCost and relocation Propensity functions parameters
     p['yearsintownSensitivityParam'] = 0.5
-    p['relocationCostParam'] = 0.1
-    p['propensityRelocationParam'] = 1.0
-    
+    p['relocationCostParam'] = 1.0
+    p['propensityRelocationParam'] = 10.0
+    p['classWeightParam'] = 0.3
+    p['sizeWeightParam'] = 0.4
     
      ## Description of the map, towns, and houses
     p['mapGridXDimension'] = 8
