@@ -11,7 +11,7 @@ import math
 class Population:
     """The population class stores a collection of persons."""
     def __init__ (self, initialPop, startYear, minStartAge, maxStartAge,
-                  nc, soc, edu, ics, iu, up, wa, il, fl, gr):
+                  nc, soc, edu, ics, iu, up, wa, il, fl, gr, wdt):
         self.allPeople = []
         self.livingPeople = []
 
@@ -25,15 +25,24 @@ class Population:
             fab = self.ageBand(ageFemale)
             maleBirthYear = startYear - ageMale
             femaleBirthYear = startYear - ageFemale
-            numClass = random.randint(0, nc-1)
+            classeRanks = range(nc)
+            numClass = np.random.choice(classeRanks, p = ics)
             classRank = numClass
             um = self.unemploymentRate(mab, classRank, iu, up)
             uf = self.unemploymentRate(fab, classRank, iu, up)
             socialClass = soc[numClass]
             eduLevel = edu[numClass]
             c = np.math.log(il[numClass]/fl[numClass])
-            maleWage = fl[numClass]*np.math.exp(c*np.math.exp(-1*gr[numClass]*(ageMale-wa[numClass])))
-            femaleWage = fl[numClass]*np.math.exp(c*np.math.exp(-1*gr[numClass]*(ageFemale-wa[numClass])))
+            workingTimeMale = 0
+            for i in range(ageMale-wa[numClass]):
+                workingTimeMale *= wdt
+                workingTimeMale += 1
+            workingTimeFemale = 0
+            for i in range(ageFemale-wa[numClass]):
+                workingTimeFemale *= wdt
+                workingTimeFemale += 1
+            maleWage = fl[numClass]*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeMale))
+            femaleWage = fl[numClass]*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeFemale))
             maleIncome = maleWage*40.0
             femaleIncome = femaleWage*40.0
             manStatus = 'employed'
@@ -42,18 +51,21 @@ class Population:
                 manStatus = 'unemployed'
                 maleIncome = 0
                 finalIncome = 0
+            yearsInTown = random.randint(0, 10)
+            tenure = 1.0
             newMan = Person(None, None, ageMale, maleBirthYear, 'male', manStatus, 
                             None, classRank, socialClass, eduLevel, maleWage, 
-                            maleIncome, finalIncome)
+                            maleIncome, finalIncome, workingTimeMale, yearsInTown, tenure)
             status = 'employed'
             finalIncome = fl[numClass]
             if random.random() < uf and manStatus == 'employed':
                 status = 'unemployed'
                 femaleIncome = 0
                 finalIncome = 0
+            yearsInTown = random.randint(0, 10)
             newWoman = Person(None, None, ageFemale, femaleBirthYear, 'female', 
                               status, None, classRank, socialClass, eduLevel, 
-                              femaleWage, femaleIncome, finalIncome)
+                              femaleWage, femaleIncome, finalIncome, workingTimeFemale, yearsInTown, tenure)
             
             newMan.independentStatus = True
             newWoman.independentStatus = True
@@ -92,7 +104,7 @@ class Person:
     counter = 1
 
     def __init__(self, mother, father, age, birthYear, sex, status, house,
-                 classRank, sec, edu, wage, income, finalIncome):
+                 classRank, sec, edu, wage, income, finalIncome, workingTime, yit, tenure):
         self.mother = mother
         self.father = father
         self.children = []
@@ -107,6 +119,7 @@ class Person:
         self.socialWork = 0
         self.workToCare = 0
         self.residualNeed = 0
+        self.supplyByKinship = []
         self.networkSupply = 0
         self.residualInformalSupply = 0
         self.residualFormalSupply = 0
@@ -128,18 +141,19 @@ class Person:
         self.classRank = classRank
         self.sec = sec
         self.education = edu
-        self.marketWage = wage
+        self.wage = wage
         self.income = income
         self.finalIncome = finalIncome
-        self.workingTime = 0
+        self.jobOffers = []
+        self.workingTime = workingTime
         self.status = status
         self.independentStatus = False
         self.jobLocation = None
         self.searchJob = False
         self.jobChange = False
         self.unemploymentDuration = 0
-        self.jobTenure = 0
-        self.yearsInTown = 0
+        self.jobTenure = tenure
+        self.yearsInTown = yit
         # Introducing care needs of babies
         if age < 1:
             self.careRequired = 80
@@ -147,3 +161,10 @@ class Person:
         self.movedThisYear = False
         self.id = Person.counter
         Person.counter += 1
+        
+
+        
+        
+        
+        
+        
