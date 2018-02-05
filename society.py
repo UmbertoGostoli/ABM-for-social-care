@@ -11,7 +11,7 @@ import math
 class Population:
     """The population class stores a collection of persons."""
     def __init__ (self, initialPop, startYear, minStartAge, maxStartAge,
-                  nc, soc, edu, ics, iu, up, wa, il, fl, gr, wdt):
+                  nc, soc, edu, ics, iu, up, wa, il, fl, gr, wdt, wv):
         self.allPeople = []
         self.livingPeople = []
 
@@ -32,7 +32,7 @@ class Population:
             uf = self.unemploymentRate(fab, classRank, iu, up)
             socialClass = soc[numClass]
             eduLevel = edu[numClass]
-            c = np.math.log(il[numClass]/fl[numClass])
+            
             workingTimeMale = 0
             for i in range(ageMale-wa[numClass]):
                 workingTimeMale *= wdt
@@ -41,8 +41,11 @@ class Population:
             for i in range(ageFemale-wa[numClass]):
                 workingTimeFemale *= wdt
                 workingTimeFemale += 1
-            maleWage = fl[numClass]*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeMale))
-            femaleWage = fl[numClass]*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeFemale))
+            dK = np.random.normal(0, wv)
+            newK = fl[numClass]*math.exp(dK)    
+            c = np.math.log(il[numClass]/newK)
+            maleWage = newK*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeMale))
+            femaleWage = newK*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeFemale))
             maleIncome = maleWage*40.0
             femaleIncome = femaleWage*40.0
             manStatus = 'employed'
@@ -138,6 +141,7 @@ class Person:
         else:
             self.sex = sex
         self.house = house
+        self.socialCareMap = []
         self.classRank = classRank
         self.sec = sec
         self.education = edu
@@ -154,6 +158,7 @@ class Person:
         self.unemploymentDuration = 0
         self.jobTenure = tenure
         self.yearsInTown = yit
+        self.justMarried = False
         # Introducing care needs of babies
         if age < 1:
             self.careRequired = 80

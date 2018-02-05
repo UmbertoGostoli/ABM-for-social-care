@@ -20,14 +20,16 @@ def init_params():
     # The basics: starting population and year, etc.
     p['initialPop'] = 1000
     p['startYear'] = 1860
-    p['endYear'] = 1890 # 2050
+    p['endYear'] = 1900 # 2050
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
     p['socialClasses'] = ['unskilled', 'skilled', 'lower', 'middle', 'upper']
-    p['initialClassShares'] = [0.25, 0.2, 0.3, 0.2, 0.05]
+    p['initialClassShares'] = [0.25, 0.25, 0.3, 0.15, 0.05]
+    p['initialUnemployment'] = [0.25, 0.2, 0.15, 0.1, 0.1]
+    p['unemploymentAgeBandParam'] = 0.3
     
     # doDeath function parameters
     p['mortalityBias'] = 0.85 # After 1950
@@ -53,12 +55,13 @@ def init_params():
     p['baseCareProb'] = 0.0002
     p['careBias'] = 0.91
     p['careTransitionRate'] = 0.7
+    p['unmetNeedExponent'] = 0.1
     p['numCareLevels'] = 5
     p['careLevelNames'] = ['none','low','moderate','substantial','critical']
     p['careDemandInHours'] = [ 0.0, 8.0, 16.0, 32.0, 80.0 ]
-    
-    # careSupplies and probSuppliers function parameters
     p['quantumCare'] = 4.0
+    
+    # careSupplies getCare and probSuppliers function parameters
     p['incomeCareParam'] = 0.001
     p['weeklyHours'] = 40.0
     p['priceSocialCare'] = 17.0
@@ -68,20 +71,22 @@ def init_params():
     p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     p['networkDistanceParam'] = 1.0
     p['employedHours'] = 12.0
+    p['excessNeedParam'] = 2.0
+    p['excessSupplyParam'] = 1.0
     
     # ageTransitions, enterWorkForce and marketWage functions parameters
     p['minWorkingAge'] = 16
     p['ageOfRetirement'] = 65
-    p['pensionIncome'] = [5.0, 7.0, 10.0, 13.0, 18.0]
+    p['pensionWage'] = [5.0, 7.0, 10.0, 13.0, 18.0]
     p['incomeInitialLevels'] = [5.0, 7.0, 9.0, 11.0, 14.0]
     p['incomeFinalLevels'] = [10.0, 15.0, 20.0, 27.0, 40.0]
     p['incomeGrowthRate'] = [0.5, 0.4, 0.35, 0.3, 0.25]
     p['educationCosts'] = [0.0, 0.0, 0.0, 0.0]
     p['eduWageSensitivity'] = 1.0
     p['eduRankSensitivity'] = 1.0
-    p['costantIncome'] = 1.0
-    p['costantEdu'] = 1.0
-    p['exoIncEdu'] = 0.5
+    p['costantIncomeParam'] = 1.0
+    p['costantEduParam'] = 1.0
+    p['incEduExp'] = 0.5
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
     p['workingAge'] = [16, 18, 20, 22, 24]
     
@@ -92,16 +97,14 @@ def init_params():
     p['divorceBias'] = 0.75
     
     # doMarriages function parameters
-    p['baseEncounters'] = 3
+    # p['baseEncounters'] = 3
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
-    p['betaGeo'] = 2.0
-    p['betaSoc'] = 2.0
-    p['constantGeo'] = 1.0
-    p['constantSoc'] = 1.0
-    p['expGeo'] = 0.3
-    p['expSoc'] = 0.3
-    
-       # Optional: for male subset
+    p['betaGeoExp'] = 2.0
+    p['betaSocExp'] = 2.0
+    p['constantGeoParam'] = 1.0
+    p['constantSocParam'] = 1.0
+    p['alphaGeoExp'] = 0.3
+    p['alphaSocExp'] = 0.3
     p['basicMaleMarriageProb'] =  0.25
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0 ]
     
@@ -113,16 +116,14 @@ def init_params():
     p['jobMobilityIntercept'] = 0.05
     p['ageBiasParam'] = [7.0, 3.0, 1.0, 0.5, 0.35, 0.15]
     p['firingParam'] = 0.2
-
-    
-    p['wageVar'] = 0.04
-    
+    p['wageVar'] = 0.05
     p['minIncreaseEmployed'] = 0.0 # 0.05
     p['maxDecreaseUnemployed'] = -0.1
     p['workDiscountingTime'] = 0.9
-    p['initialUnemployment'] = [0.25, 0.2, 0.15, 0.1, 0.1]
-    p['unemploymentAgeBandParam'] = 0.3
-    p['classWeightParam'] = 1.0
+    p['sizeWeightParam'] = 0.4
+    p['minClassWeightParam'] = 1.0
+    p['incomeDiscountingExponent'] = 1.0
+    p['incomeDiscountingParam'] = 2.0
     
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
@@ -139,11 +140,10 @@ def init_params():
     p['expReloc'] = 1.0
     
     # computeRelocationCost and relocation Propensity functions parameters
-    p['yearsintownSensitivityParam'] = 0.5
+    p['yearsInTownSensitivityParam'] = 0.5
     p['relocationCostParam'] = 1.0
-    p['propensityRelocationParam'] = 10.0
-    p['classWeightParam'] = 0.3
-    p['sizeWeightParam'] = 0.4
+    p['propensityRelocationParam'] = 1.0
+    
     
      ## Description of the map, towns, and houses
     p['mapGridXDimension'] = 8

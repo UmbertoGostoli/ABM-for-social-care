@@ -40,6 +40,7 @@ class Sim:
         
         self.pops = []
         self.socialClassShares = []
+        self.jobMarketMap = []
         self.births_1 = []
         self.births_2 = []
         self.births_3 = []
@@ -324,8 +325,8 @@ class Sim:
                                   self.p['incomeInitialLevels'],
                                   self.p['incomeFinalLevels'],
                                   self.p['incomeGrowthRate'],
-                                  self.p['workDiscountingTime']
-                                  )
+                                  self.p['workDiscountingTime'],
+                                  self.p['wageVar'])
             
             men = [x for x in self.pop.allPeople if x.sex == 'male']
             remainingHouses = []
@@ -386,6 +387,7 @@ class Sim:
         
     def doOneYear(self):
         """Run one year of simulated time."""
+        
         print('Population: ' + str(len(self.pop.livingPeople)))
         
         self.computeClassShares()
@@ -399,10 +401,8 @@ class Sim:
          #print('Divorces')
         self.doDivorces()
         
-        #print('Marriages')
+        # print('Marriages')
         self.doMarriages()
-        
-        self.joiningSpouses()
         
         #print('Care Transition')
         self.careTransitions()
@@ -410,15 +410,24 @@ class Sim:
         #print('Care Supplies')
         self.careSupplies()
         
+        
+        self.socialCareMap()
+        
+        
+        self.updateJobMap()
+        
+        # print('joiningSpouses')
+        self.joiningSpouses()
+        
         #print('Allocate Care')
         self.allocateCare()
         
-       
         #print('Job Market')
         self.jobMarket()
         
         #print('Moving Around')
         self.movingAround()
+        
         
         self.doStats()
         
@@ -436,6 +445,7 @@ class Sim:
         if (self.p['interactiveGraphics']):
             self.updateCanvas()
     
+    
     def computeClassShares(self):
         
         self.socialClassShares[:] = []
@@ -449,12 +459,9 @@ class Sim:
             self.socialClassShares.append(count/numPop)
         
         
-        
     def doDeaths(self):
         
         preDeath = len(self.pop.livingPeople)
-        
-        
         
         deaths = [0, 0, 0, 0, 0]
         """Consider the possibility of death for each person in the sim."""
@@ -578,6 +585,7 @@ class Sim:
         # print(len(self.pop.livingPeople))
     
     def doBirths(self):
+        
         preBirth = len(self.pop.livingPeople)
         marriedLadies = 0
         adultLadies = 0
@@ -631,10 +639,11 @@ class Sim:
         print('the number of births is: ' + str(postBirth - preBirth))
         
     def careTransitions(self):
+        
         for person in self.pop.livingPeople:
             person.visitedCarer = False
             person.hoursDemand = 0
-            person.residualNeed = 0
+            # person.residualNeed = 0
             person.residualInformalSupply = 0
             person.residualFormalSupply = 0
             person.socialWork = 0
@@ -668,10 +677,11 @@ class Sim:
             if random.random() < careProb:
                 person.status = 'inactive'
                 baseTransition = self.baseRate(self.socialClassShares, self.p['careBias'], 1-self.p['careTransitionRate'])
-                transitionRate = 1.0 - baseTransition*math.pow(self.p['careBias'], person.classRank)
+                unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.residualNeed)
+                transitionRate = (1.0 - baseTransition*math.pow(self.p['careBias'], person.classRank))*unmetNeedFactor
                 stepCare = 1
                 bound = transitionRate
-                while ( random.random() > bound and stepCare < self.p['numCareLevels'] - 1 ):
+                while random.random() > bound and stepCare < self.p['numCareLevels'] - 1:
                     stepCare += 1
                     bound += (1-bound)*transitionRate
                 person.careNeedLevel += stepCare
@@ -682,7 +692,7 @@ class Sim:
             careNeed = self.p['careDemandInHours'][person.careNeedLevel]
 
             person.hoursDemand = careNeed
-            person.residualNeed = careNeed
+            person.residualNeed = person.hoursDemand
                 
             if person.house == self.displayHouse:
                 messageString = str(self.year) + ": #" + str(person.id) + " now has "
@@ -705,12 +715,18 @@ class Sim:
                 child.informalCare = self.p['zeroYearCare']
                 
     def careSupplies(self):
+        
         for agent in self.pop.livingPeople:
             if agent.visitedCarer == True:
                 continue
-            household = agent.house.occupants
+            if agent.justMarried == False:
+                household = [x for x in agent.house.occupants if x.justMarried == False]
+            else:
+                household = [x for x in agent.house.occupants if x.justMarried == True]
+                
             for member in household:
                 member.visitedCarer = True
+                
             householdCarers = [x for x in household if x.hoursDemand == 0]
             notWorking = [x for x in household if x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
             for member in notWorking:
@@ -756,7 +772,148 @@ class Sim:
                 residualSupply -= person.residualFormalSupply
                 if residualSupply == 0:
                     break
-                        
+    
+    def socialCareMap(self):
+        
+        for person in self.pop.livingPeople:
+            person.visitedCarer = False
+            
+        for person in self.pop.livingPeople:
+            
+            if person.visitedCarer == True:
+                continue
+            
+            if person.justMarried == False:
+                household = [x for x in person.house.occupants if x.justMarried == False]
+            else:
+                household = [x for x in person.house.occupants if x.justMarried == True]
+            
+            for member in household:
+                member.visitedCarer = True
+
+            householdDemand = 0
+            householdSupply = 0
+            potentialIncome = 0
+            for member in household:
+                if member.status == 'employed' or member.status == 'retired':
+                    potentialIncome += member.income
+                else:
+                    potentialIncome += self.marketWage(member)*self.p['weeklyHours']
+                householdDemand += member.hoursDemand
+                householdSupply += member.residualInformalSupply
+                householdSupply += member.extraworkCare
+            deltaHouseholdCare = householdSupply - householdDemand
+            visitedPeople = []
+            for town in self.map.towns:
+                townNetworkDemand = 0
+                townNetworkSupply = 0
+                # Kinship distance == 1 (partents and children)
+                kinshipDemand = 0
+                kinshipSupply = 0
+                kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
+                for member in household:
+                    if member.father != None:
+                        if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
+                            kinshipDemand += member.father.hoursDemand*kinshipWeight
+                            kinshipSupply += member.father.residualInformalSupply*kinshipWeight
+                            kinshipSupply += member.father.extraworkCare*kinshipWeight
+                            visitedPeople.append(member.father)
+                        if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
+                            kinshipDemand += member.mother.hoursDemand*kinshipWeight
+                            kinshipSupply += member.mother.residualInformalSupply*kinshipWeight
+                            kinshipSupply += member.mother.extraworkCare*kinshipWeight
+                            visitedPeople.append(member.mother)
+                    for child in member.children:
+                        if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                            kinshipDemand += child.hoursDemand*kinshipWeight
+                            kinshipSupply += child.residualInformalSupply*kinshipWeight
+                            kinshipSupply += child.extraworkCare*kinshipWeight
+                            visitedPeople.append(child) 
+                townNetworkDemand += kinshipDemand
+                townNetworkSupply += kinshipSupply
+                # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
+                kinshipDemand = 0
+                kinshipSupply = 0
+                kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
+                for member in household:
+                    if member.father != None and member.father.father != None:
+                        if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
+                            kinshipDemand += member.father.father.hoursDemand*kinshipWeight
+                            kinshipSupply += member.father.father.residualInformalSupply*kinshipWeight
+                            kinshipSupply += member.father.father.extraworkCare*kinshipWeight
+                            visitedPeople.append(member.father.father)
+                        if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
+                            kinshipDemand += member.father.mother.hoursDemand*kinshipWeight
+                            kinshipSupply += member.father.mother.residualInformalSupply*kinshipWeight
+                            kinshipSupply += member.father.mother.extraworkCare*kinshipWeight
+                            visitedPeople.append(member.father.mother)
+                        if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
+                            kinshipDemand += member.mother.father.hoursDemand*kinshipWeight
+                            kinshipSupply += member.mother.father.residualInformalSupply*kinshipWeight
+                            kinshipSupply += member.mother.father.extraworkCare*kinshipWeight
+                            visitedPeople.append(member.mother.father)
+                        if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
+                            kinshipDemand += member.mother.mother.hoursDemand*kinshipWeight
+                            kinshipSupply += member.mother.mother.residualInformalSupply*kinshipWeight
+                            kinshipSupply += member.mother.mother.extraworkCare*kinshipWeight
+                            visitedPeople.append(member.mother.mother)
+                    for child in member.children:
+                        for grandson in child.children:
+                            if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
+                                kinshipDemand += grandson.hoursDemand*kinshipWeight
+                                kinshipSupply += grandson.residualInformalSupply*kinshipWeight
+                                kinshipSupply += grandson.extraworkCare*kinshipWeight
+                                visitedPeople.append(grandson) 
+                    if member.father != None:
+                        brothers = list(set(member.father.children + member.mother.children))
+                        brothers.remove(member)
+                        for brother in brothers:
+                            if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
+                                kinshipDemand += brother.hoursDemand*kinshipWeight
+                                kinshipSupply += brother.residualInformalSupply*kinshipWeight
+                                kinshipSupply += brother.extraworkCare*kinshipWeight
+                                visitedPeople.append(brother) 
+                townNetworkDemand += kinshipDemand
+                townNetworkSupply += kinshipSupply
+                # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
+                kinshipDemand = 0
+                kinshipSupply = 0
+                kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
+                for member in household:
+                    if member.father != None and member.father.father != None:
+                        maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
+                        maternalUncles.remove(member.mother)
+                        paternalUncles = list(set(member.father.father.children + member.father.mother.children))
+                        paternalUncles.remove(member.father)
+                        unclesList = list(set(maternalUncles + paternalUncles))
+                        for uncle in unclesList:
+                            if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
+                                kinshipDemand += uncle.hoursDemand*kinshipWeight
+                                kinshipSupply += uncle.residualInformalSupply*kinshipWeight
+                                kinshipSupply += uncle.extraworkCare*kinshipWeight
+                                visitedPeople.append(uncle)
+                    if member.father != None:
+                        brothers = list(set(member.father.children + member.mother.children))
+                        brothers.remove(member)
+                        for brother in brothers:
+                            for child in brother.children:
+                                if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                                    kinshipDemand += child.hoursDemand*kinshipWeight
+                                    kinshipSupply += child.residualInformalSupply*kinshipWeight
+                                    kinshipSupply += child.extraworkCare*kinshipWeight
+                                    visitedPeople.append(child) 
+                townNetworkDemand += kinshipDemand
+                townNetworkSupply += kinshipSupply
+                deltaNetworkCare = townNetworkDemand - townNetworkSupply
+                if deltaHouseholdCare < 0:
+                    networkSocialCareParam = self.p['excessNeedParam']
+                else:
+                    networkSocialCareParam = self.p['excessSupplyParam']
+                townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare)/potentialIncome
+                for member in household:
+                    member.socialCareMap.append(townSCI)
+                
+                    
     def allocateCare(self):
         
         careReceivers = [x for x in self.pop.livingPeople if x.hoursDemand > 0 and x.age > 0]
@@ -838,10 +995,10 @@ class Sim:
                 if brother.dead == False and brother.house not in households and brother.house.town == pin.house.town:
                     independentBrothers.append(brother)
                     households.append(brother.house)
-                    for child in brother.children:
-                        if child.dead == False and child.house not in households and child.house.town == pin.house.town:
-                            nephews.append(child)
-                            households.append(child.house)
+                for child in brother.children:
+                    if child.dead == False and child.house not in households and child.house.town == pin.house.town:
+                        nephews.append(child)
+                        households.append(child.house)
         kn.append(independentBrothers)
         # Uncles and aunts
         uncles = []
@@ -1086,6 +1243,7 @@ class Sim:
        
         for person in self.pop.livingPeople:
             person.age += 1
+            person.justMarried = False
             
         for person in self.pop.livingPeople:
             if person.status == 'maternity':
@@ -1145,7 +1303,7 @@ class Sim:
                         
             if person.age == self.p['ageOfRetirement']:
                 person.status = 'retired'
-                person.income = self.p['pensionIncome'][person.classRank]*self.p['weeklyHours']
+                person.income = self.p['pensionWage'][person.classRank]*self.p['weeklyHours']
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " has now retired.")
                         
@@ -1155,20 +1313,25 @@ class Sim:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
     
     def transitionProb (self, person, stage):
+        household = person.house.occupants
         if person.father.dead + person.mother.dead != 2:
-            if person.father.dead == False:
-                householdIncome = self.statusQuo(person.father)
-            elif person.mother.dead == False:
-                householdIncome = self.statusQuo(person.mother)
+            potentialIncome = 0
+            for member in household:
+                if member.status == 'employed' or member.status == 'retired':
+                    potentialIncome += member.income
+                else:
+                    potentialIncome += self.marketWage(member)*self.p['weeklyHours']
+            perCapitaIncome = potentialIncome/float(len(household))
+            
             forgoneSalary = self.p['incomeInitialLevels'][stage]*self.p['weeklyHours']
             educationCosts = self.p['educationCosts'][stage]
-            relCost = (forgoneSalary+educationCosts)/householdIncome
-            incomeEffect = self.p['costantIncome']/math.exp(self.p['eduWageSensitivity']*relCost)
+            relCost = (forgoneSalary+educationCosts)/perCapitaIncome
+            incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost)
             targetEL = max(person.father.classRank, person.mother.classRank)
             dE = targetEL - stage
             expEdu = math.exp(self.p['eduRankSensitivity']*dE)
-            educationEffect = expEdu/(expEdu+self.p['costantEdu'])
-            pStudy = math.pow(incomeEffect, self.p['exoIncEdu'])*math.pow(educationEffect, 1-self.p['exoIncEdu'])
+            educationEffect = expEdu/(expEdu+self.p['costantEduParam'])
+            pStudy = math.pow(incomeEffect, self.p['incEduExp'])*math.pow(educationEffect, 1-self.p['incEduExp'])
         else:
             pStudy = 0.0
         # pWork = math.exp(-1*self.p['eduEduSensitivity']*dE1)
@@ -1183,10 +1346,18 @@ class Sim:
         person.jobTenure = 0
         person.jobLocation = None
         person.searchJob = True
-        
     
+    def marketWage(self, person):
+         # Gompertz Law
+        k = self.p['incomeFinalLevels'][person.classRank]
+        r = self.p['incomeGrowthRate'][person.classRank]
+        c = np.log(self.p['incomeInitialLevels'][person.classRank]/k)
+        exp = c*math.exp(-1*r*person.workingTime)
+        marketWage = k*math.exp(exp)
+        return (marketWage)
     
     def doDivorces(self):
+
         menInRelationships = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner != None ]
         for man in menInRelationships:
             if self.year < self.p['thePresent']:
@@ -1212,6 +1383,7 @@ class Sim:
                 self.findNewHouse([man], man.house.town)
     
     def doMarriages(self):
+ 
         eligibleMen = []
         eligibleWomen = []
 
@@ -1220,8 +1392,6 @@ class Sim:
                 # Men need to be employed to marry
                 if i.sex == 'male' and i.status == 'employed':
                     eligibleMen.append(i)
-                elif i.sex == 'female':
-                    eligibleWomen.append(i)
                     
         ######     Otional: select a subset of eligible men based on age    ##########################################
         potentialGrooms = []
@@ -1231,8 +1401,10 @@ class Sim:
                 potentialGrooms.append(m)
         ###########################################################################################################
         
-        for man in eligibleMen: # for man in potentialGrooms:
-            maxEncounters = self.datingActivity(man)
+        for man in potentialGrooms: # for man in eligibleMen: # 
+            # maxEncounters = self.datingActivity(man)
+            eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.status != 'child' and x.partner == None]
+            
             potentialBrides = []
             for woman in eligibleWomen:
                 if man.mother != None and woman.mother != None:
@@ -1242,27 +1414,34 @@ class Sim:
                     if man not in woman.children and woman not in man.children:
                         potentialBrides.append(woman)
                         
-            if maxEncounters < len(potentialBrides):
-                numberEncounters = maxEncounters
-            else:
-                numberEncounters = len(potentialBrides)
+            # if maxEncounters < len(potentialBrides):
+               #  numberEncounters = maxEncounters
+            # else:
+               #  numberEncounters = len(potentialBrides)
                 
-            for i in range(numberEncounters):
+            while man.partner == None: # for i in range(numberEncounters):
                 woman = np.random.choice(potentialBrides)
                 manTown = man.house.town
                 womanTown = woman.house.town
                 geoDistance = self.manhattanDistance(manTown, womanTown)/float(self.p['mapGridXDimension'] + self.p['mapGridYDimension'])
-                geoEffect = self.p['constantGeo']/math.exp(self.p['betaGeo']*geoDistance)
+                geoEffect = self.p['constantGeoParam']/math.exp(self.p['betaGeoExp']*geoDistance)
                 statusDistance = float(abs(man.classRank-woman.classRank))/float((self.p['numberClasses']-1))
-                socEffect = self.p['constantSoc']/math.exp(self.p['betaSoc']*statusDistance)
+                socEffect = self.p['constantSocParam']/math.exp(self.p['betaSocExp']*statusDistance)
                 ageEffect = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
-                expAge = 1 - (self.p['expGeo']+self.p['expSoc'])
-                marriageProb = math.pow(geoEffect, self.p['expGeo'])*math.pow(socEffect, self.p['expSoc'])*math.pow(ageEffect, expAge)
+                alphaAgeExp = 1 - (self.p['alphaGeoExp']+self.p['alphaSocExp'])
+                marriageProb = math.pow(geoEffect, self.p['alphaGeoExp'])*math.pow(socEffect, self.p['alphaSocExp'])*math.pow(ageEffect, alphaAgeExp)
                 if random.random() < marriageProb:
                     man.partner = woman
                     woman.partner = man
-                    eligibleMen.remove(man)
-                    eligibleWomen.remove(woman)
+                    man.justMarried = True
+                    woman.justMarried = True
+                    childrenMan = [x for x in man.children if x.house == man.house]
+                    childrenWoman = [x for x in woman.children if x.house == man.house]
+                    childrenNewHousehold = list(set(childrenMan + childrenWoman))
+                    for child in childrenNewHousehold:
+                        child.justMarried = True
+                    # eligibleMen.remove(man)
+                    # eligibleWomen.remove(woman)
                     self.marriageTally += 1
             
                     if man.house == self.displayHouse or woman.house == self.displayHouse:
@@ -1270,8 +1449,6 @@ class Sim:
                         messageString += " and #" + str(woman.id) + " (age " + str(woman.age)
                         messageString += ") marry."
                         self.textUpdateList.append(messageString)
-                        
-                    break
          
         # poolMen = float(len(eligibleMen))
         # menMarried = 0.0
@@ -1332,14 +1509,26 @@ class Sim:
                     # messageString += " and #" + str(woman.id) + " (age " + str(woman.age)
                     # messageString += ") marry."
                     # self.textUpdateList.append(messageString)
-                    
-            
-    def datingActivity(self, man):
-        # Function to compute dating activity based on age, income and other factors.
-        # .............................
-        numberEncounters = self.p['baseEncounters']
-        return numberEncounters
-            
+    
+    def updateJobMap(self):
+        self.jobMarketMap[:] = []
+        totalHouseholds = len(self.map.occupiedHouses)
+        for h in self.map.occupiedHouses:
+                ranks = [x.classRank for x in h.occupants]
+                h.rank = max(ranks)
+        for c in range(self.p['numberClasses']):
+            townJobProb = []
+            n = len([x for x in self.map.occupiedHouses if x.rank == c])
+            for t in self.map.towns:
+                townHouses = len([x for x in t.houses if len(x.occupants) > 0])
+                townRelativeDimension = float(townHouses)/float(totalHouseholds)
+                j = len([x for x in t.houses if len(x.occupants) > 0 and x.rank == c])
+                classRelativeDimension = float(j + self.p['minClassWeightParam'])/float(n + self.p['minClassWeightParam'])
+                sizeFactor =  math.pow(townRelativeDimension, self.p['sizeWeightParam'])
+                classFactor = math.pow(classRelativeDimension, 1-self.p['sizeWeightParam'])
+                townJobProb.append(sizeFactor*classFactor)
+            self.jobMarketMap.append(townJobProb)
+       
     def jobMarket(self):
         
         activePop = [x for x in self.pop.livingPeople if x.status == 'employed' or x.status == 'unemployed']
@@ -1429,10 +1618,12 @@ class Sim:
                         # print('Person income: ' + str(person.income))
                         
                         householdStatusQuo = self.statusQuo(person)
+                        
                         relocationCost = self.computeRelocationsCost(person)
-                        relativeRC = relocationCost/householdStatusQuo
-                        propensityToRelocate = self.relocationPropensity(relativeRC)
-                        probTowns = self.townsProb(self.map.occupiedHouses, person.classRank, person.house.town, propensityToRelocate)
+                        
+                        propensityToRelocate = self.relocationPropensity(person.socialCareMap, person.house.town, relocationCost)
+                        
+                        probTowns = self.townsProb(person.classRank, propensityToRelocate)
                         
                         resWage = (1+self.p['minIncreaseEmployed'])*person.income + (householdStatusQuo - person.income)
                         # print('Household Income: ' + str(householdStatusQuo))
@@ -1444,12 +1635,13 @@ class Sim:
                         wage = self.computeWage(person, newK)
                         income = wage*self.p['weeklyHours']
                         town = np.random.choice(self.map.towns, p = probTowns)
-                        
-                        if town == person.house.town:
-                            relocationCost = 0
-                            
+                        townIndex = self.map.towns.index(town)
+                        relocatioCareGain = relocationCost[townIndex]
+                        townIndex = self.map.towns.index(person.house.town)
+                        relocationCareLoss = relocationCost[townIndex]
+                        relocatioNetCareGain = relocatioCareGain - relocationCareLoss
                         if person.partner == None or person.partner not in activePop:
-                            if income - relocationCost > resWage:
+                            if income + relocatioNetCareGain > resWage:
                                 self.changeJob(person, town, wage, newK)    
                                 jobChanges -= 1
                         else:
@@ -1457,12 +1649,12 @@ class Sim:
                                 continue
                             newIncome = income
                             if town != person.house.town or person.partner.status == 'unemployed':
-                                newIncome = income + self.marketWage(person.partner)*self.p['weeklyHours']
+                                newIncome = income + self.expectedIncome(person.partner, town) 
                                 # print('New Income (case 1): ' + str(newIncome))
                             elif town == person.house.town and person.partner.status == 'employed':
                                 newIncome = income + person.partner.income
                                 # print('New Income (case 2): ' + str(newIncome))
-                            if newIncome - relocationCost > resWage:
+                            if newIncome + relocatioNetCareGain > resWage:
                                 self.changeJob(person, town, wage, newK)    
                                 jobChanges -= 1
                                 if person.partner.status == 'employed' and town != person.house.town:
@@ -1518,21 +1710,26 @@ class Sim:
                             person = random.choice(unemployed)
                             
                             householdStatusQuo = self.statusQuo(person)
+                            
                             relocationCost = self.computeRelocationsCost(person)
-                            relativeRC = relocationCost/householdStatusQuo
-                            propensityToRelocate = self.relocationPropensity(relativeRC)
-                            probTowns = self.townsProb(self.map.occupiedHouses, person.classRank, person.house.town, propensityToRelocate)
+                            
+                            propensityToRelocate = self.relocationPropensity(person.socialCareMap, person.house.town, relocationCost)
+                            probTowns = self.townsProb(person.classRank, propensityToRelocate)
                             
                             dK = np.random.normal(0, self.p['wageVar'])
                             newK = self.p['incomeFinalLevels'][person.classRank]*math.exp(dK)
                             wage = self.computeWage(person, newK)
                             income = wage*self.p['weeklyHours']
                             town = np.random.choice(self.map.towns, p = probTowns)
-                            if town == person.house.town:
-                                relocationCost = 0
+                            townIndex = self.map.towns.index(town)
+                            relocatioCareGain = relocationCost[townIndex]
+                            townIndex = self.map.towns.index(person.house.town)
+                            relocationCareLoss = relocationCost[townIndex]
+                            relocatioNetCareGain = relocatioCareGain - relocationCareLoss
+
                             if person.partner == None or person.partner not in activePop:
                                 resWage = (1+self.p['maxDecreaseUnemployed'])*householdStatusQuo
-                                if income - relocationCost > resWage:
+                                if income + relocatioNetCareGain > resWage:
                                     self.changeJob(person, town, wage, newK)    
                                     peopleToHire -= 1
                             else:
@@ -1540,13 +1737,13 @@ class Sim:
                                     continue
                                 newIncome = income
                                 if town != person.house.town or person.partner.status == 'unemployed':
-                                    newIncome = income + self.marketWage(person.partner)*self.p['weeklyHours']
+                                    newIncome = income + self.expectedIncome(person.partner, town)
                                 elif town == person.house.town and person.partner.status == 'employed':
                                     newIncome = income + person.partner.income
                                 if person.partner.status == 'employed':
                                     if town != person.house.town:
                                         resWage = (1+self.p['minIncreaseEmployed'])*householdStatusQuo
-                                        if newIncome - relocationCost > resWage:
+                                        if newIncome + relocatioNetCareGain > resWage:
                                             self.changeJob(person, town, wage, newK)
                                             peopleToHire -= 1
                                             self.leaveJob(person.partner)
@@ -1556,19 +1753,19 @@ class Sim:
                                                 self.hirePerson(person.partner.classRank, self.ageBand(person.partner.age))
                                     else:
                                         resWage = (1+self.p['maxDecreaseUnemployed'])*(self.marketWage(person)*self.p['weeklyHours']) + person.partner.income
-                                        if newIncome - relocationCost > resWage:
+                                        if newIncome + relocatioNetCareGain > resWage:
                                             self.changeJob(person, town, wage, newK)
                                             peopleToHire -= 1
                                 else:
                                     resWage = (1+self.p['maxDecreaseUnemployed'])*householdStatusQuo
-                                    if newIncome - relocationCost > resWage:
+                                    if newIncome + relocatioNetCareGain > resWage:
                                         self.changeJob(person, town, wage, newK)
                                         peopleToHire -= 1
                                         
                         actualEmployed = len([x for x in pop if x.status == 'employed'])
-                        print('Unemployment rate (target): ' + str(unemploymentRate))
+                        # print('Unemployment rate (target): ' + str(unemploymentRate))
                         actualUnemploymentRate = 1.0-float(actualEmployed)/float(len(pop))
-                        print('Unemployment rate (actual): ' + str(actualUnemploymentRate))
+                        # print('Unemployment rate (actual): ' + str(actualUnemploymentRate))
                         employedPeople += actualEmployed
                         totPop += len(pop)
                         totalUnemploymentRate += actualUnemploymentRate*sharePop
@@ -1589,56 +1786,55 @@ class Sim:
                             peopleToFire -= 1
                             
                         actualEmployed = len([x for x in pop if x.status == 'employed'])
-                        print('Unemployment rate (target): ' + str(unemploymentRate))
+                        # print('Unemployment rate (target): ' + str(unemploymentRate))
                         actualUnemploymentRate = 1.0-float(actualEmployed)/float(len(pop))
-                        print('Unemployment rate (actual): ' + str(actualUnemploymentRate))
+                        # print('Unemployment rate (actual): ' + str(actualUnemploymentRate))
                         employedPeople += actualEmployed
                         totPop += len(pop)
                         totalUnemploymentRate += actualUnemploymentRate*sharePop
                         
-        print('Total unemployment rate: ' + str(totalUnemploymentRate))
+        # print('Total unemployment rate: ' + str(totalUnemploymentRate))
         
-        print('Actual Unemployment rate: ' + str(1.0-float(employedPeople)/float(totPop)))
+        # print('Actual Unemployment rate: ' + str(1.0-float(employedPeople)/float(totPop)))
         
-        activePop = [x for x in self.pop.livingPeople if x.status == 'employed' or x.status == 'unemployed']
-        employed = [x for x in activePop if x.status == 'employed']
-        employmentRate = float(len(employed))/float(len(activePop))
-        print(employedPeople)
-        print(totPop)
-        print(len(employed))
-        print(len(activePop))
-        print('Actual Unemployment rate II: ' + str(1.0-employmentRate))
+        # activePop = [x for x in self.pop.livingPeople if x.status == 'employed' or x.status == 'unemployed']
+        # employed = [x for x in activePop if x.status == 'employed']
+        # employmentRate = float(len(employed))/float(len(activePop))
+        # print(employedPeople)
+        # print(totPop)
+        # print(len(employed))
+        # print(len(activePop))
+        # print('Actual Unemployment rate II: ' + str(1.0-employmentRate))
         
     def hirePerson(self, classRank, ageBand)   :
         
         activePop = [x for x in self.pop.livingPeople if x.status == 'employed' or x.status == 'unemployed']
-        
         pop = [x for x in activePop if x.classRank == classRank and self.ageBand(x.age) == ageBand]
-        
         unemployed = [x for x in pop if x.status == 'unemployed']
-        
         hired = False
-        
+    
         while hired == False:
-            
             person = random.choice(unemployed)
-                            
             householdStatusQuo = self.statusQuo(person)
             relocationCost = self.computeRelocationsCost(person)
-            relativeRC = relocationCost/householdStatusQuo
-            propensityToRelocate = self.relocationPropensity(relativeRC)
-            probTowns = self.townsProb(self.map.occupiedHouses, person.classRank, person.house.town, propensityToRelocate)
+            propensityToRelocate = self.relocationPropensity(person.socialCareMap, person.house.town, relocationCost)
+            probTowns = self.townsProb(person.classRank, propensityToRelocate)
             
             dK = np.random.normal(0, self.p['wageVar'])
             newK = self.p['incomeFinalLevels'][person.classRank]*math.exp(dK)
             wage = self.computeWage(person, newK)
             income = wage*self.p['weeklyHours']
             town = np.random.choice(self.map.towns, p = probTowns)
-            if town == person.house.town:
-                relocationCost = 0
+
+            townIndex = self.map.towns.index(town)
+            relocatioCareGain = relocationCost[townIndex]
+            townIndex = self.map.towns.index(person.house.town)
+            relocationCareLoss = relocationCost[townIndex]
+            relocatioNetCareGain = relocatioCareGain - relocationCareLoss
+            
             if person.partner == None or person.partner not in activePop:
                 resWage = (1+self.p['maxDecreaseUnemployed'])*householdStatusQuo
-                if income - relocationCost > resWage:
+                if income + relocatioNetCareGain > resWage:
                     self.changeJob(person, town, wage, newK)    
                     hired = True
             else:
@@ -1646,13 +1842,13 @@ class Sim:
                     continue
                 newIncome = income
                 if town != person.house.town or person.partner.status == 'unemployed':
-                    newIncome = income + self.marketWage(person.partner)*self.p['weeklyHours']
+                    newIncome = income + self.expectedIncome(person.partner, town)
                 elif town == person.house.town and person.partner.status == 'employed':
                     newIncome = income + person.partner.income
                 if person.partner.status == 'employed':
                     if town != person.house.town:
                         resWage = (1+self.p['minIncreaseEmployed'])*householdStatusQuo
-                        if newIncome - relocationCost > resWage:
+                        if newIncome + relocatioNetCareGain > resWage:
                             self.changeJob(person, town, wage, newK)
                             hired = True
                             self.leaveJob(person.partner)
@@ -1662,27 +1858,35 @@ class Sim:
                                 self.hirePerson(person.partner.classRank, self.ageBand(person.partner.age))
                     else:
                         resWage = (1+self.p['maxDecreaseUnemployed'])*(self.marketWage(person)*self.p['weeklyHours']) + person.partner.income
-                        if newIncome - relocationCost > resWage:
+                        if newIncome + relocatioNetCareGain > resWage:
                             self.changeJob(person, town, wage, newK)
                             hired = True
                 else:
                     resWage = (1+self.p['maxDecreaseUnemployed'])*householdStatusQuo
-                    if newIncome - relocationCost > resWage:
+                    if newIncome + relocatioNetCareGain > resWage:
                         self.changeJob(person, town, wage, newK)
                         hired = True
         
+    def expectedIncome(self, person, town):
+        marketWage = self.marketWage(person)
+        income = marketWage*self.p['weeklyHours']
+        townIndex = self.map.towns.index(town)
+        townJobDensity = self.jobMarketMap[person.classRank][townIndex]
+        discountingFactor = 1 - 1/math.exp(self.p['incomeDiscountingExponent']*(townJobDensity + self.p['incomeDiscountingParam']))
+        expIncome = income*discountingFactor
+        return (expIncome)
         
     def statusQuo(self, agent):
         ehi = 0
         if agent.status == 'employed':
             ehi = agent.income
         else:
-            ehi = agent.wage*self.p['weeklyHours']
+            ehi = self.expectedIncome(agent, agent.house.town)
         if agent.partner != None:
             if agent.partner.status == 'employed':
                 ehi += agent.partner.income
             elif agent.partner.status == 'unemployed':
-                ehi += agent.partner.wage*self.p['weeklyHours']
+                ehi += self.expectedIncome(agent.partner, agent.partner.house.town)
         return (ehi)    
     
     def unemploymentRate(self, classShares, ageBandShares, classBias, ageBias, u, ageBand, classRank):
@@ -1699,21 +1903,49 @@ class Sim:
         return (unemploymentRate)
     
     def computeRelocationsCost(self, agent):
-        rcA = math.pow(float(agent.yearsInTown), self.p['yearsintownSensitivityParam'])
+        rcA = math.pow(float(agent.yearsInTown), self.p['yearsInTownSensitivityParam'])
         if ( agent.partner == None ):
             for child in agent.children:
-                rcA += math.pow(float(child.yearsInTown), self.p['yearsintownSensitivityParam'])
+                rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
         else:
-            rcA += math.pow(float(agent.partner.yearsInTown), self.p['yearsintownSensitivityParam'])
+            rcA += math.pow(float(agent.partner.yearsInTown), self.p['yearsInTownSensitivityParam'])
             children = list(set(agent.children+agent.partner.children))
             for child in children:
-                rcA += math.pow(float(child.yearsInTown), self.p['yearsintownSensitivityParam'])
+                rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
         rcA *= self.p['relocationCostParam']
-        return (rcA)
         
-    def relocationPropensity(self, rrc):   
-        rp = 1/math.exp(self.p['propensityRelocationParam']*rrc)
-        return(rp)
+        if agent.justMarried == False:
+            household = [x for x in agent.house.occupants if x.justMarried == False]
+        else:
+            household = [x for x in agent.house.occupants if x.justMarried == True]
+            
+        potentialIncome = 0
+        for member in household:
+            if member.status == 'employed' or member.status == 'retired':
+                potentialIncome += member.income
+            else:
+                potentialIncome += self.marketWage(member)*self.p['weeklyHours']
+        perCapitaIncome = potentialIncome/float(len(household))
+        rcA /= perCapitaIncome
+        socialCosts = []
+        index = 0
+        for town in self.map.towns:
+            if town == agent.house.town:
+                socialCost = agent.socialCareMap[index]
+            else:
+                socialCost = agent.socialCareMap[index] + rcA
+            socialCosts.append(socialCost)
+            index += 1
+        return (socialCosts)
+        
+    def relocationPropensity(self, socialCareMap, actualTown, relocationCost):  
+        propensities = []
+        index = 0
+        for town in self.map.towns:
+            rp = 1/(math.exp(self.p['propensityRelocationParam']*relocationCost[index])+1)
+            propensities.append(rp)
+            index += 1
+        return(propensities)
     
     def changeJob(self, a, town, w, k):
         if a.status == 'unemployed':
@@ -1727,6 +1959,9 @@ class Sim:
         a.jobLocation = town
         a.jobTenure = 0
         a.searchJob = False
+        if a.independentStatus == False:
+            self.findNewHouse([a], town)
+            a.independentStatus = True
                     
     def leaveJob(self, person):
             self.exitWork += 1
@@ -1752,27 +1987,13 @@ class Sim:
         baseRate = cp/a
         return (baseRate)
     
-    def townsProb(self, occupiedHouses, classRank, town, relocPropensity):
+    def townsProb(self, classRank, relocPropensity):
         townDensity = []
-        classWeight = 0
-        totalHouses = len(self.map.allHouses)
-        for h in occupiedHouses:
-            ranks = [x.classRank for x in h.occupants]
-            h.rank = max(ranks)
-        n = [x for x in occupiedHouses if x.rank == classRank]
+        index = 0
         for t in self.map.towns:
-            townHouses = len(t.houses)
-            townRelativeDimension = float(townHouses)/float(totalHouses)
-            j = [x for x in t.houses if x.rank == classRank]
-            classWeight = math.exp(self.p['classWeightParam']*(float(len(j))/float(len(n))))
-            classFactor = math.pow(classWeight, self.p['classWeightParam'])
-            sizeFactor =  math.pow(townRelativeDimension, self.p['sizeWeightParam'])
-            relocationWeightParam = 1.0 - (self.p['classWeightParam'] + self.p['sizeWeightParam'])
-            relocationFactor = math.pow(relocPropensity, relocationWeightParam)
-            if t == town:
-                relocationFactor = 1.0
-            townWeight = sizeFactor*classFactor*relocationFactor
-            townDensity.append(townWeight)
+            townSocialAttraction = relocPropensity[index]
+            townDensity.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
+            index += 1
         sumDensity = sum(townDensity)
         relTownDensity = [i/sumDensity for i in townDensity]
         return(relTownDensity)            
@@ -1798,15 +2019,6 @@ class Sim:
         else:
             person.income = 0
             
-    def marketWage(self, person):
-         # Gompertz Law
-
-        k = self.p['incomeFinalLevels'][person.classRank]
-        r = self.p['incomeGrowthRate'][person.classRank]
-        c = np.log(self.p['incomeInitialLevels'][person.classRank]/k)
-        exp = c*math.exp(-1*r*person.workingTime)
-        marketWage = k*math.exp(exp)
-        return (marketWage)
       
     def movingAround(self):
     
@@ -1895,8 +2107,7 @@ class Sim:
         
         for person in self.pop.livingPeople:
             partnerJoined = False
-            if person.movedThisYear == True:
-                continue
+            
             
             # ageClass = person.age / 10       
             if person.partner != None and person.house != person.partner.house:
@@ -1905,12 +2116,19 @@ class Sim:
                 person.movedThisYear = True
                 person.partner.movedThisYear = True
                 
+                relocationCost = self.computeRelocationsCost(person)
+                personTownIndex = self.map.towns.index(person.house.town)
+                personTownCare = relocationCost[personTownIndex]
+                partnerTownIndex = self.map.towns.index(person.partner.house.town)
+                partnerTownCare = relocationCost[partnerTownIndex]
+                
                 # 1st case: both partners living with parents.
                 # Find a new home near the highest earning partner
-                if (person.independentStatus + person.partner.independentStatus == 0):
+                if person.independentStatus + person.partner.independentStatus == 0:
+                    print('Warning: they should not be married')
                     # person.independentStatus = True
                     # person.partner.independentStatus = True
-                    if ( person.income > person.partner.income ):
+                    if person.income + personTownCare > person.partner.income + partnerTownCare:
                         peopleToMove = [person, person.partner]
                         destination = person.house.town
                         if ( person.house.town != person.partner.house.town and person.partner.status == 'employed'):
@@ -1946,11 +2164,15 @@ class Sim:
                         
                         # person.partner.independentStatus = True
                         a = person
+                        aTownCare = personTownCare
                         b = person.partner
+                        bTownCare = partnerTownCare
                     else:
                         # person.independentStatus = True
                         a = person.partner
+                        aTownCare = partnerTownCare
                         b = person
+                        bTownCare = personTownCare
                         
                     childrenWithPartner = self.kidsWithPartner(a)
                     childrenWithPerson = self.kidsWithPerson(a)
@@ -1999,7 +2221,7 @@ class Sim:
                             self.findNewHouse(peopleToMove, destination)
                             continue
                     else:
-                        if ( a.income > b.income ):
+                        if a.income + aTownCare > b.income + bTownCare:
                             newOcc = 1 + len(childrenWithPartner)
                             oldOcc = len(a.house.occupants)
                             pReloc = self.relocationProb(newOcc, oldOcc, a.house.initialOccupants)
@@ -2127,7 +2349,13 @@ class Sim:
                                 continue
                     # If different town: move into house of higher income partner
                     else:
-                        if ( person.income > person.partner.income ):
+                        personIncome = person.income
+                        if person.income == 0:
+                            personIncome = self.expectedIncome(person, person.house.town)
+                        partnerIncome = person.partner.income
+                        if person.partner.income == 0:
+                            partnerIncome = self.expectedIncome(person.partner, person.partner.house.town)
+                        if personIncome + personTownCare > partnerIncome + partnerTownCare:
                             a = person
                             b = person.partner
                             newOcc = newOcc1
@@ -2565,6 +2793,9 @@ class Sim:
         
         ## Marriages and divorces
         self.numMarriages.append(self.marriageTally)
+        
+        # print('Marriages: ' + str(self.marriageTally))
+        
         self.marriageTally = 0
         self.numDivorces.append(self.divorceTally)            
         self.divorceTally = 0
