@@ -58,7 +58,7 @@ class Population:
             tenure = 1.0
             newMan = Person(None, None, ageMale, maleBirthYear, 'male', manStatus, 
                             None, classRank, socialClass, eduLevel, maleWage, 
-                            maleIncome, finalIncome, workingTimeMale, yearsInTown, tenure)
+                            maleIncome, finalIncome, workingTimeMale, yearsInTown, tenure, 0.02)
             status = 'employed'
             finalIncome = fl[numClass]
             if random.random() < uf and manStatus == 'employed':
@@ -68,7 +68,7 @@ class Population:
             yearsInTown = random.randint(0, 10)
             newWoman = Person(None, None, ageFemale, femaleBirthYear, 'female', 
                               status, None, classRank, socialClass, eduLevel, 
-                              femaleWage, femaleIncome, finalIncome, workingTimeFemale, yearsInTown, tenure)
+                              femaleWage, femaleIncome, finalIncome, workingTimeFemale, yearsInTown, tenure, 0.02)
             
             newMan.independentStatus = True
             newWoman.independentStatus = True
@@ -107,7 +107,7 @@ class Person:
     counter = 1
 
     def __init__(self, mother, father, age, birthYear, sex, status, house,
-                 classRank, sec, edu, wage, income, finalIncome, workingTime, yit, tenure):
+                 classRank, sec, edu, wage, income, finalIncome, workingTime, yit, tenure, ur):
         self.mother = mother
         self.father = father
         self.children = []
@@ -158,7 +158,8 @@ class Person:
         self.unemploymentDuration = 0
         self.jobTenure = tenure
         self.yearsInTown = yit
-        self.justMarried = False
+        self.justMarried = None
+        self.unemploymentRate = ur
         # Introducing care needs of babies
         if age < 1:
             self.careRequired = 80

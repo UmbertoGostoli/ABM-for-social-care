@@ -20,7 +20,7 @@ def init_params():
     # The basics: starting population and year, etc.
     p['initialPop'] = 1000
     p['startYear'] = 1860
-    p['endYear'] = 1900 # 2050
+    p['endYear'] = 2020 # 2050
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
@@ -33,6 +33,7 @@ def init_params():
     
     # doDeath function parameters
     p['mortalityBias'] = 0.85 # After 1950
+    p['careNeedBias'] = 0.8
     p['baseDieProb'] = 0.0001
     p['babyDieProb'] = 0.005
     p['maleAgeScaling'] = 14.0
@@ -72,7 +73,8 @@ def init_params():
     p['networkDistanceParam'] = 1.0
     p['employedHours'] = 12.0
     p['excessNeedParam'] = 2.0
-    p['excessSupplyParam'] = 1.0
+    p['careSupplyBias'] = 0.5
+    p['careIncomeParam'] = 0.001
     
     # ageTransitions, enterWorkForce and marketWage functions parameters
     p['minWorkingAge'] = 16
@@ -101,11 +103,9 @@ def init_params():
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
     p['betaGeoExp'] = 2.0
     p['betaSocExp'] = 2.0
-    p['constantGeoParam'] = 1.0
-    p['constantSocParam'] = 1.0
     p['alphaGeoExp'] = 0.3
     p['alphaSocExp'] = 0.3
-    p['basicMaleMarriageProb'] =  0.25
+    p['basicMaleMarriageProb'] =  0.35
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0 ]
     
     # jobMarket, updateWork and unemploymentRate functions parameters
@@ -120,7 +120,7 @@ def init_params():
     p['minIncreaseEmployed'] = 0.0 # 0.05
     p['maxDecreaseUnemployed'] = -0.1
     p['workDiscountingTime'] = 0.9
-    p['sizeWeightParam'] = 0.4
+    p['sizeWeightParam'] = 0.8
     p['minClassWeightParam'] = 1.0
     p['incomeDiscountingExponent'] = 1.0
     p['incomeDiscountingParam'] = 2.0
@@ -142,7 +142,7 @@ def init_params():
     # computeRelocationCost and relocation Propensity functions parameters
     p['yearsInTownSensitivityParam'] = 0.5
     p['relocationCostParam'] = 1.0
-    p['propensityRelocationParam'] = 1.0
+    p['propensityRelocationParam'] = 0.01
     
     
      ## Description of the map, towns, and houses
