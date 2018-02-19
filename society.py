@@ -116,13 +116,16 @@ class Person:
         self.visitedCarer = False
         self.careNeedLevel = 0
         self.hoursDemand = 0
+        self.hoursInformalSupply = 0
+        self.hoursFormalSupply = 0
         self.hoursSupply = 0
         self.extraworkCare = 0
         self.hoursFormalSupply = 0
         self.socialWork = 0
         self.workToCare = 0
         self.residualNeed = 0
-        self.supplyByKinship = []
+        self.informalSupplyByKinship = []
+        self.formalSupplyByKinship = []
         self.networkSupply = 0
         self.residualInformalSupply = 0
         self.residualFormalSupply = 0
@@ -155,6 +158,9 @@ class Person:
         self.jobLocation = None
         self.searchJob = False
         self.jobChange = False
+        self.newTown = None
+        self.newK = 0
+        self.newWage = 0
         self.unemploymentDuration = 0
         self.jobTenure = tenure
         self.yearsInTown = yit
