@@ -56,14 +56,19 @@ def init_params():
     p['baseCareProb'] = 0.0002
     p['careBias'] = 0.91
     p['careTransitionRate'] = 0.7
-    p['unmetNeedExponent'] = 0.1
+    
+    ########   Key parameter 1  ##############
+    p['unmetNeedExponent'] = 0.1 #[0 - 0.1]
+    
     p['numCareLevels'] = 5
     p['careLevelNames'] = ['none','low','moderate','substantial','critical']
     p['careDemandInHours'] = [ 0.0, 8.0, 16.0, 32.0, 80.0 ]
     p['quantumCare'] = 4.0
     
     # careSupplies getCare and probSuppliers function parameters
-    p['incomeCareParam'] = 0.001
+    ########   Key parameter 2  ##############
+    p['incomeCareParam'] = 0.001 #[0 - 0.001]
+    
     p['weeklyHours'] = 40.0
     p['pricePublicSocialCare'] = 20.0
     p['priceSocialCare'] = 17.0
@@ -73,7 +78,10 @@ def init_params():
     p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     p['networkDistanceParam'] = 1.0
     p['employedHours'] = 12.0
-    p['excessNeedParam'] = 2.0
+    
+    ########   Key parameter 3  ##############
+    p['excessNeedParam'] = 2.0 #[0 - 2.0]
+    
     p['careSupplyBias'] = 0.5
     p['careIncomeParam'] = 0.001
     
@@ -104,8 +112,12 @@ def init_params():
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
     p['betaGeoExp'] = 2.0
     p['betaSocExp'] = 2.0
-    p['alphaGeoExp'] = 0.3
-    p['alphaSocExp'] = 0.3
+    
+    ########   Key parameter 4  ##############
+    p['alphaGeoExp'] = 0.3 #[0 - 0.5]
+    
+    # p['alphaSocExp'] = 0.3
+    
     p['basicMaleMarriageProb'] =  0.4
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0 ]
     

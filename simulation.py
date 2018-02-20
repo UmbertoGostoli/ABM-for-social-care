@@ -281,15 +281,41 @@ class Sim:
                                          background=self.p['bgColour'])
 
     def run(self):
+        # Read parameters 
+        self.parameters = np.genfromtxt('parameters.csv',
+                                       skip_header = 1, delimiter=',')
         
-        for r in range(1):
+        # Create a list of combinations
+        combinations = []
+        for i in range(len(self.parameters)):
+            for j in range(len(self.parameters)):
+                for z in range(len(self.parameters[i])):
+                    for k in range(len(self.parameters[i])):
+                        runParameters = []
+                        runParameters.append(self.parameters[i][0])
+                        runParameters.append(self.parameters[j][1])
+                        runParameters.append(self.parameters[z][2])
+                        runParameters.append(self.parameters[k][3])
+                        combinations.append(runParameters)
+                    
+        for r in range(len(combinations)):
             
             folder  = 'N:/Social Care Model II/Charts/Run_' + str(r)
             
             random.seed(self.p['favouriteSeed'])
             
-            
+            self.p['unmetNeedExponent'] = combinations[r][0] # Default = 0.1
+            self.p['incomeCareParam'] = combinations[r][1] # Default = 0.001
+            self.p['excessNeedParam'] = combinations[r][2] # Default = 2.0
+            self.p['alphaGeoExp'] = combinations[r][3] # Default = 0.3
     
+            filename = folder + '/parameterValues.csv'
+            if not os.path.isdir(os.path.dirname(filename)):
+                os.mkdir(os.path.dirname(filename))
+            values = zip(np.array(combinations[r]))
+            names = ('unmetNeedExponent, incomeCareParam, excessNeedParam, alphaGeoExp')
+            np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="") 
+            
             self.initializePop()
             
             if self.p['interactiveGraphics']:
@@ -378,11 +404,11 @@ class Sim:
             if self.p['singleRunGraphs']:
                 self.doGraphs(folder)
     
-            if self.p['interactiveGraphics']:
-                print "Entering main loop to hold graphics up there."
-                self.window.mainloop()
-    
-            return self.totalTaxBurden[-1]
+        if self.p['interactiveGraphics']:
+            print "Entering main loop to hold graphics up there."
+            self.window.mainloop()
+
+        return self.totalTaxBurden[-1]
 
     def initializePop(self):
         
@@ -725,8 +751,7 @@ class Sim:
                 if self.year < 1951:
                     rawRate = self.p['growingPopBirthProb']
                 else:
-                    rawRate = (self.fert_data[(self.year - woman.birthdate)
-                                -16,self.year-1950])/marriedPercentage
+                    rawRate = (self.fert_data[(self.year - woman.birthdate)-16,self.year-1950])/marriedPercentage
                 baseRate = self.baseRate(self.socialClassShares, self.p['fertilityBias'], rawRate)
                 birthProb = baseRate*math.pow(self.p['fertilityBias'], woman.classRank)
                 
@@ -1579,11 +1604,13 @@ class Sim:
                     statusDistance = float(abs(man.classRank-woman.classRank))/float((self.p['numberClasses']-1))
                     socEffect = 1/math.exp(self.p['betaSocExp']*statusDistance)
                     ageEffect = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
-                    alphaAgeExp = 1 - (self.p['alphaGeoExp']+self.p['alphaSocExp'])
+                    # alphaAgeExp = 1 - (self.p['alphaGeoExp']+self.p['alphaSocExp'])
                     geoFactor = math.pow(geoEffect, self.p['alphaGeoExp'])
-                    socFactor = math.pow(socEffect, self.p['alphaSocExp'])
-                    ageFactor = math.pow(ageEffect, alphaAgeExp)
-                    marriageProb = geoFactor*socFactor*ageFactor
+                    socExponent = 1 - self.p['alphaGeoExp']
+                    # socFactor = math.pow(socEffect, self.p['alphaSocExp'])
+                    socFactor = math.pow(socEffect, socExponent)
+                    # ageFactor = math.pow(ageEffect, alphaAgeExp)
+                    marriageProb = geoFactor*socFactor*ageEffect #ageFactor
                     bridesWeights.append(marriageProb)
                 bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
                 woman = np.random.choice(potentialBrides, p = bridesProb)
@@ -3649,6 +3676,7 @@ class Sim:
         """Plot the graphs needed at the end of one run."""
         years = [int(i) for i in self.times]
         
+        # Chart 1: total social and child care demand and potential supply (from 1960 to 2020)
         fig, ax = plt.subplots()
         ax.plot(years, self.totalCareSupply, linewidth=3, label = 'Potential Supply')
         ax.stackplot(years, self.totalSocialCareDemand, self.totalChildCareDemand, labels = ['Social Care Need','Child Care Needs'])
@@ -3667,6 +3695,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
+        # Chart 2: total informal and formal care received and unmet care needs (from 1960 to 2020)
         fig, ax = plt.subplots()
         ax.stackplot(years, self.totalInformalCareReceived, self.totalFormalCareReceived, 
                       self.totalUnmetDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
@@ -3685,14 +3714,18 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        fig = plt.figure()
-        plt.stackplot(years, self.totalInformalSocialCareReceived, self.totalFormalSocialCareReceived, 
+        # Chart 3: total informal and formal social care received and unmet social care needs (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        ax.stackplot(years, self.totalInformalSocialCareReceived, self.totalFormalSocialCareReceived, 
                       self.totalSocialCareUnmetDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
-        plt.legend(loc = 'upper left')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Hours of care')
-        plt.xlabel('Year')
-        plt.title('Social Care and Unmet Care Needs')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Social Care and Unmet Care Needs')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/SocialCareReceivedStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3700,15 +3733,18 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        fig = plt.figure()
-        plt.stackplot(years, self.totalInformalChildCareReceived, self.totalFormalChildCareReceived, 
+        # Chart 4: total informal and formal child care received and unmet child care needs (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        ax.stackplot(years, self.totalInformalChildCareReceived, self.totalFormalChildCareReceived, 
                       self.totalChildCareUnmetDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
-        plt.legend(loc = 'upper left')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Hours of care')
-        plt.xlabel('Year')
-        plt.title('Child Care and Unmet Care Needs')
-        plt.tight_layout()
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Child Social Care and Unmet Care Needs')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/ChildCareReceivedStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3716,7 +3752,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Stacked barplot showing informal and formal care received and unmet care need per recipient by social class
+        # Chart 5: informal and formal care received and unmet care needs per recipient by social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         meanInformalCareReceived_1 = np.mean(self.totalInformalCarePerRecipient_1[-20:])
         meanFormalCareReceived_1 = np.mean(self.totalFormalCarePerRecipient_1[-20:])
@@ -3742,15 +3778,17 @@ class Sim:
         ind = np.arange(n_groups)    # the x locations for the groups
         width = 0.4       # the width of the bars: can also be len(x) sequence
         
-        fig = plt.figure()
-        p1 = plt.bar(ind, informalCare, width)
-        p2 = plt.bar(ind, formalCare, width, bottom = informalCare)
-        p3 = plt.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare)
-        plt.ylabel('Hours of care')
-        plt.title('Informal, Formal and Unmet Care Need per Recipient')
+        fig, ax = plt.subplots()
+        p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
+        p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
+        p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
+        ax.set_ylabel('Hours of care')
+        ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
-        plt.legend((p1[0], p2[0], p3[0]), ('Informal Care', 'Formal Care', 'Unmet Needs'))
-        plt.tight_layout()
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Informal, Formal and Unmet Care Need per Recipient')
+        fig.tight_layout()
         filename = folder + '/CarePerRecipientByClassStackedBarChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3758,7 +3796,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Stacked barplot showing informal and formal care supplied per carer by social class
+        # Chart 6: informal and formal care supplied per carer by social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         meanInformalCareSupplied_1 = np.mean(self.totalInformalCarePerCarer_1[-20:])
         meanFormalCareSupplied_1 = np.mean(self.totalFormalCarePerCarer_1[-20:])
@@ -3776,14 +3814,15 @@ class Sim:
                       meanFormalCareSupplied_4, meanFormalCareSupplied_5)
         ind = np.arange(n_groups)    # the x locations for the groups
         width = 0.4       # the width of the bars: can also be len(x) sequence
-        fig = plt.figure()
-        p1 = plt.bar(ind, informalCare, width)
-        p2 = plt.bar(ind, formalCare, width, bottom = informalCare)
-        plt.ylabel('Hours of care')
-        plt.title('Informal and Formal Care per Carer')
+        fig, ax = plt.subplots()
+        p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
+        p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
+        ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
-        plt.legend((p1[0], p2[0]), ('Informal Care', 'Formal Care'))
-        plt.tight_layout()
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Informal and Formal Care per Carer')
+        fig.tight_layout()
         filename = folder + '/CarePerCarerByClassStackedBarChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3791,7 +3830,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Informal and Formal Care provided by kind of kinship
+        # Chart 7: informal and formal care supplied by kinship network distance (mean of last 20 years)
         n_groups = 4
         meanInformalCareHousehold = np.mean(self.totalInformalSupplyHousehold[-20:])
         meanFormalCareHousehold = np.mean(self.totalFormalSupplyHousehold[-20:])
@@ -3805,14 +3844,15 @@ class Sim:
         formalCare = (meanFormalCareHousehold, meanFormalCare_K1, meanFormalCare_K2, meanFormalCare_K3)
         ind = np.arange(n_groups)    # the x locations for the groups
         width = 0.4       # the width of the bars: can also be len(x) sequence
-        fig = plt.figure()
-        p1 = plt.bar(ind, informalCare, width)
-        p2 = plt.bar(ind, formalCare, width, bottom = informalCare)
-        plt.ylabel('Hours of care')
-        plt.title('Informal and Formal Care per Kinship Level')
+        fig, ax = plt.subplots()
+        p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
+        p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
+        ax.set_xticks(ind)
         plt.xticks(ind, ('Household', 'I', 'II', 'III'))
-        plt.legend((p1[0], p2[0]), ('Informal Care', 'Formal Care'))
-        plt.tight_layout()
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Informal and Formal Care per Kinship Level')
+        fig.tight_layout()
         filename = folder + '/InformalFormalCareByKinshipStackedBarChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3820,15 +3860,18 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        fig = plt.figure()
-        plt.stackplot(years, self.totalCareSuppliedFemale, self.totalCareSuppliedMale, 
+        # Chart 8: Care supplied by gender (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        ax.stackplot(years, self.totalCareSuppliedFemale, self.totalCareSuppliedMale, 
                       labels = ['Care by Women', 'Care by Men'])
-        plt.legend(loc = 'upper left')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Hours of care')
-        plt.xlabel('Year')
-        plt.title('Care supplied by gender')
-        plt.tight_layout()
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Care supplied by gender')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/CareSuppliedByGenderStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3836,8 +3879,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Change this chart to grouped bar chart showing informla care provided by men and women by social class (copy chart below).
-        
+        # Chart 9: informal care provided by gender per social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         informalCareMales_1 = np.mean(self.totalInformalCareSuppliedMale_1[-20:])
         informalCareMales_2 = np.mean(self.totalInformalCareSuppliedMale_2[-20:])
@@ -3855,15 +3897,14 @@ class Sim:
         index = np.arange(n_groups)
         bar_width = 0.35
         opacity = 0.8
-        rects1 = plt.bar(index, means_females, bar_width,
+        rects1 = ax.bar(index, means_females, bar_width,
                          alpha=opacity,
                          color='b',
                          label='Female')
-        rects2 = plt.bar(index + bar_width, means_males, bar_width,
+        rects2 = ax.bar(index + bar_width, means_males, bar_width,
                          alpha=opacity,
                          color='g',
                          label='Male')
-        ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of Care')
         ax.set_xlabel('Socio-Economic Classes')
         ax.set_title('Informal Care Supplied by Gender')
@@ -3879,7 +3920,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Grouped bar plot showing Men and Women Income by social class
+        # Chart 10: income by gender per social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         incomeMales_1 = np.mean(self.averageIncome_1_Males[-20:])
         incomeMales_2 = np.mean(self.averageIncome_2_Males[-20:])
@@ -3897,15 +3938,14 @@ class Sim:
         index = np.arange(n_groups)
         bar_width = 0.35
         opacity = 0.8
-        rects3 = plt.bar(index, means_females, bar_width,
+        rects3 = ax.bar(index, means_females, bar_width,
                          alpha=opacity,
                          color='b',
                          label='Female')
-        rects4 = plt.bar(index + bar_width, means_males, bar_width,
+        rects4 = ax.bar(index + bar_width, means_males, bar_width,
                          alpha=opacity,
                          color='g',
                          label='Male')
-        ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Income')
         ax.set_xlabel('Socio-Economic Classes')
         ax.set_title('Female and Male Average Income')
@@ -3922,18 +3962,20 @@ class Sim:
         pp.close()
         
         ################################################################## 
-        # Old Charts: Population, taxpayers, average household size, 
-        fig = plt.figure()
-        plt.plot(years, self.numTaxpayers, linewidth = 3, label = 'Number of Taxpayers')
-        plt.stackplot(years, self.unskilledPop, self.skilledPop, self.lowerclassPop,
+        # Chart 11: Population by social class and number of taxpayers (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(years, self.numTaxpayers, linewidth = 3, label = 'Number of Taxpayers', color = 'yellow')
+        ax.stackplot(years, self.unskilledPop, self.skilledPop, self.lowerclassPop,
                       self.middleclassPop, self.upperclassPop, 
                       labels = ['Unskilled Class (I)','Skilled Class (II)', 'Lower Class (III)', 'Middel Class (IV)', 'Upper Class (V)'])
-        plt.legend(loc='upper left')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Number of people')
-        plt.xlabel('Year')
-        plt.title('Population and Number of Taxpayers')
-        plt.tight_layout()
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Population and Number of Taxpayers')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/PopulationTaxPayersStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3941,18 +3983,21 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        fig = plt.figure()
-        plt.plot(years, self.avgHouseholdSize_1)
-        plt.plot(years, self.avgHouseholdSize_2)
-        plt.plot(years, self.avgHouseholdSize_3)
-        plt.plot(years, self.avgHouseholdSize_4)
-        plt.plot(years, self.avgHouseholdSize_5)
-        plt.legend(['Class I','Class II', 'Class III', 'Class IV', 'Class V'], loc='upper left')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Average Number of People')
-        plt.xlabel('Year')
-        plt.title('Average Family Size')
-        plt.tight_layout()
+        # Chart 12: Average Household size (1960-2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.avgHouseholdSize_1, label = 'Class I')
+        p2, = ax.plot(years, self.avgHouseholdSize_2, label = 'Class II')
+        p3, = ax.plot(years, self.avgHouseholdSize_3, label = 'Class III')
+        p4, = ax.plot(years, self.avgHouseholdSize_4, label = 'Class IV')
+        p5, = ax.plot(years, self.avgHouseholdSize_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Average Family Size')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/AverageFamilySizeChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
@@ -3970,34 +4015,37 @@ class Sim:
 ##        pylab.xlabel('Year')
 ##        pylab.savefig('numDivorces.pdf')
         
-        fig = plt.figure()
-        plt.plot(years, self.totalTaxBurden, color = 'red')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Care costs in pounds per taxpayer per year')
-        plt.xlabel('Year')
-        plt.title('Average Tax Burden in pounds')
-        plt.tight_layout()
+        # Chart 13: Average Tax Burden (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(years, self.totalTaxBurden, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Care costs per taxpayer per year')
+        ax.set_xlabel('Year')
+        ax.set_title('Average Tax Burden in pounds')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/TaxBurdenChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
         pp.savefig(fig)
         pp.close()  
-       
-        fig = plt.figure()
-        plt.plot(years, self.marriageProp, color = 'red')
-        plt.xlim(xmin = self.p['statsCollectFrom'])
-        plt.ylabel('Proportion of married adult women')
-        plt.xlabel('Year')
-        plt.title('Marriage Rate (females)')
-        plt.tight_layout()
+      
+        # Chart 14: Proportion of married adult women (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(years, self.marriageProp, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Proportion of married adult women')
+        ax.set_xlabel('Year')
+        ax.set_title('Marriage Rate (females)')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
         filename = folder + '/MarriageRateChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
         pp.savefig(fig)
         pp.close()
-        
         
 class PopPyramid:
     """Builds a data object for storing population pyramid data in."""
