@@ -307,6 +307,10 @@ class Sim:
             
             folder  = 'N:/Social Care Model II/Charts/Run_' + str(r)
             
+            folder  = 'N:\Social Care Model II\Charts\Run_' + str(r)
+            if not os.path.isdir(os.path.dirname(folder)):
+                os.makedirs(folder)
+            
             random.seed(self.p['favouriteSeed'])
             
             self.p['unmetNeedExponent'] = combinations[r][0] # Default = 0.1
@@ -1506,17 +1510,17 @@ class Sim:
         household = person.house.occupants
         if person.father.dead + person.mother.dead != 2:
             pStudy = 0
-            disposableIncome = 0
+            income = 0
             for member in household:
                 if member.status == 'employed' or member.status == 'retired':
-                    disposableIncome += member.disposableIncome
+                    income += member.income
                 elif member.status == 'unemployed':
-                    disposableIncome += self.expectedIncome(member, member.house.town)
-            perCapitaDisposableIncome = disposableIncome/float(len(household))
-            if perCapitaDisposableIncome > 0:
+                    income += self.expectedIncome(member, member.house.town)
+            perCapitaIncome = income/float(len(household))
+            if perCapitaIncome > 0:
                 forgoneSalary = self.p['incomeInitialLevels'][stage]*self.p['weeklyHours']
                 educationCosts = self.p['educationCosts'][stage]
-                relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
+                relCost = (forgoneSalary+educationCosts)/perCapitaIncome
                 incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost)
                 targetEL = max(person.father.classRank, person.mother.classRank)
                 dE = targetEL - stage
@@ -1622,8 +1626,11 @@ class Sim:
                     ageFactor = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
                     marriageProb = geoFactor*socFactor*ageFactor
                     bridesWeights.append(marriageProb)
-                bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
-                woman = np.random.choice(potentialBrides, p = bridesProb)
+                if sum(bridesWeights) > 0:
+                    bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
+                    woman = np.random.choice(potentialBrides, p = bridesProb)
+                else:
+                    woman = np.random.choice(potentialBrides)
                 man.partner = woman
                 woman.partner = man
                 man.justMarried = woman.id
@@ -1729,7 +1736,10 @@ class Sim:
                 for x in classPop:
                     if self.ageBand(x.age) == b:
                         count += 1.0
-                ageBandShares.append(count/numclassPop)
+                if numclassPop > 0:
+                    ageBandShares.append(count/numclassPop)
+                else:
+                    ageBandShares.append(0)
         
         for person in activePop:
             person.unemploymentRate = self.unemploymentRate(classShares, ageBandShares, self.p['unemploymentClassBias'], 
@@ -1795,7 +1805,10 @@ class Sim:
                 for x in classPop:
                     if self.ageBand(x.age) == b:
                         count += 1.0
-                ageBandShares.append(count/numclassPop)
+                if numclassPop > 0:
+                    ageBandShares.append(count/numclassPop)
+                else:
+                    ageBandShares.append(0)
             
             for a in range(self.p['numberAgeBands']):
                
@@ -1875,7 +1888,10 @@ class Sim:
                 for x in classPop:
                     if self.ageBand(x.age) == b:
                         count += 1.0
-                ageBandShares.append(count/numclassPop)
+                if numclassPop > 0:
+                    ageBandShares.append(count/numclassPop)
+                else:
+                    ageBandShares.append(0)
             
             for a in range(self.p['numberAgeBands']):
                

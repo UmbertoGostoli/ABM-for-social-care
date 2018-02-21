@@ -20,7 +20,7 @@ def init_params():
     # The basics: starting population and year, etc.
     p['initialPop'] = 1000
     p['startYear'] = 1860
-    p['endYear'] = 2020
+    p['endYear'] = 2022
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
@@ -189,7 +189,7 @@ def init_params():
     # p['houseClasses'] = ['small','medium','large']
     
     ## Graphical interface details
-    p['interactiveGraphics'] = True
+    p['interactiveGraphics'] = False #True
     p['delayTime'] = 0.0
     p['screenWidth'] = 1300
     p['screenHeight'] = 700
