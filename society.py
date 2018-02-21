@@ -150,6 +150,7 @@ class Person:
         self.education = edu
         self.wage = wage
         self.income = income
+        self.disposableIncome = income
         self.finalIncome = finalIncome
         self.jobOffers = []
         self.workingTime = workingTime
