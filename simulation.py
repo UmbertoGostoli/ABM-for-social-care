@@ -16,6 +16,7 @@ import pylab
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib.backends.backend_pdf import PdfPages
+from time import gmtime, strftime
 import os
 import Tkinter
 import struct
@@ -289,8 +290,8 @@ class Sim:
         combinations = []
         for i in range(len(self.parameters)):
             for j in range(len(self.parameters)):
-                for z in range(len(self.parameters[i])):
-                    for k in range(len(self.parameters[i])):
+                for z in range(len(self.parameters)):
+                    for k in range(len(self.parameters)):
                         runParameters = []
                         runParameters.append(self.parameters[i][0])
                         runParameters.append(self.parameters[j][1])
@@ -300,6 +301,10 @@ class Sim:
                     
         for r in range(len(combinations)):
             
+            print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+            print('Run: ' + str(r))
+            
+            
             folder  = 'N:/Social Care Model II/Charts/Run_' + str(r)
             
             random.seed(self.p['favouriteSeed'])
@@ -307,7 +312,7 @@ class Sim:
             self.p['unmetNeedExponent'] = combinations[r][0] # Default = 0.1
             self.p['incomeCareParam'] = combinations[r][1] # Default = 0.001
             self.p['excessNeedParam'] = combinations[r][2] # Default = 2.0
-            self.p['alphaGeoExp'] = combinations[r][3] # Default = 0.3
+            self.p['betaGeoExp'] = combinations[r][3] # Default = 2.0
     
             filename = folder + '/parameterValues.csv'
             if not os.path.isdir(os.path.dirname(filename)):
@@ -536,6 +541,8 @@ class Sim:
         
         print('Allocate Care')
         self.allocateCare()
+        
+        self.socialTransition()
         
         print('Job Market')
         self.jobMarket()
@@ -818,6 +825,7 @@ class Sim:
             if child.age == 0 and child.mother.status != 'inactive':
                 child.mother.socialWork = self.p['zeroYearCare']
                 child.mother.income = 0
+                child.mother.disposableIncome = child.mother.income
                 child.mother.status = 'maternity'
                 child.mother.babyCarer = True
                 child.residualNeed = 0
@@ -1430,6 +1438,19 @@ class Sim:
         activePop = [x for x in self.pop.livingPeople if x.status != 'inactive']
         
         for person in activePop:
+            if person.age == self.p['ageOfRetirement']:
+                person.status = 'retired'
+                person.income = self.p['pensionWage'][person.classRank]*self.p['weeklyHours']
+                person.disposableIncome = person.income
+                if person.house == self.displayHouse:
+                    self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " has now retired.")
+    
+    
+    def socialTransition(self):
+        
+        activePop = [x for x in self.pop.livingPeople if x.status != 'inactive']
+        
+        for person in activePop:
             if person.age == self.p['minWorkingAge']:
                 person.status = 'student'
             # With a certain probability p the person enters the workforce, 
@@ -1475,33 +1496,27 @@ class Sim:
                 self.enterWorkForce(person)
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
-                        
-            if person.age == self.p['ageOfRetirement']:
-                person.status = 'retired'
-                person.income = self.p['pensionWage'][person.classRank]*self.p['weeklyHours']
-                if person.house == self.displayHouse:
-                    self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " has now retired.")
-                        
+         
             if person.status == 'student' and person.mother.dead and person.father.dead:
                 self.enterWorkForce(person)
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
-    
+
     def transitionProb (self, person, stage):
         household = person.house.occupants
         if person.father.dead + person.mother.dead != 2:
             pStudy = 0
-            potentialIncome = 0
+            disposableIncome = 0
             for member in household:
                 if member.status == 'employed' or member.status == 'retired':
-                    potentialIncome += member.income
+                    disposableIncome += member.disposableIncome
                 elif member.status == 'unemployed':
-                    potentialIncome += self.expectedIncome(member, member.house.town)
-            perCapitaIncome = potentialIncome/float(len(household))
-            if perCapitaIncome > 0:
+                    disposableIncome += self.expectedIncome(member, member.house.town)
+            perCapitaDisposableIncome = disposableIncome/float(len(household))
+            if perCapitaDisposableIncome > 0:
                 forgoneSalary = self.p['incomeInitialLevels'][stage]*self.p['weeklyHours']
                 educationCosts = self.p['educationCosts'][stage]
-                relCost = (forgoneSalary+educationCosts)/perCapitaIncome
+                relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
                 incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost)
                 targetEL = max(person.father.classRank, person.mother.classRank)
                 dE = targetEL - stage
@@ -1518,6 +1533,7 @@ class Sim:
         person.status = 'unemployed'
         person.wage = self.marketWage(person)
         person.income = 0
+        person.disposableIncome = 0
         person.finalIncome = 0
         person.jobTenure = 0
         person.jobLocation = None
@@ -1600,17 +1616,11 @@ class Sim:
                 for woman in potentialBrides:
                     womanTown = woman.house.town
                     geoDistance = self.manhattanDistance(manTown, womanTown)/float(self.p['mapGridXDimension'] + self.p['mapGridYDimension'])
-                    geoEffect = 1/math.exp(self.p['betaGeoExp']*geoDistance)
+                    geoFactor = 1/math.exp(self.p['betaGeoExp']*geoDistance)
                     statusDistance = float(abs(man.classRank-woman.classRank))/float((self.p['numberClasses']-1))
-                    socEffect = 1/math.exp(self.p['betaSocExp']*statusDistance)
-                    ageEffect = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
-                    # alphaAgeExp = 1 - (self.p['alphaGeoExp']+self.p['alphaSocExp'])
-                    geoFactor = math.pow(geoEffect, self.p['alphaGeoExp'])
-                    socExponent = 1 - self.p['alphaGeoExp']
-                    # socFactor = math.pow(socEffect, self.p['alphaSocExp'])
-                    socFactor = math.pow(socEffect, socExponent)
-                    # ageFactor = math.pow(ageEffect, alphaAgeExp)
-                    marriageProb = geoFactor*socFactor*ageEffect #ageFactor
+                    socFactor = 1/math.exp(self.p['betaSocExp']*statusDistance)
+                    ageFactor = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
+                    marriageProb = geoFactor*socFactor*ageFactor
                     bridesWeights.append(marriageProb)
                 bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
                 woman = np.random.choice(potentialBrides, p = bridesProb)
@@ -2039,6 +2049,7 @@ class Sim:
         a.status = 'employed'
         a.wage = a.newWage
         a.income = a.wage*self.p['weeklyHours']
+        a.disposableIncome = a.income
         a.finalIncome = a.newK
         a.jobLocation = a.newTown
         a.jobTenure = 0
@@ -2052,6 +2063,7 @@ class Sim:
             person.status = 'unemployed'
             person.wage = self.marketWage(person)
             person.income = 0
+            person.disposableIncome = 0
             person.finalIncome = 0
             person.jobTenure = 0
             person.jobLocation = None
@@ -2100,6 +2112,10 @@ class Sim:
         person.wage = k*math.exp(exp)
         if person.status == 'employed':
             person.income = person.wage*self.p['weeklyHours']
+            person.disposableIncome = workTime*person.income
+            person.disposableIncome -= person.workToCare*self.p['priceSocialCare']
+            if person.disposableIncome < 0:
+                person.disposableIncome == 0
         else:
             person.income = 0
             
@@ -2866,13 +2882,28 @@ class Sim:
         ## Avg household size (easily calculated by pop / occupied houses)
         households = float(len(self.map.occupiedHouses))
         self.avgHouseholdSize.append(currentPop/households)
-
-        self.avgHouseholdSize_1.append(occupants_1/float(len(h1)))
-        self.avgHouseholdSize_2.append(occupants_2/float(len(h2)))
-        self.avgHouseholdSize_3.append(occupants_3/float(len(h3)))
-        self.avgHouseholdSize_4.append(occupants_4/float(len(h4)))
-        self.avgHouseholdSize_5.append(occupants_5/float(len(h5)))
         
+        if len(h1) > 0:
+            self.avgHouseholdSize_1.append(occupants_1/float(len(h1)))
+        else:
+            self.avgHouseholdSize_1.append(0)
+        if len(h2) > 0:
+            self.avgHouseholdSize_2.append(occupants_2/float(len(h2)))
+        else:
+            self.avgHouseholdSize_2.append(0)
+        if len(h3) > 0:
+            self.avgHouseholdSize_3.append(occupants_3/float(len(h3)))
+        else:
+            self.avgHouseholdSize_3.append(0)
+        if len(h4) > 0:
+            self.avgHouseholdSize_4.append(occupants_4/float(len(h4)))
+        else:
+            self.avgHouseholdSize_4.append(0)
+        if len(h5) > 0:
+            self.avgHouseholdSize_5.append(occupants_5/float(len(h5)))
+        else:
+            self.avgHouseholdSize_5.append(0)
+       
         ## Marriages and divorces
         self.numMarriages.append(self.marriageTally)
         
@@ -2985,11 +3016,20 @@ class Sim:
         self.totalUnmetDemand_1.append(totalUnmetDemandHours) 
         self.totalInformalSupply_1.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_1.append(totalFormalCareSupplyHours)
-        self.totalInformalCarePerRecipient_1.append(totalInformalCareSupplyHours/numberOfRecipients)
-        self.totalFormalCarePerRecipient_1.append(totalFormalCareSupplyHours/numberOfRecipients)
-        self.totalUnmetNeedPerRecipient_1.append(totalUnmetDemandHours/numberOfRecipients)
-        self.totalInformalCarePerCarer_1.append(totalInformalCareSupplyHours/numberOfCarers)
-        self.totalFormalCarePerCarer_1.append(totalFormalCareSupplyHours/numberOfCarers)
+        if numberOfRecipients > 0:
+            self.totalInformalCarePerRecipient_1.append(totalInformalCareSupplyHours/numberOfRecipients)
+            self.totalFormalCarePerRecipient_1.append(totalFormalCareSupplyHours/numberOfRecipients)
+            self.totalUnmetNeedPerRecipient_1.append(totalUnmetDemandHours/numberOfRecipients)
+        else:
+            self.totalInformalCarePerRecipient_1.append(0)
+            self.totalFormalCarePerRecipient_1.append(0)
+            self.totalUnmetNeedPerRecipient_1.append(0)
+        if numberOfCarers > 0:
+            self.totalInformalCarePerCarer_1.append(totalInformalCareSupplyHours/numberOfCarers)
+            self.totalFormalCarePerCarer_1.append(totalFormalCareSupplyHours/numberOfCarers)
+        else:
+            self.totalInformalCarePerCarer_1.append(0)
+            self.totalFormalCarePerCarer_1.append(0)
         
         class2 = [x for x in self.pop.livingPeople if x.classRank == 1]
         totalCareDemandHours = 0
@@ -3013,11 +3053,20 @@ class Sim:
         self.totalUnmetDemand_2.append(totalUnmetDemandHours) 
         self.totalInformalSupply_2.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_2.append(totalFormalCareSupplyHours)
-        self.totalInformalCarePerRecipient_2.append(totalInformalCareSupplyHours/numberOfRecipients)
-        self.totalFormalCarePerRecipient_2.append(totalFormalCareSupplyHours/numberOfRecipients)
-        self.totalUnmetNeedPerRecipient_2.append(totalUnmetDemandHours/numberOfRecipients)
-        self.totalInformalCarePerCarer_2.append(totalInformalCareSupplyHours/numberOfCarers)
-        self.totalFormalCarePerCarer_2.append(totalFormalCareSupplyHours/numberOfCarers)
+        if numberOfRecipients > 0:
+            self.totalInformalCarePerRecipient_2.append(totalInformalCareSupplyHours/numberOfRecipients)
+            self.totalFormalCarePerRecipient_2.append(totalFormalCareSupplyHours/numberOfRecipients)
+            self.totalUnmetNeedPerRecipient_2.append(totalUnmetDemandHours/numberOfRecipients)
+        else:
+            self.totalInformalCarePerRecipient_2.append(0)
+            self.totalFormalCarePerRecipient_2.append(0)
+            self.totalUnmetNeedPerRecipient_2.append(0)
+        if numberOfCarers > 0:
+            self.totalInformalCarePerCarer_2.append(totalInformalCareSupplyHours/numberOfCarers)
+            self.totalFormalCarePerCarer_2.append(totalFormalCareSupplyHours/numberOfCarers)
+        else:
+            self.totalInformalCarePerCarer_2.append(0)
+            self.totalFormalCarePerCarer_2.append(0)
         
         class3 = [x for x in self.pop.livingPeople if x.classRank == 2]
         totalCareDemandHours = 0
@@ -3041,11 +3090,20 @@ class Sim:
         self.totalUnmetDemand_3.append(totalUnmetDemandHours) 
         self.totalInformalSupply_3.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_3.append(totalFormalCareSupplyHours)
-        self.totalInformalCarePerRecipient_3.append(totalInformalCareSupplyHours/numberOfRecipients)
-        self.totalFormalCarePerRecipient_3.append(totalFormalCareSupplyHours/numberOfRecipients)
-        self.totalUnmetNeedPerRecipient_3.append(totalUnmetDemandHours/numberOfRecipients)
-        self.totalInformalCarePerCarer_3.append(totalInformalCareSupplyHours/numberOfCarers)
-        self.totalFormalCarePerCarer_3.append(totalFormalCareSupplyHours/numberOfCarers)
+        if numberOfRecipients > 0:
+            self.totalInformalCarePerRecipient_3.append(totalInformalCareSupplyHours/numberOfRecipients)
+            self.totalFormalCarePerRecipient_3.append(totalFormalCareSupplyHours/numberOfRecipients)
+            self.totalUnmetNeedPerRecipient_3.append(totalUnmetDemandHours/numberOfRecipients)
+        else:
+            self.totalInformalCarePerRecipient_3.append(0)
+            self.totalFormalCarePerRecipient_3.append(0)
+            self.totalUnmetNeedPerRecipient_3.append(0)
+        if numberOfCarers > 0:
+            self.totalInformalCarePerCarer_3.append(totalInformalCareSupplyHours/numberOfCarers)
+            self.totalFormalCarePerCarer_3.append(totalFormalCareSupplyHours/numberOfCarers)
+        else:
+            self.totalInformalCarePerCarer_3.append(0)
+            self.totalFormalCarePerCarer_3.append(0)
         
         class4 = [x for x in self.pop.livingPeople if x.classRank == 3]
         totalCareDemandHours = 0
@@ -3069,11 +3127,20 @@ class Sim:
         self.totalUnmetDemand_4.append(totalUnmetDemandHours) 
         self.totalInformalSupply_4.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_4.append(totalFormalCareSupplyHours)
-        self.totalInformalCarePerRecipient_4.append(totalInformalCareSupplyHours/numberOfRecipients)
-        self.totalFormalCarePerRecipient_4.append(totalFormalCareSupplyHours/numberOfRecipients)
-        self.totalUnmetNeedPerRecipient_4.append(totalUnmetDemandHours/numberOfRecipients)
-        self.totalInformalCarePerCarer_4.append(totalInformalCareSupplyHours/numberOfCarers)
-        self.totalFormalCarePerCarer_4.append(totalFormalCareSupplyHours/numberOfCarers)
+        if numberOfRecipients > 0:
+            self.totalInformalCarePerRecipient_4.append(totalInformalCareSupplyHours/numberOfRecipients)
+            self.totalFormalCarePerRecipient_4.append(totalFormalCareSupplyHours/numberOfRecipients)
+            self.totalUnmetNeedPerRecipient_4.append(totalUnmetDemandHours/numberOfRecipients)
+        else:
+            self.totalInformalCarePerRecipient_4.append(0)
+            self.totalFormalCarePerRecipient_4.append(0)
+            self.totalUnmetNeedPerRecipient_4.append(0)
+        if numberOfCarers > 0:
+            self.totalInformalCarePerCarer_4.append(totalInformalCareSupplyHours/numberOfCarers)
+            self.totalFormalCarePerCarer_4.append(totalFormalCareSupplyHours/numberOfCarers)
+        else:
+            self.totalInformalCarePerCarer_4.append(0)
+            self.totalFormalCarePerCarer_4.append(0)
         
         class5 = [x for x in self.pop.livingPeople if x.classRank == 4]
         totalCareDemandHours = 0
@@ -3097,11 +3164,20 @@ class Sim:
         self.totalUnmetDemand_5.append(totalUnmetDemandHours) 
         self.totalInformalSupply_5.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_5.append(totalFormalCareSupplyHours)
-        self.totalInformalCarePerRecipient_5.append(totalInformalCareSupplyHours/numberOfRecipients)
-        self.totalFormalCarePerRecipient_5.append(totalFormalCareSupplyHours/numberOfRecipients)
-        self.totalUnmetNeedPerRecipient_5.append(totalUnmetDemandHours/numberOfRecipients)
-        self.totalInformalCarePerCarer_5.append(totalInformalCareSupplyHours/numberOfCarers)
-        self.totalFormalCarePerCarer_5.append(totalFormalCareSupplyHours/numberOfCarers)
+        if numberOfRecipients > 0:
+            self.totalInformalCarePerRecipient_5.append(totalInformalCareSupplyHours/numberOfRecipients)
+            self.totalFormalCarePerRecipient_5.append(totalFormalCareSupplyHours/numberOfRecipients)
+            self.totalUnmetNeedPerRecipient_5.append(totalUnmetDemandHours/numberOfRecipients)
+        else:
+            self.totalInformalCarePerRecipient_5.append(0)
+            self.totalFormalCarePerRecipient_5.append(0)
+            self.totalUnmetNeedPerRecipient_5.append(0)
+        if numberOfCarers > 0:
+            self.totalInformalCarePerCarer_5.append(totalInformalCareSupplyHours/numberOfCarers)
+            self.totalFormalCarePerCarer_5.append(totalFormalCareSupplyHours/numberOfCarers)
+        else:
+            self.totalInformalCarePerCarer_5.append(0)
+            self.totalFormalCarePerCarer_5.append(0)
         
         taxPayers = len([x for x in self.pop.livingPeople if x.income > 0])
         self.numTaxpayers.append(taxPayers)
@@ -3140,7 +3216,10 @@ class Sim:
         employed_1_Males = [x for x in employed_1 if x.sex == 'male']
         employed_1_Females = [x for x in employed_1 if x.sex == 'female']
         unemployed_1 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 0]
-        employmentRate_1 = float(len(employed_1))/(float(len(employed_1)) + float(len(unemployed_1)))
+        if employed_1 + unemployed_1 > 0: 
+            employmentRate_1 = float(len(employed_1))/(float(len(employed_1)) + float(len(unemployed_1)))
+        else:
+            employmentRate_1 = 0
         self.totalEmployment_1.append(employmentRate_1)
         # print('Employment rate of class 1: ' + str(employmentRate_1))
         
@@ -3148,7 +3227,10 @@ class Sim:
         employed_2_Males = [x for x in employed_2 if x.sex == 'male']
         employed_2_Females = [x for x in employed_2 if x.sex == 'female']
         unemployed_2 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 1]
-        employmentRate_2 = float(len(employed_2))/(float(len(employed_2)) + float(len(unemployed_2)))
+        if employed_2 + unemployed_2 > 0: 
+            employmentRate_2 = float(len(employed_2))/(float(len(employed_2)) + float(len(unemployed_2)))
+        else:
+            employmentRate_2 = 0
         self.totalEmployment_2.append(employmentRate_2)
         # print('Employment rate of class 2: ' + str(employmentRate_2))
         
@@ -3156,7 +3238,10 @@ class Sim:
         employed_3_Males = [x for x in employed_3 if x.sex == 'male']
         employed_3_Females = [x for x in employed_3 if x.sex == 'female']
         unemployed_3 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 2]
-        employmentRate_3 = float(len(employed_3))/(float(len(employed_3)) + float(len(unemployed_3)))
+        if employed_3 + unemployed_3 > 0: 
+            employmentRate_3 = float(len(employed_3))/(float(len(employed_3)) + float(len(unemployed_3)))
+        else:
+            employmentRate_3 = 0
         self.totalEmployment_3.append(employmentRate_3)
         # print('Employment rate of class 3: ' + str(employmentRate_3))
         
@@ -3164,7 +3249,10 @@ class Sim:
         employed_4_Males = [x for x in employed_4 if x.sex == 'male']
         employed_4_Females = [x for x in employed_4 if x.sex == 'female']
         unemployed_4 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 3]
-        employmentRate_4 = float(len(employed_4))/(float(len(employed_4)) + float(len(unemployed_4)))
+        if employed_4 + unemployed_4 > 0: 
+            employmentRate_4 = float(len(employed_4))/(float(len(employed_4)) + float(len(unemployed_4)))
+        else:
+            employmentRate_4 = 0
         self.totalEmployment_4.append(employmentRate_4)
         # print('Employment rate of class 4: ' + str(employmentRate_4))
         
@@ -3172,7 +3260,10 @@ class Sim:
         employed_5_Males = [x for x in employed_5 if x.sex == 'male']
         employed_5_Females = [x for x in employed_5 if x.sex == 'female']
         unemployed_5 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 4]
-        employmentRate_5 = float(len(employed_5))/(float(len(employed_5)) + float(len(unemployed_5)))
+        if employed_5 + unemployed_5 > 0: 
+            employmentRate_5 = float(len(employed_5))/(float(len(employed_5)) + float(len(unemployed_5)))
+        else:
+            employmentRate_5 = 0
         self.totalEmployment_5.append(employmentRate_5)
         # print('Employment rate of class 5: ' + str(employmentRate_5))
         
@@ -3183,46 +3274,97 @@ class Sim:
         
         employedMales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'male']
         malesIncome = sum([x.income for x in employedMales])
-        self.averageIncome_M.append(malesIncome/float(len(employedMales)))
+        if len(employedMales) > 0:
+            self.averageIncome_M.append(malesIncome/float(len(employedMales)))
+        else:
+            self.averageIncome_M.append(0)
         
         employedFemales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'female']
         femalesIncome = sum([x.income for x in employedFemales])
-        self.averageIncome_F.append(femalesIncome/float(len(employedFemales)))
+        if len(employedFemales) > 0:
+            self.averageIncome_F.append(femalesIncome/float(len(employedFemales)))
+        else:
+            self.averageIncome_F.append(0)
         
         income_1 = sum([x.income for x in employed_1])
         income_1_Males = sum([x.income for x in employed_1_Males])
         income_1_Females = sum([x.income for x in employed_1_Females])
-        self.averageIncome_1.append(income_1/float(len(employed_1)))
-        self.averageIncome_1_Males.append(income_1_Males/float(len(employed_1_Males)))
-        self.averageIncome_1_Females.append(income_1_Females/float(len(employed_1_Females)))
+        if len(employed_1) > 0:
+            self.averageIncome_1.append(income_1/float(len(employed_1)))
+        else:
+            self.averageIncome_1.append(0)
+        if len(employed_1_Males) > 0:
+            self.averageIncome_1_Males.append(income_1_Males/float(len(employed_1_Males)))
+        else:
+            self.averageIncome_1_Males.append(0)
+        if len(employed_1_Females) > 0:
+            self.averageIncome_1_Females.append(income_1_Females/float(len(employed_1_Females)))
+        else:
+            self.averageIncome_1_Females.append(0)
         
         income_2 = sum([x.income for x in employed_2])
         income_2_Males = sum([x.income for x in employed_2_Males])
         income_2_Females = sum([x.income for x in employed_2_Females])
-        self.averageIncome_2.append(income_2/float(len(employed_2)))
-        self.averageIncome_2_Males.append(income_2_Males/float(len(employed_2_Males)))
-        self.averageIncome_2_Females.append(income_2_Females/float(len(employed_2_Females)))
+        if len(employed_2) > 0:
+            self.averageIncome_2.append(income_2/float(len(employed_2)))
+        else:
+            self.averageIncome_2.append(0)
+        if len(employed_2_Males) > 0:
+            self.averageIncome_2_Males.append(income_2_Males/float(len(employed_2_Males)))
+        else:
+            self.averageIncome_2_Males.append(0)
+        if len(employed_2_Females) > 0:
+            self.averageIncome_2_Females.append(income_2_Females/float(len(employed_2_Females)))
+        else:
+            self.averageIncome_2_Females.append(0)
         
         income_3 = sum([x.income for x in employed_3])
         income_3_Males = sum([x.income for x in employed_3_Males])
         income_3_Females = sum([x.income for x in employed_3_Females])
-        self.averageIncome_3.append(income_3/float(len(employed_3)))
-        self.averageIncome_3_Males.append(income_3_Males/float(len(employed_3_Males)))
-        self.averageIncome_3_Females.append(income_3_Females/float(len(employed_3_Females)))
+        if len(employed_3) > 0:
+            self.averageIncome_3.append(income_3/float(len(employed_3)))
+        else:
+            self.averageIncome_3.append(0)
+        if len(employed_3_Males) > 0:
+            self.averageIncome_3_Males.append(income_3_Males/float(len(employed_3_Males)))
+        else:
+            self.averageIncome_3_Males.append(0)
+        if len(employed_3_Females) > 0:
+            self.averageIncome_3_Females.append(income_3_Females/float(len(employed_3_Females)))
+        else:
+            self.averageIncome_3_Females.append(0)
         
         income_4 = sum([x.income for x in employed_4])
         income_4_Males = sum([x.income for x in employed_4_Males])
         income_4_Females = sum([x.income for x in employed_4_Females])
-        self.averageIncome_4.append(income_4/float(len(employed_4)))
-        self.averageIncome_4_Males.append(income_4_Males/float(len(employed_4_Males)))
-        self.averageIncome_4_Females.append(income_4_Females/float(len(employed_4_Females)))
+        if len(employed_4) > 0:
+            self.averageIncome_4.append(income_4/float(len(employed_4)))
+        else:
+            self.averageIncome_4.append(0)
+        if len(employed_4_Males) > 0:
+            self.averageIncome_4_Males.append(income_4_Males/float(len(employed_4_Males)))
+        else:
+            self.averageIncome_4_Males.append(0)
+        if len(employed_4_Females) > 0:
+            self.averageIncome_4_Females.append(income_4_Females/float(len(employed_4_Females)))
+        else:
+            self.averageIncome_4_Females.append(0)
         
         income_5 = sum([x.income for x in employed_5])
         income_5_Males = sum([x.income for x in employed_5_Males])
         income_5_Females = sum([x.income for x in employed_5_Females])
-        self.averageIncome_5.append(income_5/float(len(employed_5)))
-        self.averageIncome_5_Males.append(income_5_Males/float(len(employed_5_Males)))
-        self.averageIncome_5_Females.append(income_5_Females/float(len(employed_5_Females)))
+        if len(employed_5) > 0:
+            self.averageIncome_5.append(income_5/float(len(employed_5)))
+        else:
+            self.averageIncome_5.append(0)
+        if len(employed_5_Males) > 0:
+            self.averageIncome_5_Males.append(income_5_Males/float(len(employed_5_Males)))
+        else:
+            self.averageIncome_5_Males.append(0)
+        if len(employed_5_Females) > 0:
+            self.averageIncome_5_Females.append(income_5_Females/float(len(employed_5_Females)))
+        else:
+            self.averageIncome_5_Females.append(0)
         
         ####### Mobility Outputs ################################################################
         

@@ -20,9 +20,9 @@ def init_params():
     # The basics: starting population and year, etc.
     p['initialPop'] = 1000
     p['startYear'] = 1860
-    p['endYear'] = 1880 # 2020
+    p['endYear'] = 2020
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1860 # 1960
+    p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -110,14 +110,11 @@ def init_params():
     # doMarriages function parameters
     # p['baseEncounters'] = 3
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
-    p['betaGeoExp'] = 2.0
-    p['betaSocExp'] = 2.0
     
     ########   Key parameter 4  ##############
-    p['alphaGeoExp'] = 0.3 #[0 - 0.5]
+    p['betaGeoExp'] = 2.0 #[0 - 2.0]
     
-    # p['alphaSocExp'] = 0.3
-    
+    p['betaSocExp'] = 2.0
     p['basicMaleMarriageProb'] =  0.4
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0 ]
     
