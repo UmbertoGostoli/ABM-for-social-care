@@ -299,15 +299,13 @@ class Sim:
                         runParameters.append(self.parameters[k][3])
                         combinations.append(runParameters)
                     
-        for r in range(len(combinations)):
+        for r in range(15, 0, -1):
             
             print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
             print('Run: ' + str(r))
+
             
-            
-            folder  = 'N:/Social Care Model II/Charts/Run_' + str(r)
-            
-            folder  = 'N:\Social Care Model II\Charts\Run_' + str(r)
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\Run_' + str(r)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
@@ -315,14 +313,14 @@ class Sim:
             
             self.p['unmetNeedExponent'] = combinations[r][0] # Default = 0.1
             self.p['incomeCareParam'] = combinations[r][1] # Default = 0.001
-            self.p['excessNeedParam'] = combinations[r][2] # Default = 2.0
+            self.p['excessNeedParam'] = combinations[r][2] # Default = 1.0
             self.p['betaGeoExp'] = combinations[r][3] # Default = 2.0
     
             filename = folder + '/parameterValues.csv'
             if not os.path.isdir(os.path.dirname(filename)):
                 os.mkdir(os.path.dirname(filename))
             values = zip(np.array(combinations[r]))
-            names = ('unmetNeedExponent, incomeCareParam, excessNeedParam, alphaGeoExp')
+            names = ('unmetNeedExponent, incomeCareParam, excessNeedParam, betaGeoExp')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="") 
             
             self.initializePop()
@@ -405,6 +403,9 @@ class Sim:
                     'averageIncome_3, averageIncome_4, averageIncome_5, numberRelocations, numJobRelocations, '
                     'numMarriageRelocations, numSizeRelocations, numRetiredRelocations, numberTownChanges')
             
+            filename = folder + '/Outputs.csv'
+            if not os.path.isdir(os.path.dirname(filename)):
+                os.mkdir(os.path.dirname(filename))
             np.savetxt('Outputs.csv', values, delimiter=',', fmt='%f', header=names, comments="")
             
             # Graphic Output related code
@@ -512,55 +513,53 @@ class Sim:
         
         self.computeClassShares()
         
-        print('Do Deaths')
+        #print('Do Deaths')
         self.doDeaths()
         
-        print('Do Births')
+        #print('Do Births')
         self.doBirths()
         
-        print('Divorces')
+        #print('Divorces')
         self.doDivorces()
         
-        print('Marriages')
+        #print('Marriages')
         self.doMarriages()
         
         
         self.careNeeds()
         
-        print('Care Supplies')
+        #print('Care Supplies')
         self.careSupplies()
         
-        print('Update Job Map')
+        #print('Update Job Map')
         self.updateJobMap()
         
         
         self.updateUnemploymentRates()
         
-        
-        print('Social Care Map')
+        #print('Social Care Map')
         self.socialCareMap()
         
-        print('joiningSpouses')
+        #print('joiningSpouses')
         self.joiningSpouses()
         
-        print('Allocate Care')
+        #print('Allocate Care')
         self.allocateCare()
         
         self.socialTransition()
         
-        print('Job Market')
+        #print('Job Market')
         self.jobMarket()
         
-        print('Moving Around')
+        #print('Moving Around')
         self.movingAround()
-        
         
         self.doStats()
         
-        print('Age Transition')
+        #print('Age Transition')
         self.ageTransitions()
         
-        print('Care Transition')
+        #print('Care Transition')
         self.careTransitions()
 
         # self.householdSize()
@@ -607,9 +606,9 @@ class Sim:
         classRate = lowClassRate*math.pow(self.p['mortalityBias'], classRank)
         a = 0
         for i in range(self.p['numCareLevels']):
-            a += self.careNeedShares[classRank][i]*math.pow(self.p['careNeedBias'], i)
-        lowerNeedRate = classRate/a
-        deathProb = lowerNeedRate*math.pow(self.p['careNeedBias'], needLevel)
+            a += self.careNeedShares[classRank][i]*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - i)
+        higherNeedRate = classRate/a
+        deathProb = higherNeedRate*math.pow(self.p['careNeedBias'], (self.p['numCareLevels']-1) - needLevel)
         return (deathProb)
     
     def doDeaths(self):
@@ -748,7 +747,7 @@ class Sim:
                                   if x.sex == 'female'
                                   and x.age > self.p['minPregnancyAge']
                                   and x.age < self.p['maxPregnancyAge']
-                                  and x.partner != None and x.status != 'inactive']
+                                  and x.partner != None] # and x.status != 'inactive']
                         
         for person in self.pop.livingPeople:
            
@@ -759,28 +758,35 @@ class Sim:
         marriedPercentage = float(marriedLadies)/float(adultLadies)
         
         for woman in womenOfReproductiveAge:
-                if self.year < 1951:
-                    rawRate = self.p['growingPopBirthProb']
-                else:
-                    rawRate = (self.fert_data[(self.year - woman.birthdate)-16,self.year-1950])/marriedPercentage
-                baseRate = self.baseRate(self.socialClassShares, self.p['fertilityBias'], rawRate)
-                birthProb = baseRate*math.pow(self.p['fertilityBias'], woman.classRank)
+            
+            
+            if self.year < 1951:
+                rawRate = self.p['growingPopBirthProb']
+            else:
+                rawRate = (self.fert_data[(self.year - woman.birthdate)-16,self.year-1950])/marriedPercentage
                 
-                if random.random() < birthProb:
-                    # (self, mother, father, age, birthYear, sex, status, house,
-                    # classRank, sec, edu, wage, income, finalIncome):
-                    
-                    baby = Person(woman, woman.partner, 0, self.year, 'random', 
-                                  'child', woman.house, woman.classRank, woman.sec, None, 0, 0, 0, 0, 0, 0, 0)
-                    births[woman.classRank] += 1
-                    self.pop.allPeople.append(baby)
-                    self.pop.livingPeople.append(baby)
-                    woman.house.occupants.append(baby)
-                    woman.children.append(baby)
-                    woman.partner.children.append(baby)
-                    if woman.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(woman.id) + " had a baby, #" + str(baby.id) + "." 
-                        self.textUpdateList.append(messageString)
+            birthProb = self.computeBirthProb(self.socialClassShares, self.p['fertilityBias'], rawRate, woman.classRank)
+            
+            #baseRate = self.baseRate(self.socialClassShares, self.p['fertilityBias'], rawRate)
+            #fertilityCorrector = (self.socialClassShares[woman.classRank] - self.p['initialClassShares'][woman.classRank])/self.p['initialClassShares'][woman.classRank]
+            #baseRate *= 1/math.exp(self.p['fertilityCorrector']*fertilityCorrector)
+            #birthProb = baseRate*math.pow(self.p['fertilityBias'], woman.classRank)
+            
+            if random.random() < birthProb:
+                # (self, mother, father, age, birthYear, sex, status, house,
+                # classRank, sec, edu, wage, income, finalIncome):
+                
+                baby = Person(woman, woman.partner, 0, self.year, 'random', 
+                              'child', woman.house, woman.classRank, woman.sec, None, 0, 0, 0, 0, 0, 0, 0)
+                births[woman.classRank] += 1
+                self.pop.allPeople.append(baby)
+                self.pop.livingPeople.append(baby)
+                woman.house.occupants.append(baby)
+                woman.children.append(baby)
+                woman.partner.children.append(baby)
+                if woman.house == self.displayHouse:
+                    messageString = str(self.year) + ": #" + str(woman.id) + " had a baby, #" + str(baby.id) + "." 
+                    self.textUpdateList.append(messageString)
         postBirth = len(self.pop.livingPeople)
         
         self.births_1.append(births[0])
@@ -791,6 +797,25 @@ class Sim:
         
         print('the number of births is: ' + str(postBirth - preBirth))
     
+    def computeBirthProb(self, classShares, fertilityBias, rawRate, womanRank):
+        a = 0
+        for i in range(self.p['numberClasses']):
+            a += classShares[i]*math.pow(fertilityBias, i)
+        baseRate = rawRate/a
+        birthProb = baseRate*math.pow(self.p['fertilityBias'], womanRank)
+        classRates = []
+        for i in range(self.p['numberClasses']):
+            birthProb = baseRate*math.pow(self.p['fertilityBias'], i)
+            fertilityCorrector = (classShares[i] - self.p['initialClassShares'][i])/self.p['initialClassShares'][i]
+            classRate = birthProb*(1/math.exp(self.p['fertilityCorrector']*fertilityCorrector))
+            classRates.append(classRate)
+        a = 0
+        for i in range(self.p['numberClasses']):
+            a += classShares[i]*classRates[i]
+        correction = rawRate/a
+        correctedClassRates = [x*correction for x in classRates]
+        return(correctedClassRates[womanRank])
+            
     def careNeeds(self):
         
         for person in self.pop.livingPeople:
@@ -1442,7 +1467,7 @@ class Sim:
         activePop = [x for x in self.pop.livingPeople if x.status != 'inactive']
         
         for person in activePop:
-            if person.age == self.p['ageOfRetirement']:
+            if person.age >= self.p['ageOfRetirement']:
                 person.status = 'retired'
                 person.income = self.p['pensionWage'][person.classRank]*self.p['weeklyHours']
                 person.disposableIncome = person.income
@@ -1510,27 +1535,30 @@ class Sim:
         household = person.house.occupants
         if person.father.dead + person.mother.dead != 2:
             pStudy = 0
-            income = 0
+            disposableIncome = 0
             for member in household:
                 if member.status == 'employed' or member.status == 'retired':
-                    income += member.income
+                    disposableIncome += member.income
                 elif member.status == 'unemployed':
-                    income += self.expectedIncome(member, member.house.town)
-            perCapitaIncome = income/float(len(household))
-            if perCapitaIncome > 0:
+                    disposableIncome += self.expectedIncome(member, member.house.town)
+            perCapitaDisposableIncome = disposableIncome/float(len(household))
+            if perCapitaDisposableIncome > 0:
                 forgoneSalary = self.p['incomeInitialLevels'][stage]*self.p['weeklyHours']
                 educationCosts = self.p['educationCosts'][stage]
-                relCost = (forgoneSalary+educationCosts)/perCapitaIncome
+                relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
                 incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost)
                 targetEL = max(person.father.classRank, person.mother.classRank)
                 dE = targetEL - stage
                 expEdu = math.exp(self.p['eduRankSensitivity']*dE)
                 educationEffect = expEdu/(expEdu+self.p['costantEduParam'])
                 pStudy = math.pow(incomeEffect, self.p['incEduExp'])*math.pow(educationEffect, 1-self.p['incEduExp'])
+            else:
+                pStudy = 0
         else:
             pStudy = 0
         # pWork = math.exp(-1*self.p['eduEduSensitivity']*dE1)
         # return (pStudy/(pStudy+pWork))
+        #pStudy = 0.8
         return (pStudy)
     
     def enterWorkForce(self, person):
@@ -1870,7 +1898,11 @@ class Sim:
                             changeWeights.append(changeWeight)
                             person.searchJob = False
                         changeProbs = [i/sum(changeWeights) for i in changeWeights]
-                        peopleToChange = np.random.choice(employed, jobChanges, replace = False, p = changeProbs)
+                        if len([x for x in changeProbs if x != 0]) >= jobChanges:
+                            peopleToChange = np.random.choice(employed, jobChanges, replace = False, p = changeProbs)
+                        else:
+                            jobChanges = len([x for x in changeProbs if x != 0])
+                            peopleToChange = np.random.choice(employed, jobChanges, replace = False, p = changeProbs)
                         for person in peopleToChange:
                             self.changeJob(person)
                             if person.partner != None and person.partner.status == 'employed' and person.newTown != person.partner.house.town:
@@ -1988,7 +2020,10 @@ class Sim:
         a = 0
         for i in range(self.p['numberAgeBands']):
             a += ageBandShares[i]*ageBias[i]
-        lowerAgeBandRate = classRate/a
+        if a > 0:
+            lowerAgeBandRate = classRate/a 
+        else:
+            lowerAgeBandRate = 0
         unemploymentRate = lowerAgeBandRate*ageBias[ageBand]
         return (unemploymentRate)
     
@@ -2115,7 +2150,10 @@ class Sim:
         workTime = 0
         if person.status == 'employed':
             person.jobTenure += 1
-            workingHours = float(max(self.p['weeklyHours'] - person.socialWork, 0))
+            careWorkingHours = person.socialWork - self.p['employedHours']
+            if careWorkingHours < 0:
+                careWorkingHours = 0
+            workingHours = float(max(self.p['weeklyHours'] - careWorkingHours, 0))
             workTime = workingHours/float(self.p['weeklyHours'])
         person.workingTime += workTime
         if person.status == 'employed':
@@ -2131,7 +2169,7 @@ class Sim:
             person.disposableIncome = workTime*person.income
             person.disposableIncome -= person.workToCare*self.p['priceSocialCare']
             if person.disposableIncome < 0:
-                person.disposableIncome == 0
+                person.disposableIncome = 0
         else:
             person.income = 0
             
@@ -2228,7 +2266,7 @@ class Sim:
 
                 #person.movedThisYear = True
                 #person.partner.movedThisYear = True
-                
+
                 relocationCost = self.computeRelocationsCostSpouses(person)
                 personTownIndex = self.map.towns.index(person.house.town)
                 personTownAttraction = relocationCost[personTownIndex]
@@ -2744,20 +2782,24 @@ class Sim:
         
         # Year
         self.times.append(self.year)
-        
         # Population stats
-        currentPop = len(self.pop.livingPeople)
+        currentPop = float(len(self.pop.livingPeople))
         self.pops.append(currentPop)
         unskilled = [x for x in self.pop.livingPeople if x.classRank == 0]
-        self.unskilledPop.append(len(unskilled))
+        print(float(len(unskilled))/currentPop)
+        self.unskilledPop.append(len(unskilled)/currentPop)
         skilled = [x for x in self.pop.livingPeople if x.classRank == 1]
-        self.skilledPop.append(len(skilled))
+        print(float(len(skilled))/currentPop)
+        self.skilledPop.append(len(skilled)/currentPop)
         lowerclass = [x for x in self.pop.livingPeople if x.classRank == 2]
-        self.lowerclassPop.append(len(lowerclass))
+        print(float(len(lowerclass))/currentPop)
+        self.lowerclassPop.append(len(lowerclass)/currentPop)
         middelclass = [x for x in self.pop.livingPeople if x.classRank == 3]
-        self.middleclassPop.append(len(middelclass))
+        print(float(len(middelclass))/currentPop)
+        self.middleclassPop.append(len(middelclass)/currentPop)
         upperclass = [x for x in self.pop.livingPeople if x.classRank == 4]
-        self.upperclassPop.append(len(upperclass))
+        print(float(len(upperclass))/currentPop)
+        self.upperclassPop.append(len(upperclass)/currentPop)
         
         tally_1to2 = 0
         tally_1to3 = 0
@@ -3232,7 +3274,7 @@ class Sim:
         employed_1_Males = [x for x in employed_1 if x.sex == 'male']
         employed_1_Females = [x for x in employed_1 if x.sex == 'female']
         unemployed_1 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 0]
-        if employed_1 + unemployed_1 > 0: 
+        if len(employed_1) + len(unemployed_1) > 0: 
             employmentRate_1 = float(len(employed_1))/(float(len(employed_1)) + float(len(unemployed_1)))
         else:
             employmentRate_1 = 0
@@ -3243,7 +3285,7 @@ class Sim:
         employed_2_Males = [x for x in employed_2 if x.sex == 'male']
         employed_2_Females = [x for x in employed_2 if x.sex == 'female']
         unemployed_2 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 1]
-        if employed_2 + unemployed_2 > 0: 
+        if len(employed_2) + len(unemployed_2) > 0: 
             employmentRate_2 = float(len(employed_2))/(float(len(employed_2)) + float(len(unemployed_2)))
         else:
             employmentRate_2 = 0
@@ -3254,7 +3296,7 @@ class Sim:
         employed_3_Males = [x for x in employed_3 if x.sex == 'male']
         employed_3_Females = [x for x in employed_3 if x.sex == 'female']
         unemployed_3 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 2]
-        if employed_3 + unemployed_3 > 0: 
+        if len(employed_3) + len(unemployed_3) > 0: 
             employmentRate_3 = float(len(employed_3))/(float(len(employed_3)) + float(len(unemployed_3)))
         else:
             employmentRate_3 = 0
@@ -3265,7 +3307,7 @@ class Sim:
         employed_4_Males = [x for x in employed_4 if x.sex == 'male']
         employed_4_Females = [x for x in employed_4 if x.sex == 'female']
         unemployed_4 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 3]
-        if employed_4 + unemployed_4 > 0: 
+        if len(employed_4) + len(unemployed_4) > 0:
             employmentRate_4 = float(len(employed_4))/(float(len(employed_4)) + float(len(unemployed_4)))
         else:
             employmentRate_4 = 0
@@ -3276,7 +3318,7 @@ class Sim:
         employed_5_Males = [x for x in employed_5 if x.sex == 'male']
         employed_5_Females = [x for x in employed_5 if x.sex == 'female']
         unemployed_5 = [x for x in self.pop.livingPeople if x.status == 'unemployed' and x.classRank == 4]
-        if employed_5 + unemployed_5 > 0: 
+        if len(employed_5) + len(unemployed_5) > 0: 
             employmentRate_5 = float(len(employed_5))/(float(len(employed_5)) + float(len(unemployed_5)))
         else:
             employmentRate_5 = 0
