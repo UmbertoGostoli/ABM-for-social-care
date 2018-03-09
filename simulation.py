@@ -35,19 +35,20 @@ class Sim:
     """Instantiates a single run of the simulation."""    
     def __init__ (self, params):
         self.p = params
-
+        self.socialClassShares = []
+        self.careNeedShares = []
+        self.jobMarketMap = []
+        
         ## Statistical tallies
         self.periodCount = 0
         
-        self.times = []
+        
         
         ###################### Demographic outputs ###################
         self.agent = None
         
+        self.times = []
         self.pops = []
-        self.socialClassShares = []
-        self.careNeedShares = []
-        self.jobMarketMap = []
         self.births_1 = []
         self.births_2 = []
         self.births_3 = []
@@ -64,26 +65,31 @@ class Sim:
         self.middleclassPop = []
         self.upperclassPop = []
         
+        self.socialMobility_1to1 = []
         self.socialMobility_1to2 = []
         self.socialMobility_1to3 = []
         self.socialMobility_1to4 = []
         self.socialMobility_1to5 = []
         self.socialMobility_2to1 = []
+        self.socialMobility_2to2 = []
         self.socialMobility_2to3 = []
         self.socialMobility_2to4 = []
         self.socialMobility_2to5 = []
         self.socialMobility_3to1 = []
         self.socialMobility_3to2 = []
+        self.socialMobility_3to3 = []
         self.socialMobility_3to4 = []
         self.socialMobility_3to5 = []
         self.socialMobility_4to1 = []
         self.socialMobility_4to2 = []
         self.socialMobility_4to3 = []
+        self.socialMobility_4to4 = []
         self.socialMobility_4to5 = []
         self.socialMobility_5to1 = []
         self.socialMobility_5to2 = []
         self.socialMobility_5to3 = []
         self.socialMobility_5to4 = []
+        self.socialMobility_5to5 = []
         
         self.numberHouseholds = []
         self.numberHouseholds_1 = []
@@ -106,41 +112,92 @@ class Sim:
         self.numDivorces = []
         
         ############################# Social Care outputs ###################
-        
+        self.shareCareGivers = []
+        self.shareCareGivers_1 = []
+        self.shareCareGivers_2 = []
+        self.shareCareGivers_3 = []
+        self.shareCareGivers_4 = []
+        self.shareCareGivers_5 = []
+        self.shareSocialCareTakers_N1 = []
+        self.shareSocialCareTakers_N2 = []
+        self.shareSocialCareTakers_N3 = []
+        self.shareSocialCareTakers_N4 = []
         self.totalCareDemand = []
+        self.perCapitaCareDemand = []
+        self.perCapitaSocialCareDemand = []
+        self.perCapitaChildCareDemand = []
         self.totalChildCareDemand = []
-        self.totalSocialCareDemand = []  # New!
-        self.totalCareSupply = [] # New!
-        self.totalInformalCareSupply = [] # New!
-        self.totalFormalCareSupply = [] # New!
-        self.totalCareReceived = [] # New!
-        self.totalChildCareReceived = [] #New!
-        self.totalSocialCareReceived = [] #New!
+        self.totalSocialCareDemand = []
+        self.shareSocialCareDemand = []
+        
+        self.totalCareSupply = []
+        self.totalInformalCareSupply = []
+        self.totalFormalCareSupply = []
+        self.shareInformalCareSupply = []
+        
         self.totalInformalCareReceived = []
         self.totalFormalCareReceived = []
+        self.totalCareReceived = []
+        self.averageCareReceived = []
+        self.averageInformalCareReceived = []
+        self.averageFormalCareReceived = []
+        self.averageCareSupplied = []
+        self.averageInformalCareSupplied = []
+        self.averageFormalCareSupplied = []
+        self.shareInformalCareReceived = []
+        self.totalUnmetCareDemand = []
+        self.shareUnmetCareDemand = []
+        self.perCapitaUnmetCareDemand = []
+        self.averageUnmetCareDemand = []
+        
         self.totalInformalSocialCareReceived = []
         self.totalFormalSocialCareReceived = []
+        self.totalSocialCareReceived = [] 
+        self.averageSocialCareReceived = []
+        self.averageInformalSocialCareReceived = []
+        self.averageFormalSocialCareReceived = []
+        self.averageSocialCareSupplied = []
+        self.averageInformalSocialCareSupplied = []
+        self.averageFormalSocialCareSupplied = []
+        self.shareInformalSocialCareReceived = []
+        self.totalSocialCareUnmetDemand = [] 
+        self.shareUnmetSocialCareDemand = []
+        self.perCapitaUnmetSocialCareDemand = []
+        self.averageUnmetSocialCareDemand = []
+        
         self.totalInformalChildCareReceived = []
         self.totalFormalChildCareReceived = []
-        self.totalUnmetDemand = []
-        self.totalSocialCareUnmetDemand = [] # New!
-        self.totalChildCareUnmetDemand = [] # New!
-        self.totalCareSuppliedMale = [] # New!
-        self.totalInformalCareSuppliedMale = [] # New!
-        self.totalInformalCareSuppliedMale_1 = [] # New!
-        self.totalInformalCareSuppliedMale_2 = [] # New!
-        self.totalInformalCareSuppliedMale_3 = [] # New!
-        self.totalInformalCareSuppliedMale_4 = [] # New!
-        self.totalInformalCareSuppliedMale_5 = [] # New!
-        self.totalFormalCareSuppliedMale = [] # New!
-        self.totalCareSuppliedFemale = [] # New!
-        self.totalInformalCareSuppliedFemale = [] # New!
-        self.totalInformalCareSuppliedFemale_1 = [] # New!
-        self.totalInformalCareSuppliedFemale_2 = [] # New!
-        self.totalInformalCareSuppliedFemale_3 = [] # New!
-        self.totalInformalCareSuppliedFemale_4 = [] # New!
-        self.totalInformalCareSuppliedFemale_5 = [] # New!
-        self.totalFormalCareSuppliedFemale = [] # New!
+        self.totalChildCareReceived = [] 
+        self.averageChildCareReceived = []
+        self.averageInformalChildCareReceived = []
+        self.averageFormalChildCareReceived = []
+        self.averageChildCareSupplied = []
+        self.averageInformalChildCareSupplied = []
+        self.averageFormalChildCareSupplied = []
+        self.shareInformalChildCareReceived = []
+        self.totalChildCareUnmetDemand = [] 
+        self.shareUnmetChildCareDemand = []
+        self.perCapitaUnmetChildCareDemand = []
+        self.averageUnmetChildCareDemand = []
+        
+        self.totalInformalCareSuppliedMale = [] 
+        self.totalInformalCareSuppliedMale_1 = [] 
+        self.totalInformalCareSuppliedMale_2 = [] 
+        self.totalInformalCareSuppliedMale_3 = [] 
+        self.totalInformalCareSuppliedMale_4 = []
+        self.totalInformalCareSuppliedMale_5 = [] 
+        self.totalInformalCareSuppliedFemale = [] 
+        self.totalInformalCareSuppliedFemale_1 = [] 
+        self.totalInformalCareSuppliedFemale_2 = [] 
+        self.totalInformalCareSuppliedFemale_3 = [] 
+        self.totalInformalCareSuppliedFemale_4 = [] 
+        self.totalInformalCareSuppliedFemale_5 = [] 
+        self.shareFemaleInformalCareSupplied = []
+        self.shareFemaleInformalCareSupplied_1 = []
+        self.shareFemaleInformalCareSupplied_2 = []
+        self.shareFemaleInformalCareSupplied_3 = []
+        self.shareFemaleInformalCareSupplied_4 = []
+        self.shareFemaleInformalCareSupplied_5 = []
         
         self.totalCareDemand_1 = []
         self.totalCareSupply_1 = []
@@ -162,39 +219,63 @@ class Sim:
         self.totalFormalSupply = []
         self.totalInformalSupply_1 = []
         self.totalFormalSupply_1 = []
+        self.shareSocialCare_1 = []
         self.totalInformalCarePerRecipient_1 = []
         self.totalFormalCarePerRecipient_1 = []
         self.totalUnmetNeedPerRecipient_1 = []
         self.totalInformalCarePerCarer_1 = []
         self.totalFormalCarePerCarer_1 = []
+        self.shareInformalSupply_1 = []
+        self.shareUnmetCareDemand_1 = []
+        self.perCapitaUnmetCareDemand_1 = []
+        
         self.totalInformalSupply_2 = []
         self.totalFormalSupply_2 = []
+        self.shareSocialCare_2 = []
         self.totalInformalCarePerRecipient_2 = []
         self.totalFormalCarePerRecipient_2 = []
         self.totalUnmetNeedPerRecipient_2 = []
         self.totalInformalCarePerCarer_2 = []
         self.totalFormalCarePerCarer_2 = []
+        self.shareInformalSupply_2 = []
+        self.shareUnmetCareDemand_2 = []
+        self.perCapitaUnmetCareDemand_2 = []
+        
         self.totalInformalSupply_3 = []
         self.totalFormalSupply_3 = []
+        self.shareSocialCare_3 = []
         self.totalInformalCarePerRecipient_3 = []
         self.totalFormalCarePerRecipient_3 = []
         self.totalUnmetNeedPerRecipient_3 = []
         self.totalInformalCarePerCarer_3 = []
         self.totalFormalCarePerCarer_3 = []
+        self.shareInformalSupply_3 = []
+        self.shareUnmetCareDemand_3 = []
+        self.perCapitaUnmetCareDemand_3 = []
+        
         self.totalInformalSupply_4 = []
         self.totalFormalSupply_4 = []
+        self.shareSocialCare_4 = []
         self.totalInformalCarePerRecipient_4 = []
         self.totalFormalCarePerRecipient_4 = []
         self.totalUnmetNeedPerRecipient_4 = []
         self.totalInformalCarePerCarer_4 = []
         self.totalFormalCarePerCarer_4 = []
+        self.shareInformalSupply_4 = []
+        self.shareUnmetCareDemand_4 = []
+        self.perCapitaUnmetCareDemand_4 = []
+        
         self.totalInformalSupply_5 = []
         self.totalFormalSupply_5 = []
+        self.shareSocialCare_5 = []
         self.totalInformalCarePerRecipient_5 = []
         self.totalFormalCarePerRecipient_5 = []
         self.totalUnmetNeedPerRecipient_5 = []
         self.totalInformalCarePerCarer_5 = []
         self.totalFormalCarePerCarer_5 = []
+        self.shareInformalSupply_5 = []
+        self.shareUnmetCareDemand_5 = []
+        self.perCapitaUnmetCareDemand_5 = []
         
         self.totalSupplyHousehold = []
         self.totalSupplyNoK_1 = []
@@ -221,29 +302,42 @@ class Sim:
         
         self.averageIncome_M = []
         self.averageIncome_F = []
-        
+        self.ratioWomenMaleIncome = []
         self.averageIncome_1 = []
         self.averageIncome_1_Males = []
         self.averageIncome_1_Females = []
+        self.ratioWomenMaleIncome_1 = []
         self.averageIncome_2 = []
         self.averageIncome_2_Males = []
         self.averageIncome_2_Females = []
+        self.ratioWomenMaleIncome_2 = []
         self.averageIncome_3 = []
         self.averageIncome_3_Males = []
         self.averageIncome_3_Females = []
+        self.ratioWomenMaleIncome_3 = []
         self.averageIncome_4 = []
         self.averageIncome_4_Males = []
         self.averageIncome_4_Females = []
+        self.ratioWomenMaleIncome_4 = []
         self.averageIncome_5 = []
         self.averageIncome_5_Males = []
         self.averageIncome_5_Females = []
+        self.ratioWomenMaleIncome_5 = []
         
         ########################## Mobility outputs ######################
         
         self.totalRelocations = 0
         self.numberRelocations = []
-        self.jobRelocations = 0
-        self.numJobRelocations = []
+        self.jobRelocations_1 = 0
+        self.jobRelocations_2 = 0
+        self.jobRelocations_3 = 0
+        self.jobRelocations_4 = 0
+        self.jobRelocations_5 = 0
+        self.numJobRelocations_1 = []
+        self.numJobRelocations_2 = []
+        self.numJobRelocations_3 = []
+        self.numJobRelocations_4 = []
+        self.numJobRelocations_5 = []
         self.marriageRelocations = 0
         self.numMarriageRelocations = []
         self.sizeRelocations = 0
@@ -264,7 +358,32 @@ class Sim:
         self.enterWork = []
         self.exitWork = []
         self.changeWork = []
-
+        
+        ############   Sensitivity Outputs   #######
+        
+        self.sharesUnmetCare_M = []
+        self.sharesUnmetCare_SD = []
+        self.averagesUnmetCare_M = []
+        self.averagesUnmetCare_SD = []
+        self.sharesSocialCare_M = []
+        self.sharesSocialCare_SD = []
+        self.sharesInformalCare_M = []
+        self.sharesInformalCare_SD = []
+        
+        # Check variables
+        self.perCapitaHouseholdIncome = []
+        self.socialCareMapValues = []
+        self.relativeEducationCost = []
+        self.changeJobRate = []
+        self.changeJobdIncome = []
+        self.relocationCareLoss = []
+        self.relocationCost = []
+        self.townJobAttraction = []
+        self.unemployedIncomeDiscountingFactor = []
+        self.relativeTownAttraction = []
+        self.houseScore = []
+        self.deltaHouseOccupants = []
+        
         # Counters and storage
         self.check = False
         self.exitWork = 0
@@ -283,23 +402,26 @@ class Sim:
 
     def run(self):
         # Read parameters 
-        self.parameters = np.genfromtxt('parameters.csv',
+        self.parameters = np.genfromtxt('parameters_r.csv',
                                        skip_header = 1, delimiter=',')
         
-        # Create a list of combinations
+        self.parameters = map(list, zip(*self.parameters))
+         # Create a list of combinations
         combinations = []
+        defaultValues = [0.1, 0.001, 0.5, 1.0, 1.0, 0.002]
         for i in range(len(self.parameters)):
-            for j in range(len(self.parameters)):
-                for z in range(len(self.parameters)):
-                    for k in range(len(self.parameters)):
-                        runParameters = []
-                        runParameters.append(self.parameters[i][0])
-                        runParameters.append(self.parameters[j][1])
-                        runParameters.append(self.parameters[z][2])
-                        runParameters.append(self.parameters[k][3])
-                        combinations.append(runParameters)
-                    
-        for r in range(15, 0, -1):
+            for j in range(2):
+                runParameters = [x for x in defaultValues]
+                runParameters[i] = self.parameters[i][j]
+                combinations.append(runParameters)
+                
+        folder_S  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
+        if not os.path.isdir(os.path.dirname(folder_S)):
+            os.makedirs(folder_S)
+            
+        for r in range(len(combinations)):
+            
+            #self.emptyTimeSeries()
             
             print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
             print('Run: ' + str(r))
@@ -315,12 +437,14 @@ class Sim:
             self.p['incomeCareParam'] = combinations[r][1] # Default = 0.001
             self.p['excessNeedParam'] = combinations[r][2] # Default = 1.0
             self.p['betaGeoExp'] = combinations[r][3] # Default = 2.0
+            self.p['relocationCostParameter'] = combinations[r][4]
+            self.p['propensityRelocationParam'] = combinations[r][5]
     
             filename = folder + '/parameterValues.csv'
             if not os.path.isdir(os.path.dirname(filename)):
                 os.mkdir(os.path.dirname(filename))
             values = zip(np.array(combinations[r]))
-            names = ('unmetNeedExponent, incomeCareParam, excessNeedParam, betaGeoExp')
+            names = ('unmetNeedExponent, incomeCareParam, excessNeedParam, betaGeoExp, relocationCostParam, propensityRelocationParam')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="") 
             
             self.initializePop()
@@ -341,85 +465,158 @@ class Sim:
             
     
             ###### Create csv with all the outputs   ############
-            values = zip(self.pops, self.births_1, self.births_2, self.births_3, self.births_4, self.births_5, 
-                         self.deaths_1, self.deaths_2, self.deaths_3, self.deaths_4, self.deaths_5,
-                         self.unskilledPop, self.skilledPop, self.lowerclassPop, 
-                         self.middleclassPop, self.upperclassPop, self.socialMobility_1to2, 
-                         self.socialMobility_1to3, self.socialMobility_1to4, self.socialMobility_1to5, 
-                         self.socialMobility_2to1, self.socialMobility_2to3, self.socialMobility_2to4, 
-                         self.socialMobility_2to5, self.socialMobility_3to1, self.socialMobility_3to2, 
-                         self.socialMobility_3to4, self.socialMobility_3to5, self.socialMobility_4to1, 
-                         self.socialMobility_4to2, self.socialMobility_4to3, self.socialMobility_4to5, 
-                         self.socialMobility_5to1, self.socialMobility_5to2, self.socialMobility_5to3, 
-                         self.socialMobility_5to4, self.numberHouseholds, self.numberHouseholds_1, 
-                         self.numberHouseholds_2, self.numberHouseholds_3, self.numberHouseholds_4, 
-                         self.numberHouseholds_5, self.avgHouseholdSize, self.avgHouseholdSize_1, 
-                         self.avgHouseholdSize_2, self.avgHouseholdSize_3, self.avgHouseholdSize_4, 
-                         self.avgHouseholdSize_5, self.marriageProp, self.numMarriages, self.numDivorces, 
+            values = zip(self.pops,self.unskilledPop,self.skilledPop,self.lowerclassPop,self.middleclassPop,
+                         self.upperclassPop,self.numberHouseholds,self.numberHouseholds_1,self.numberHouseholds_2,
+                         self.numberHouseholds_3,self.numberHouseholds_4,self.numberHouseholds_5,self.avgHouseholdSize,
+                         self.avgHouseholdSize_1,self.avgHouseholdSize_2,self.avgHouseholdSize_3,self.avgHouseholdSize_4,
+                         self.avgHouseholdSize_5,self.marriageProp,self.numMarriages,self.numDivorces,self.totalCareDemand,
+                         self.perCapitaCareDemand,self.perCapitaSocialCareDemand,self.perCapitaChildCareDemand,
+                         self.totalChildCareDemand,self.totalSocialCareDemand,self.shareSocialCareDemand,
+                         self.totalCareSupply,self.totalInformalCareSupply,self.totalFormalCareSupply,self.shareInformalCareSupply,
+                         self.totalInformalCareReceived,self.totalFormalCareReceived,self.totalCareReceived,self.averageCareReceived,
+                         self.averageInformalCareReceived,self.averageFormalCareReceived,self.averageCareSupplied,
+                         self.averageInformalCareSupplied,self.averageFormalCareSupplied,self.shareInformalCareReceived,
+                         self.totalUnmetCareDemand,self.shareUnmetCareDemand,self.perCapitaUnmetCareDemand,self.averageUnmetCareDemand,
+                         self.totalInformalSocialCareReceived,self.totalFormalSocialCareReceived,self.totalSocialCareReceived,
+                         self.averageSocialCareReceived,self.averageInformalSocialCareReceived,self.averageFormalSocialCareReceived,
+                         self.averageSocialCareSupplied,self.averageInformalSocialCareSupplied,self.averageFormalSocialCareSupplied,
+                         self.shareInformalSocialCareReceived,self.totalSocialCareUnmetDemand ,self.shareUnmetSocialCareDemand,
+                         self.perCapitaUnmetSocialCareDemand,self.averageUnmetSocialCareDemand,self.totalInformalChildCareReceived,
+                         self.totalFormalChildCareReceived,self.totalChildCareReceived ,self.averageChildCareReceived,
+                         self.averageInformalChildCareReceived,self.averageFormalChildCareReceived,self.averageChildCareSupplied,
+                         self.averageInformalChildCareSupplied,self.averageFormalChildCareSupplied,self.shareInformalChildCareReceived,
+                         self.totalChildCareUnmetDemand,self.shareUnmetChildCareDemand,self.perCapitaUnmetChildCareDemand,
+                         self.averageUnmetChildCareDemand,self.totalInformalCareSuppliedMale,self.totalInformalCareSuppliedMale_1,
+                         self.totalInformalCareSuppliedMale_2,self.totalInformalCareSuppliedMale_3,self.totalInformalCareSuppliedMale_4,
+                         self.totalInformalCareSuppliedMale_5,self.totalInformalCareSuppliedFemale,self.totalInformalCareSuppliedFemale_1,
+                         self.totalInformalCareSuppliedFemale_2,self.totalInformalCareSuppliedFemale_3,self.totalInformalCareSuppliedFemale_4,
+                         self.totalInformalCareSuppliedFemale_5,self.shareFemaleInformalCareSupplied,self.shareFemaleInformalCareSupplied_1,
+                         self.shareFemaleInformalCareSupplied_2,self.shareFemaleInformalCareSupplied_3,self.shareFemaleInformalCareSupplied_4,
+                         self.shareFemaleInformalCareSupplied_5,self.totalCareDemand_1,self.totalCareSupply_1,self.totalUnmetDemand_1,
+                         self.totalCareDemand_2,self.totalCareSupply_2,self.totalUnmetDemand_2,self.totalCareDemand_3,self.totalCareSupply_3,
+                         self.totalUnmetDemand_3,self.totalCareDemand_4,self.totalCareSupply_4,self.totalUnmetDemand_4,self.totalCareDemand_5,
+                         self.totalCareSupply_5,self.totalUnmetDemand_5,self.shareSocialCare_1,self.totalInformalSupply_1,self.totalFormalSupply_1,
+                         self.totalInformalCarePerRecipient_1,self.totalFormalCarePerRecipient_1,self.totalUnmetNeedPerRecipient_1,
+                         self.totalInformalCarePerCarer_1,self.totalFormalCarePerCarer_1,self.shareInformalSupply_1,self.shareUnmetCareDemand_1,
+                         self.perCapitaUnmetCareDemand_1,self.shareSocialCare_2,self.totalInformalSupply_2,self.totalFormalSupply_2,
+                         self.totalInformalCarePerRecipient_2,self.totalFormalCarePerRecipient_2,self.totalUnmetNeedPerRecipient_2,
+                         self.totalInformalCarePerCarer_2,self.totalFormalCarePerCarer_2,self.shareInformalSupply_2,self.shareUnmetCareDemand_2,
+                         self.perCapitaUnmetCareDemand_2,self.shareSocialCare_3,self.totalInformalSupply_3,self.totalFormalSupply_3,
+                         self.totalInformalCarePerRecipient_3,self.totalFormalCarePerRecipient_3,
+                         self.totalUnmetNeedPerRecipient_3,self.totalInformalCarePerCarer_3,self.totalFormalCarePerCarer_3,self.shareSocialCare_4,
+                         self.shareInformalSupply_3,self.shareUnmetCareDemand_3,self.perCapitaUnmetCareDemand_3,self.totalInformalSupply_4,
+                         self.totalFormalSupply_4,self.totalInformalCarePerRecipient_4,self.totalFormalCarePerRecipient_4,
+                         self.totalUnmetNeedPerRecipient_4,self.totalInformalCarePerCarer_4,self.totalFormalCarePerCarer_4,
+                         self.shareInformalSupply_4,self.shareUnmetCareDemand_4,self.perCapitaUnmetCareDemand_4,self.shareSocialCare_5,
+                         self.totalInformalSupply_5,self.totalFormalSupply_5,self.totalInformalCarePerRecipient_5,self.totalFormalCarePerRecipient_5,
+                         self.totalUnmetNeedPerRecipient_5,self.totalInformalCarePerCarer_5,self.totalFormalCarePerCarer_5,
+                         self.shareInformalSupply_5,self.shareUnmetCareDemand_5,self.perCapitaUnmetCareDemand_5,self.totalSupplyHousehold,
+                         self.totalSupplyNoK_1,self.totalSupplyNoK_2,self.totalSupplyNoK_3,self.totalInformalSupplyHousehold,
+                         self.totalInformalSupplyNoK_1,self.totalInformalSupplyNoK_2,self.totalInformalSupplyNoK_3,self.totalFormalSupplyHousehold,
+                         self.totalFormalSupplyNoK_1,self.totalFormalSupplyNoK_2,self.totalFormalSupplyNoK_3,self.totalEmployment,
+                         self.totalEmployment_1,self.totalEmployment_2,self.totalEmployment_3,self.totalEmployment_4,self.totalEmployment_5,
+                         self.totalJobChanges,self.averageIncome_M,self.averageIncome_F,self.averageIncome_1,self.averageIncome_1_Males,
+                         self.averageIncome_1_Females,self.averageIncome_2,self.averageIncome_2_Males,self.averageIncome_2_Females,
+                         self.averageIncome_3,self.averageIncome_3_Males,self.averageIncome_3_Females,self.averageIncome_4,
+                         self.averageIncome_4_Males,self.averageIncome_4_Females,self.averageIncome_5,self.averageIncome_5_Males,
+                         self.averageIncome_5_Females,self.numberRelocations,self.numJobRelocations_1,self.numJobRelocations_2,
+                         self.numJobRelocations_3,self.numJobRelocations_4,self.numJobRelocations_5,self.numMarriageRelocations,
+                         self.numSizeRelocations,self.numRetiredRelocations,self.numberTownChanges)
                          
-                         self.totalCareDemand, self.totalChildCareDemand, self.totalCareSupply, self.totalUnmetDemand, 
-                         self.totalInformalCareReceived, self.totalFormalCareReceived, 
-                         
-                         self.totalCareDemand_1, self.totalCareSupply_1, self.totalUnmetDemand_1, 
-                         self.totalCareDemand_2, self.totalCareSupply_2, self.totalUnmetDemand_2, 
-                         self.totalCareDemand_3, self.totalCareSupply_3, self.totalUnmetDemand_3, 
-                         self.totalCareDemand_4, self.totalCareSupply_4, self.totalUnmetDemand_4, 
-                         self.totalCareDemand_5, self.totalCareSupply_5, self.totalUnmetDemand_5, 
-                         self.totalInformalSupply, self.totalFormalSupply, self.totalInformalSupply_1, 
-                         self.totalFormalSupply_1, self.totalInformalSupply_2, self.totalFormalSupply_2, 
-                         self.totalInformalSupply_3, self.totalFormalSupply_3, self.totalInformalSupply_4, 
-                         self.totalFormalSupply_4, self.totalInformalSupply_5, self.totalFormalSupply_5, 
-                         self.totalSupplyHousehold, self.totalSupplyNoK_1, self.totalSupplyNoK_2, 
-                         self.totalSupplyNoK_3, self.totalEmployment, self.totalEmployment_1, self.totalEmployment_2, 
-                         self.totalEmployment_3, self.totalEmployment_4, self.totalEmployment_5, self.totalJobChanges, 
-                         self.averageIncome_M, self.averageIncome_F, self.averageIncome_1, self.averageIncome_2, 
-                         self.averageIncome_3, self.averageIncome_4, self.averageIncome_5, self.numberRelocations, 
-                         self.numJobRelocations, self.numMarriageRelocations, self.numSizeRelocations, 
-                         self.numRetiredRelocations, self.numberTownChanges)
-                         
-            names = ('pops, births_1, births_2, births_3, births_4, births_5, '
-                    'deaths_1, deaths_2, deaths_3, deaths_4, deaths_5,unskilledPop, '
-                    'skilledPop, lowerclassPop, middleclassPop, upperclassPop, '
-                    'socialMobility_1to2, socialMobility_1to3, socialMobility_1to4, socialMobility_1to5, '
-                    'socialMobility_2to1, socialMobility_2to3, socialMobility_2to4, socialMobility_2to5, '
-                    'socialMobility_3to1, socialMobility_3to2, socialMobility_3to4, socialMobility_3to5, '
-                    'socialMobility_4to1, socialMobility_4to2, socialMobility_4to3, socialMobility_4to5, '
-                    'socialMobility_5to1, socialMobility_5to2, socialMobility_5to3, socialMobility_5to4, '
-                    'numberHouseholds, numberHouseholds_1, numberHouseholds_2, numberHouseholds_3, '
-                    'numberHouseholds_4, numberHouseholds_5, avgHouseholdSize, avgHouseholdSize_1, '
-                    'avgHouseholdSize_2, avgHouseholdSize_3, avgHouseholdSize_4, avgHouseholdSize_5, '
-                    'marriageProp, numMarriages, numDivorces, totalCareDemand, totalChildCare, totalCareSupply, '
-                    'totalUnmetDemand, totalInformalCareReceived, totalFormalCareReceived, ' 
-                    'totalCareDemand_1, totalCareSupply_1, totalUnmetDemand_1, '
-                    'totalCareDemand_2, totalCareSupply_2, totalUnmetDemand_2, totalCareDemand_3, '
-                    'totalCareSupply_3, totalUnmetDemand_3, totalCareDemand_4, totalCareSupply_4, '
-                    'totalUnmetDemand_4, totalCareDemand_5, totalCareSupply_5, totalUnmetDemand_5, '
-                    'totalInformalSupply, totalFormalSupply, totalInformalSupply_1, totalFormalSupply_1, '
-                    'totalInformalSupply_2, totalFormalSupply_2, totalInformalSupply_3, totalFormalSupply_3, '
-                    'totalInformalSupply_4, totalFormalSupply_4, totalInformalSupply_5, totalFormalSupply_5, '
-                    'totalSupplyHousehold, totalSupplyNoK_1, totalSupplyNoK_2, totalSupplyNoK_3, totalEmployment, '
-                    'totalEmployment_1, totalEmployment_2, totalEmployment_3, totalEmployment_4, totalEmployment_5, '
-                    'totalJobChanges, averageIncome_M, averageIncome_F, averageIncome_1, averageIncome_2, '
-                    'averageIncome_3, averageIncome_4, averageIncome_5, numberRelocations, numJobRelocations, '
-                    'numMarriageRelocations, numSizeRelocations, numRetiredRelocations, numberTownChanges')
+            names = ('pops,unskilledPop,skilledPop,lowerclassPop,middleclassPop, '
+                     'upperclassPop,numberHouseholds,numberHouseholds_1,numberHouseholds_2, '
+                     'numberHouseholds_3,numberHouseholds_4,numberHouseholds_5,avgHouseholdSize, '
+                     'avgHouseholdSize_1,avgHouseholdSize_2,avgHouseholdSize_3,avgHouseholdSize_4, '
+                     'avgHouseholdSize_5,marriageProp,numMarriages,numDivorces,totalCareDemand, '
+                     'perCapitaCareDemand,perCapitaSocialCareDemand,perCapitaChildCareDemand, '
+                     'totalChildCareDemand,totalSocialCareDemand,shareSocialCareDemand, '
+                     'totalCareSupply,totalInformalCareSupply,totalFormalCareSupply,shareInformalCareSupply, '
+                     'totalInformalCareReceived,totalFormalCareReceived,totalCareReceived,averageCareReceived, '
+                     'averageInformalCareReceived,averageFormalCareReceived,averageCareSupplied, '
+                     'averageInformalCareSupplied,averageFormalCareSupplied,shareInformalCareReceived, '
+                     'totalUnmetCareDemand,shareUnmetCareDemand,perCapitaUnmetCareDemand,averageUnmetCareDemand, '
+                     'totalInformalSocialCareReceived,totalFormalSocialCareReceived,totalSocialCareReceived, '
+                     'averageSocialCareReceived,averageInformalSocialCareReceived,averageFormalSocialCareReceived, '
+                     'averageSocialCareSupplied,averageInformalSocialCareSupplied,averageFormalSocialCareSupplied, '
+                     'shareInformalSocialCareReceived,totalSocialCareUnmetDemand ,shareUnmetSocialCareDemand, '
+                     'perCapitaUnmetSocialCareDemand,averageUnmetSocialCareDemand,totalInformalChildCareReceived, '
+                     'totalFormalChildCareReceived,totalChildCareReceived ,averageChildCareReceived, '
+                     'averageInformalChildCareReceived,averageFormalChildCareReceived,averageChildCareSupplied, '
+                     'averageInformalChildCareSupplied,averageFormalChildCareSupplied,shareInformalChildCareReceived, '
+                     'totalChildCareUnmetDemand,shareUnmetChildCareDemand,perCapitaUnmetChildCareDemand, '
+                     'averageUnmetChildCareDemand,totalInformalCareSuppliedMale,totalInformalCareSuppliedMale_1, '
+                     'totalInformalCareSuppliedMale_2,totalInformalCareSuppliedMale_3,totalInformalCareSuppliedMale_4, '
+                     'totalInformalCareSuppliedMale_5,totalInformalCareSuppliedFemale,totalInformalCareSuppliedFemale_1, '
+                     'totalInformalCareSuppliedFemale_2,totalInformalCareSuppliedFemale_3,totalInformalCareSuppliedFemale_4, '
+                     'totalInformalCareSuppliedFemale_5,shareFemaleInformalCareSupplied,shareFemaleInformalCareSupplied_1, '
+                     'shareFemaleInformalCareSupplied_2,shareFemaleInformalCareSupplied_3,shareFemaleInformalCareSupplied_4, '
+                     'shareFemaleInformalCareSupplied_5,totalCareDemand_1,totalCareSupply_1,totalUnmetDemand_1, '
+                     'totalCareDemand_2,totalCareSupply_2,totalUnmetDemand_2,totalCareDemand_3,totalCareSupply_3, '
+                     'totalUnmetDemand_3,totalCareDemand_4,totalCareSupply_4,totalUnmetDemand_4,totalCareDemand_5, '
+                     'totalCareSupply_5,totalUnmetDemand_5,shareSocialCare_1,totalInformalSupply_1,totalFormalSupply_1, '
+                     'totalInformalCarePerRecipient_1,totalFormalCarePerRecipient_1,totalUnmetNeedPerRecipient_1, '
+                     'totalInformalCarePerCarer_1,totalFormalCarePerCarer_1,shareInformalSupply_1,shareUnmetCareDemand_1, '
+                     'perCapitaUnmetCareDemand_1,shareSocialCare_2,totalInformalSupply_2,totalFormalSupply_2,totalInformalCarePerRecipient_2, '
+                     'totalFormalCarePerRecipient_2,totalUnmetNeedPerRecipient_2,totalInformalCarePerCarer_2, '
+                     'totalFormalCarePerCarer_2,shareInformalSupply_2,shareUnmetCareDemand_2,perCapitaUnmetCareDemand_2, '
+                     'shareSocialCare_3,totalInformalSupply_3,totalFormalSupply_3,totalInformalCarePerRecipient_3,totalFormalCarePerRecipient_3, '
+                     'totalUnmetNeedPerRecipient_3,totalInformalCarePerCarer_3,totalFormalCarePerCarer_3, '
+                     'shareInformalSupply_3,shareUnmetCareDemand_3,perCapitaUnmetCareDemand_3,shareSocialCare_4,totalInformalSupply_4, '
+                     'totalFormalSupply_4,totalInformalCarePerRecipient_4,totalFormalCarePerRecipient_4, '
+                     'totalUnmetNeedPerRecipient_4,totalInformalCarePerCarer_4,totalFormalCarePerCarer_4, '
+                     'shareInformalSupply_4,shareUnmetCareDemand_4,perCapitaUnmetCareDemand_4,shareSocialCare_5,totalInformalSupply_5, '
+                     'totalFormalSupply_5,totalInformalCarePerRecipient_5,totalFormalCarePerRecipient_5, '
+                     'totalUnmetNeedPerRecipient_5,totalInformalCarePerCarer_5,totalFormalCarePerCarer_5, '
+                     'shareInformalSupply_5,shareUnmetCareDemand_5,perCapitaUnmetCareDemand_5,totalSupplyHousehold, '
+                     'totalSupplyNoK_1,totalSupplyNoK_2,totalSupplyNoK_3,totalInformalSupplyHousehold, '
+                     'totalInformalSupplyNoK_1,totalInformalSupplyNoK_2,totalInformalSupplyNoK_3,totalFormalSupplyHousehold, '
+                     'totalFormalSupplyNoK_1,totalFormalSupplyNoK_2,totalFormalSupplyNoK_3,totalEmployment, '
+                     'totalEmployment_1,totalEmployment_2,totalEmployment_3,totalEmployment_4,totalEmployment_5, '
+                     'totalJobChanges,averageIncome_M,averageIncome_F,averageIncome_1,averageIncome_1_Males, '
+                     'averageIncome_1_Females,averageIncome_2,averageIncome_2_Males,averageIncome_2_Females, '
+                     'averageIncome_3,averageIncome_3_Males,averageIncome_3_Females,averageIncome_4, '
+                     'averageIncome_4_Males,averageIncome_4_Females,averageIncome_5,averageIncome_5_Males, '
+                     'averageIncome_5_Females,numberRelocations,numJobRelocations_1,numJobRelocations_2, '
+                     'numJobRelocations_3,numJobRelocations_4,numJobRelocations_5,numMarriageRelocations, '
+                     'numSizeRelocations,numRetiredRelocations,numberTownChanges')
             
             filename = folder + '/Outputs.csv'
             if not os.path.isdir(os.path.dirname(filename)):
                 os.mkdir(os.path.dirname(filename))
-            np.savetxt('Outputs.csv', values, delimiter=',', fmt='%f', header=names, comments="")
+            np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
+            
+            # Check Values file
+            
+            values = zip(self.perCapitaHouseholdIncome, self.socialCareMapValues, self.relativeEducationCost, 
+                         self.changeJobRate, self.changeJobdIncome, self.relocationCareLoss, self.relocationCost,
+                         self.townJobAttraction, self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction,
+                         self.houseScore, self.deltaHouseOccupants)
+            
+            names = ('perCapitaHouseholdIncome, socialCareMapValues, relativeEducationCost,' 
+                     'changeJobRate, changeJobdIncome, relocationCareLoss, relocationCost,'
+                     'townJobAttraction, unemployedIncomeDiscountingFactor, relativeTownAttraction,'
+                     'houseScore, deltaHouseOccupants')
+            
+            filename = folder + '/Check_Values.csv'
+            if not os.path.isdir(os.path.dirname(filename)):
+                os.mkdir(os.path.dirname(filename))
+            np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
+            
+            
             
             # Graphic Output related code
-            
-    
+        
             if self.p['singleRunGraphs']:
                 self.doGraphs(folder)
+                
+        self.sensitivityGraphs(folder_S)
     
         if self.p['interactiveGraphics']:
             print "Entering main loop to hold graphics up there."
             self.window.mainloop()
 
         return self.totalTaxBurden[-1]
-
+    
     def initializePop(self):
         
         if self.p['loadFromFile'] == False:
@@ -803,18 +1000,19 @@ class Sim:
             a += classShares[i]*math.pow(fertilityBias, i)
         baseRate = rawRate/a
         birthProb = baseRate*math.pow(self.p['fertilityBias'], womanRank)
-        classRates = []
-        for i in range(self.p['numberClasses']):
-            birthProb = baseRate*math.pow(self.p['fertilityBias'], i)
-            fertilityCorrector = (classShares[i] - self.p['initialClassShares'][i])/self.p['initialClassShares'][i]
-            classRate = birthProb*(1/math.exp(self.p['fertilityCorrector']*fertilityCorrector))
-            classRates.append(classRate)
-        a = 0
-        for i in range(self.p['numberClasses']):
-            a += classShares[i]*classRates[i]
-        correction = rawRate/a
-        correctedClassRates = [x*correction for x in classRates]
-        return(correctedClassRates[womanRank])
+        return(birthProb)
+#        classRates = []
+#        for i in range(self.p['numberClasses']):
+#            birthProb = baseRate*math.pow(self.p['fertilityBias'], i)
+#            fertilityCorrector = (classShares[i] - self.p['initialClassShares'][i])/self.p['initialClassShares'][i]
+#            classRate = birthProb*(1/math.exp(self.p['fertilityCorrector']*fertilityCorrector))
+#            classRates.append(classRate)
+#        a = 0
+#        for i in range(self.p['numberClasses']):
+#            a += classShares[i]*classRates[i]
+#        correction = rawRate/a
+#        correctedClassRates = [x*correction for x in classRates]
+#        return(correctedClassRates[womanRank])
             
     def careNeeds(self):
         
@@ -931,9 +1129,12 @@ class Sim:
             householdIncome = self.householdIncome(household)
             householdPerCapitaIncome = householdIncome/float(len(household))
             
+            # Check time series
+            self.perCapitaHouseholdIncome.append(householdPerCapitaIncome)
+            
             # Compute the total income devoted to informal care supply
-            incomeCoefficient = math.exp(self.p['incomeCareParam']*householdPerCapitaIncome)
-            residualIncomeForCare = householdIncome*(1 - 1/incomeCoefficient)
+            incomeCoefficient = 1/math.exp(self.p['incomeCareParam']*householdPerCapitaIncome) # Min-Max: 0 - 1500
+            residualIncomeForCare = householdIncome*(1 - incomeCoefficient)
             # Assign the total informal care supply to the employed members of the household (according to income)
             for worker in employed:
                 worker.extraworkCare = self.p['employedHours']
@@ -951,7 +1152,7 @@ class Sim:
                     break
 
             # Compute the total income-based formal care supply   
-            householdEmployedFormalSupply = householdIncome*(1 - 1/incomeCoefficient)/self.p['priceSocialCare']
+            householdEmployedFormalSupply = householdIncome*(1 - incomeCoefficient)/self.p['priceSocialCare']
             householdEmployedFormalSupply = int((householdEmployedFormalSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
             # Assign the total income-based formal care supply to the employed members of the household (according to income) 
             residualSupply = householdEmployedFormalSupply
@@ -973,143 +1174,412 @@ class Sim:
             if person.visitedCarer == True:
                 continue
             
+            household = []
             if person.justMarried == None:
-                household = [x for x in person.house.occupants if x.justMarried == None]
-            else:
-                household = [x for x in person.house.occupants if x.justMarried == person.partner.id]
-                household.extend([x for x in person.partner.house.occupants if x.justMarried == person.id])
-            
-            for member in household:
-                member.visitedCarer = True
-
-            householdDemand = 0
-            householdSupply = 0
-            potentialIncome = 0
-            for member in household:
-                if member.status == 'employed' or member.status == 'retired':
-                    potentialIncome += member.income
-                elif member.status == 'unemployed':
-                    potentialIncome += self.expectedIncome(member, member.house.town)
-                    
-                householdDemand += member.hoursDemand
-                householdSupply += member.residualInformalSupply
-                householdSupply += member.residualFormalSupply
-                householdSupply += member.extraworkCare
-            potentialIncome /= float(len(household))
-            deltaHouseholdCare = householdSupply - householdDemand
-            visitedPeople = []
-            for town in self.map.towns:
-                townNetworkDemand = 0
-                townNetworkSupply = 0
-                # Kinship distance == 1 (partents and children)
-                kinshipDemand = 0
-                kinshipSupply = 0
-                kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
+                if person.independentStatus == False and (person.status == 'employed' or person.status == 'unemployed'):
+                    household = [person]
+                    household.extend([x for x in person.children if x.dead == False and x.house == person.house])
+                else:
+                    household = [x for x in person.house.occupants if x.justMarried == None]
+#            else:
+#                household = [x for x in person.house.occupants if x.justMarried == person.partner.id]
+#                household.extend([x for x in person.partner.house.occupants if x.justMarried == person.id])
+            if len(household) > 0:
                 for member in household:
-                    if member.father != None:
-                        if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
-                            kinshipDemand += member.father.hoursDemand*kinshipWeight
-                            kinshipSupply += member.father.residualInformalSupply*kinshipWeight
-                            kinshipSupply += member.father.extraworkCare*kinshipWeight
-                            visitedPeople.append(member.father)
-                        if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
-                            kinshipDemand += member.mother.hoursDemand*kinshipWeight
-                            kinshipSupply += member.mother.residualInformalSupply*kinshipWeight
-                            kinshipSupply += member.mother.extraworkCare*kinshipWeight
-                            visitedPeople.append(member.mother)
-                    for child in member.children:
+                    member.visitedCarer = True
+    
+                householdDemand = 0
+                householdSupply = 0
+                potentialIncome = 0
+                for member in household:
+                    if member.status == 'employed' or member.status == 'retired':
+                        potentialIncome += member.income
+                    elif member.status == 'unemployed':
+                        potentialIncome += self.expectedIncome(member, member.house.town)
+                        
+                    householdDemand += member.hoursDemand
+                    householdSupply += member.residualInformalSupply
+                    householdSupply += member.residualFormalSupply
+                    householdSupply += member.extraworkCare
+                potentialIncome /= float(len(household))
+                deltaHouseholdCare = householdSupply - householdDemand
+                visitedPeople = []
+                for town in self.map.towns:
+                    townNetworkDemand = 0
+                    townNetworkSupply = 0
+                    # Kinship distance == 1 (partents and children)
+                    kinshipDemand = 0
+                    kinshipSupply = 0
+                    kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
+                    for member in household:
+                        if member.father != None:
+                            if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
+                                kinshipDemand += member.father.hoursDemand*kinshipWeight
+                                kinshipSupply += member.father.residualInformalSupply*kinshipWeight
+                                kinshipSupply += member.father.extraworkCare*kinshipWeight
+                                visitedPeople.append(member.father)
+                            if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
+                                kinshipDemand += member.mother.hoursDemand*kinshipWeight
+                                kinshipSupply += member.mother.residualInformalSupply*kinshipWeight
+                                kinshipSupply += member.mother.extraworkCare*kinshipWeight
+                                visitedPeople.append(member.mother)
+                        for child in member.children:
+                            if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                                kinshipDemand += child.hoursDemand*kinshipWeight
+                                kinshipSupply += child.residualInformalSupply*kinshipWeight
+                                kinshipSupply += child.extraworkCare*kinshipWeight
+                                visitedPeople.append(child) 
+                    townNetworkDemand += kinshipDemand
+                    townNetworkSupply += kinshipSupply
+                    # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
+                    kinshipDemand = 0
+                    kinshipSupply = 0
+                    kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
+                    for member in household:
+                        if member.father != None and member.father.father != None:
+                            if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
+                                kinshipDemand += member.father.father.hoursDemand*kinshipWeight
+                                kinshipSupply += member.father.father.residualInformalSupply*kinshipWeight
+                                kinshipSupply += member.father.father.extraworkCare*kinshipWeight
+                                visitedPeople.append(member.father.father)
+                            if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
+                                kinshipDemand += member.father.mother.hoursDemand*kinshipWeight
+                                kinshipSupply += member.father.mother.residualInformalSupply*kinshipWeight
+                                kinshipSupply += member.father.mother.extraworkCare*kinshipWeight
+                                visitedPeople.append(member.father.mother)
+                            if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
+                                kinshipDemand += member.mother.father.hoursDemand*kinshipWeight
+                                kinshipSupply += member.mother.father.residualInformalSupply*kinshipWeight
+                                kinshipSupply += member.mother.father.extraworkCare*kinshipWeight
+                                visitedPeople.append(member.mother.father)
+                            if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
+                                kinshipDemand += member.mother.mother.hoursDemand*kinshipWeight
+                                kinshipSupply += member.mother.mother.residualInformalSupply*kinshipWeight
+                                kinshipSupply += member.mother.mother.extraworkCare*kinshipWeight
+                                visitedPeople.append(member.mother.mother)
+                        for child in member.children:
+                            for grandson in child.children:
+                                if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
+                                    kinshipDemand += grandson.hoursDemand*kinshipWeight
+                                    kinshipSupply += grandson.residualInformalSupply*kinshipWeight
+                                    kinshipSupply += grandson.extraworkCare*kinshipWeight
+                                    visitedPeople.append(grandson) 
+                        if member.father != None:
+                            brothers = list(set(member.father.children + member.mother.children))
+                            brothers.remove(member)
+                            for brother in brothers:
+                                if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
+                                    kinshipDemand += brother.hoursDemand*kinshipWeight
+                                    kinshipSupply += brother.residualInformalSupply*kinshipWeight
+                                    kinshipSupply += brother.extraworkCare*kinshipWeight
+                                    visitedPeople.append(brother) 
+                    townNetworkDemand += kinshipDemand
+                    townNetworkSupply += kinshipSupply
+                    # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
+                    kinshipDemand = 0
+                    kinshipSupply = 0
+                    kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
+                    for member in household:
+                        if member.father != None and member.father.father != None:
+                            maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
+                            maternalUncles.remove(member.mother)
+                            paternalUncles = list(set(member.father.father.children + member.father.mother.children))
+                            paternalUncles.remove(member.father)
+                            unclesList = list(set(maternalUncles + paternalUncles))
+                            unclesList = [x for x in unclesList if x.dead == False]
+                            for uncle in unclesList:
+                                if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
+                                    kinshipDemand += uncle.hoursDemand*kinshipWeight
+                                    kinshipSupply += uncle.residualInformalSupply*kinshipWeight
+                                    kinshipSupply += uncle.extraworkCare*kinshipWeight
+                                    visitedPeople.append(uncle)
+                        if member.father != None:
+                            brothers = list(set(member.father.children + member.mother.children))
+                            brothers = [x for x in brothers if x.dead == False]
+                            brothers.remove(member)
+                            for brother in brothers:
+                                for child in brother.children:
+                                    if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                                        kinshipDemand += child.hoursDemand*kinshipWeight
+                                        kinshipSupply += child.residualInformalSupply*kinshipWeight
+                                        kinshipSupply += child.extraworkCare*kinshipWeight
+                                        visitedPeople.append(child) 
+                    townNetworkDemand += kinshipDemand
+                    townNetworkSupply += kinshipSupply
+                    deltaNetworkCare = townNetworkDemand - townNetworkSupply
+                    if deltaHouseholdCare < 0:
+                        networkSocialCareParam = self.p['excessNeedParam']
+                    else:
+                        networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+                    
+                    # Check variable
+                    if deltaHouseholdCare*deltaNetworkCare != 0:
+                        self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
+                    # Min-Max: -5000 - 5000
+                    townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
+                    for member in household:
+                        member.socialCareMap.append(townSCI)
+                
+    def spousesCareLocation(self, person):
+        household = [person, person.partner]
+        householdDemand = 0
+        householdSupply = 0
+        potentialIncome = 0
+        for member in household:
+            if member.status == 'employed' or member.status == 'retired':
+                potentialIncome += member.income
+            elif member.status == 'unemployed':
+                potentialIncome += self.expectedIncome(member, member.house.town)
+                
+            householdDemand += member.hoursDemand
+            householdSupply += member.residualInformalSupply
+            householdSupply += member.residualFormalSupply
+            householdSupply += member.extraworkCare
+        potentialIncome /= float(len(household))
+        deltaHouseholdCare = householdSupply - householdDemand
+        visitedPeople = []
+        town = person.house.town
+        townNetworkDemand = 0
+        townNetworkSupply = 0
+        # Kinship distance == 1 (partents and children)
+        kinshipDemand = 0
+        kinshipSupply = 0
+        kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
+        for member in household:
+            if member.father != None:
+                if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
+                    kinshipDemand += member.father.hoursDemand*kinshipWeight
+                    kinshipSupply += member.father.residualInformalSupply*kinshipWeight
+                    kinshipSupply += member.father.extraworkCare*kinshipWeight
+                    visitedPeople.append(member.father)
+                if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
+                    kinshipDemand += member.mother.hoursDemand*kinshipWeight
+                    kinshipSupply += member.mother.residualInformalSupply*kinshipWeight
+                    kinshipSupply += member.mother.extraworkCare*kinshipWeight
+                    visitedPeople.append(member.mother)
+            for child in member.children:
+                if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                    kinshipDemand += child.hoursDemand*kinshipWeight
+                    kinshipSupply += child.residualInformalSupply*kinshipWeight
+                    kinshipSupply += child.extraworkCare*kinshipWeight
+                    visitedPeople.append(child) 
+        townNetworkDemand += kinshipDemand
+        townNetworkSupply += kinshipSupply
+        # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
+        kinshipDemand = 0
+        kinshipSupply = 0
+        kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
+        for member in household:
+            if member.father != None and member.father.father != None:
+                if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
+                    kinshipDemand += member.father.father.hoursDemand*kinshipWeight
+                    kinshipSupply += member.father.father.residualInformalSupply*kinshipWeight
+                    kinshipSupply += member.father.father.extraworkCare*kinshipWeight
+                    visitedPeople.append(member.father.father)
+                if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
+                    kinshipDemand += member.father.mother.hoursDemand*kinshipWeight
+                    kinshipSupply += member.father.mother.residualInformalSupply*kinshipWeight
+                    kinshipSupply += member.father.mother.extraworkCare*kinshipWeight
+                    visitedPeople.append(member.father.mother)
+                if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
+                    kinshipDemand += member.mother.father.hoursDemand*kinshipWeight
+                    kinshipSupply += member.mother.father.residualInformalSupply*kinshipWeight
+                    kinshipSupply += member.mother.father.extraworkCare*kinshipWeight
+                    visitedPeople.append(member.mother.father)
+                if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
+                    kinshipDemand += member.mother.mother.hoursDemand*kinshipWeight
+                    kinshipSupply += member.mother.mother.residualInformalSupply*kinshipWeight
+                    kinshipSupply += member.mother.mother.extraworkCare*kinshipWeight
+                    visitedPeople.append(member.mother.mother)
+            for child in member.children:
+                for grandson in child.children:
+                    if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
+                        kinshipDemand += grandson.hoursDemand*kinshipWeight
+                        kinshipSupply += grandson.residualInformalSupply*kinshipWeight
+                        kinshipSupply += grandson.extraworkCare*kinshipWeight
+                        visitedPeople.append(grandson) 
+            if member.father != None:
+                brothers = list(set(member.father.children + member.mother.children))
+                brothers.remove(member)
+                for brother in brothers:
+                    if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
+                        kinshipDemand += brother.hoursDemand*kinshipWeight
+                        kinshipSupply += brother.residualInformalSupply*kinshipWeight
+                        kinshipSupply += brother.extraworkCare*kinshipWeight
+                        visitedPeople.append(brother) 
+        townNetworkDemand += kinshipDemand
+        townNetworkSupply += kinshipSupply
+        # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
+        kinshipDemand = 0
+        kinshipSupply = 0
+        kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
+        for member in household:
+            if member.father != None and member.father.father != None:
+                maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
+                maternalUncles.remove(member.mother)
+                paternalUncles = list(set(member.father.father.children + member.father.mother.children))
+                paternalUncles.remove(member.father)
+                unclesList = list(set(maternalUncles + paternalUncles))
+                unclesList = [x for x in unclesList if x.dead == False]
+                for uncle in unclesList:
+                    if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
+                        kinshipDemand += uncle.hoursDemand*kinshipWeight
+                        kinshipSupply += uncle.residualInformalSupply*kinshipWeight
+                        kinshipSupply += uncle.extraworkCare*kinshipWeight
+                        visitedPeople.append(uncle)
+            if member.father != None:
+                brothers = list(set(member.father.children + member.mother.children))
+                brothers = [x for x in brothers if x.dead == False]
+                brothers.remove(member)
+                for brother in brothers:
+                    for child in brother.children:
                         if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
                             kinshipDemand += child.hoursDemand*kinshipWeight
                             kinshipSupply += child.residualInformalSupply*kinshipWeight
                             kinshipSupply += child.extraworkCare*kinshipWeight
                             visitedPeople.append(child) 
-                townNetworkDemand += kinshipDemand
-                townNetworkSupply += kinshipSupply
-                # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
-                kinshipDemand = 0
-                kinshipSupply = 0
-                kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
-                for member in household:
-                    if member.father != None and member.father.father != None:
-                        if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
-                            kinshipDemand += member.father.father.hoursDemand*kinshipWeight
-                            kinshipSupply += member.father.father.residualInformalSupply*kinshipWeight
-                            kinshipSupply += member.father.father.extraworkCare*kinshipWeight
-                            visitedPeople.append(member.father.father)
-                        if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
-                            kinshipDemand += member.father.mother.hoursDemand*kinshipWeight
-                            kinshipSupply += member.father.mother.residualInformalSupply*kinshipWeight
-                            kinshipSupply += member.father.mother.extraworkCare*kinshipWeight
-                            visitedPeople.append(member.father.mother)
-                        if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
-                            kinshipDemand += member.mother.father.hoursDemand*kinshipWeight
-                            kinshipSupply += member.mother.father.residualInformalSupply*kinshipWeight
-                            kinshipSupply += member.mother.father.extraworkCare*kinshipWeight
-                            visitedPeople.append(member.mother.father)
-                        if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
-                            kinshipDemand += member.mother.mother.hoursDemand*kinshipWeight
-                            kinshipSupply += member.mother.mother.residualInformalSupply*kinshipWeight
-                            kinshipSupply += member.mother.mother.extraworkCare*kinshipWeight
-                            visitedPeople.append(member.mother.mother)
-                    for child in member.children:
-                        for grandson in child.children:
-                            if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
-                                kinshipDemand += grandson.hoursDemand*kinshipWeight
-                                kinshipSupply += grandson.residualInformalSupply*kinshipWeight
-                                kinshipSupply += grandson.extraworkCare*kinshipWeight
-                                visitedPeople.append(grandson) 
-                    if member.father != None:
-                        brothers = list(set(member.father.children + member.mother.children))
-                        brothers.remove(member)
-                        for brother in brothers:
-                            if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
-                                kinshipDemand += brother.hoursDemand*kinshipWeight
-                                kinshipSupply += brother.residualInformalSupply*kinshipWeight
-                                kinshipSupply += brother.extraworkCare*kinshipWeight
-                                visitedPeople.append(brother) 
-                townNetworkDemand += kinshipDemand
-                townNetworkSupply += kinshipSupply
-                # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
-                kinshipDemand = 0
-                kinshipSupply = 0
-                kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
-                for member in household:
-                    if member.father != None and member.father.father != None:
-                        maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
-                        maternalUncles.remove(member.mother)
-                        paternalUncles = list(set(member.father.father.children + member.father.mother.children))
-                        paternalUncles.remove(member.father)
-                        unclesList = list(set(maternalUncles + paternalUncles))
-                        unclesList = [x for x in unclesList if x.dead == False]
-                        for uncle in unclesList:
-                            if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
-                                kinshipDemand += uncle.hoursDemand*kinshipWeight
-                                kinshipSupply += uncle.residualInformalSupply*kinshipWeight
-                                kinshipSupply += uncle.extraworkCare*kinshipWeight
-                                visitedPeople.append(uncle)
-                    if member.father != None:
-                        brothers = list(set(member.father.children + member.mother.children))
-                        brothers = [x for x in brothers if x.dead == False]
-                        brothers.remove(member)
-                        for brother in brothers:
-                            for child in brother.children:
-                                if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
-                                    kinshipDemand += child.hoursDemand*kinshipWeight
-                                    kinshipSupply += child.residualInformalSupply*kinshipWeight
-                                    kinshipSupply += child.extraworkCare*kinshipWeight
-                                    visitedPeople.append(child) 
-                townNetworkDemand += kinshipDemand
-                townNetworkSupply += kinshipSupply
-                deltaNetworkCare = townNetworkDemand - townNetworkSupply
-                if deltaHouseholdCare < 0:
-                    networkSocialCareParam = self.p['excessNeedParam']
-                else:
-                    networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
-                townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
-                for member in household:
-                    member.socialCareMap.append(townSCI)
+        townNetworkDemand += kinshipDemand
+        townNetworkSupply += kinshipSupply
+        deltaNetworkCare = townNetworkDemand - townNetworkSupply
+        if deltaHouseholdCare < 0:
+            networkSocialCareParam = self.p['excessNeedParam']
+        else:
+            networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+        townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare)
+        return(townSCI)
+
+    def spousesSocialCareMap(self, person):
+        household = [x for x in person.house.occupants]
+        householdDemand = 0
+        householdSupply = 0
+        potentialIncome = 0
+        for member in household:
+            if member.status == 'employed' or member.status == 'retired':
+                potentialIncome += member.income
+            elif member.status == 'unemployed':
+                potentialIncome += self.expectedIncome(member, member.house.town)
                 
-                    
+            householdDemand += member.hoursDemand
+            householdSupply += member.residualInformalSupply
+            householdSupply += member.residualFormalSupply
+            householdSupply += member.extraworkCare
+        potentialIncome /= float(len(household))
+        deltaHouseholdCare = householdSupply - householdDemand
+        visitedPeople = []
+        for town in self.map.towns:
+            townNetworkDemand = 0
+            townNetworkSupply = 0
+            # Kinship distance == 1 (partents and children)
+            kinshipDemand = 0
+            kinshipSupply = 0
+            kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
+            for member in household:
+                if member.father != None:
+                    if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
+                        kinshipDemand += member.father.hoursDemand*kinshipWeight
+                        kinshipSupply += member.father.residualInformalSupply*kinshipWeight
+                        kinshipSupply += member.father.extraworkCare*kinshipWeight
+                        visitedPeople.append(member.father)
+                    if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
+                        kinshipDemand += member.mother.hoursDemand*kinshipWeight
+                        kinshipSupply += member.mother.residualInformalSupply*kinshipWeight
+                        kinshipSupply += member.mother.extraworkCare*kinshipWeight
+                        visitedPeople.append(member.mother)
+                for child in member.children:
+                    if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                        kinshipDemand += child.hoursDemand*kinshipWeight
+                        kinshipSupply += child.residualInformalSupply*kinshipWeight
+                        kinshipSupply += child.extraworkCare*kinshipWeight
+                        visitedPeople.append(child) 
+            townNetworkDemand += kinshipDemand
+            townNetworkSupply += kinshipSupply
+            # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
+            kinshipDemand = 0
+            kinshipSupply = 0
+            kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
+            for member in household:
+                if member.father != None and member.father.father != None:
+                    if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
+                        kinshipDemand += member.father.father.hoursDemand*kinshipWeight
+                        kinshipSupply += member.father.father.residualInformalSupply*kinshipWeight
+                        kinshipSupply += member.father.father.extraworkCare*kinshipWeight
+                        visitedPeople.append(member.father.father)
+                    if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
+                        kinshipDemand += member.father.mother.hoursDemand*kinshipWeight
+                        kinshipSupply += member.father.mother.residualInformalSupply*kinshipWeight
+                        kinshipSupply += member.father.mother.extraworkCare*kinshipWeight
+                        visitedPeople.append(member.father.mother)
+                    if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
+                        kinshipDemand += member.mother.father.hoursDemand*kinshipWeight
+                        kinshipSupply += member.mother.father.residualInformalSupply*kinshipWeight
+                        kinshipSupply += member.mother.father.extraworkCare*kinshipWeight
+                        visitedPeople.append(member.mother.father)
+                    if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
+                        kinshipDemand += member.mother.mother.hoursDemand*kinshipWeight
+                        kinshipSupply += member.mother.mother.residualInformalSupply*kinshipWeight
+                        kinshipSupply += member.mother.mother.extraworkCare*kinshipWeight
+                        visitedPeople.append(member.mother.mother)
+                for child in member.children:
+                    for grandson in child.children:
+                        if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
+                            kinshipDemand += grandson.hoursDemand*kinshipWeight
+                            kinshipSupply += grandson.residualInformalSupply*kinshipWeight
+                            kinshipSupply += grandson.extraworkCare*kinshipWeight
+                            visitedPeople.append(grandson) 
+                if member.father != None:
+                    brothers = list(set(member.father.children + member.mother.children))
+                    brothers.remove(member)
+                    for brother in brothers:
+                        if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
+                            kinshipDemand += brother.hoursDemand*kinshipWeight
+                            kinshipSupply += brother.residualInformalSupply*kinshipWeight
+                            kinshipSupply += brother.extraworkCare*kinshipWeight
+                            visitedPeople.append(brother) 
+            townNetworkDemand += kinshipDemand
+            townNetworkSupply += kinshipSupply
+            # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
+            kinshipDemand = 0
+            kinshipSupply = 0
+            kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
+            for member in household:
+                if member.father != None and member.father.father != None:
+                    maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
+                    maternalUncles.remove(member.mother)
+                    paternalUncles = list(set(member.father.father.children + member.father.mother.children))
+                    paternalUncles.remove(member.father)
+                    unclesList = list(set(maternalUncles + paternalUncles))
+                    unclesList = [x for x in unclesList if x.dead == False]
+                    for uncle in unclesList:
+                        if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
+                            kinshipDemand += uncle.hoursDemand*kinshipWeight
+                            kinshipSupply += uncle.residualInformalSupply*kinshipWeight
+                            kinshipSupply += uncle.extraworkCare*kinshipWeight
+                            visitedPeople.append(uncle)
+                if member.father != None:
+                    brothers = list(set(member.father.children + member.mother.children))
+                    brothers = [x for x in brothers if x.dead == False]
+                    brothers.remove(member)
+                    for brother in brothers:
+                        for child in brother.children:
+                            if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
+                                kinshipDemand += child.hoursDemand*kinshipWeight
+                                kinshipSupply += child.residualInformalSupply*kinshipWeight
+                                kinshipSupply += child.extraworkCare*kinshipWeight
+                                visitedPeople.append(child) 
+            townNetworkDemand += kinshipDemand
+            townNetworkSupply += kinshipSupply
+            deltaNetworkCare = townNetworkDemand - townNetworkSupply
+            if deltaHouseholdCare < 0:
+                networkSocialCareParam = self.p['excessNeedParam']
+            else:
+                networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+            townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
+            
+            for member in household:
+                member.socialCareMap.append(townSCI)
+        
+
+         
     def allocateCare(self):
         
         careReceivers = [x for x in self.pop.livingPeople if x.hoursDemand > 0 and x.age > 0]
@@ -1121,7 +1591,13 @@ class Sim:
         
         residualReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0 and x.totalSupply > 0]
         while len(residualReceivers) > 0:
-            careList = [x.residualNeed for x in residualReceivers]
+            careList = []
+            for x in residualReceivers:
+                if x.age < 16:
+                    needWeight = x.residualNeed
+                else:
+                    needWeight = x.residualNeed*self.p['socialCareWeightBias']
+                careList.append(needWeight)
             probReceivers = [i/sum(careList) for i in careList]
             receiver = np.random.choice(residualReceivers, p = probReceivers)
             self.getCare(receiver)
@@ -1225,7 +1701,7 @@ class Sim:
                 networkList.append(j)
         for carer in networkList:
             townCarer = carer.house.town
-            household = carer.house.occupants
+            household = [x for x in carer.house.occupants]
             householdCarers = [x for x in household if x.hoursDemand == 0]
             notWorking = [x for x in householdCarers if x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
             employed = [x for x in householdCarers if x.status == 'employed']
@@ -1546,7 +2022,11 @@ class Sim:
                 forgoneSalary = self.p['incomeInitialLevels'][stage]*self.p['weeklyHours']
                 educationCosts = self.p['educationCosts'][stage]
                 relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
-                incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost)
+                
+                # Check variable
+                self.relativeEducationCost.append(relCost) 
+                
+                incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost) # Min-Max: 0 - 10
                 targetEL = max(person.father.classRank, person.mother.classRank)
                 dE = targetEL - stage
                 expEdu = math.exp(self.p['eduRankSensitivity']*dE)
@@ -1650,7 +2130,11 @@ class Sim:
                     geoDistance = self.manhattanDistance(manTown, womanTown)/float(self.p['mapGridXDimension'] + self.p['mapGridYDimension'])
                     geoFactor = 1/math.exp(self.p['betaGeoExp']*geoDistance)
                     statusDistance = float(abs(man.classRank-woman.classRank))/float((self.p['numberClasses']-1))
-                    socFactor = 1/math.exp(self.p['betaSocExp']*statusDistance)
+                    if man.classRank < woman.classRank:
+                        betaExponent = self.p['betaSocExp']
+                    else:
+                        betaExponent = self.p['betaSocExp']*self.p['rankGenderBias']
+                    socFactor = 1/math.exp(betaExponent*statusDistance)
                     ageFactor = self.p['deltageProb'][self.deltaAge(man.age-woman.age)]
                     marriageProb = geoFactor*socFactor*ageFactor
                     bridesWeights.append(marriageProb)
@@ -1854,6 +2338,8 @@ class Sim:
                     
                     jobMobilityRate = (self.p['jobMobilitySlope']/unemploymentRate + self.p['jobMobilityIntercept'])*self.p['ageBiasParam'][a]
                     
+                    self.changeJobRate.append(jobMobilityRate)
+                    
                     if jobMobilityRate > 0.85:
                         jobMobilityRate = 0.85
 
@@ -1892,8 +2378,13 @@ class Sim:
                                     newHouseholdIncome += person.partner.income
                                     
                             deltaIncome = newHouseholdIncome - householdStatusQuo
-                            deltaIncomeFactor = math.exp(self.p['deltaIncomeExp']*deltaIncome)
-                            careLossFactor = 1/math.exp(self.p['relocationCareLossExp']*relocationNetLoss)
+                            
+                            # Check variables
+                            self.changeJobdIncome.append(deltaIncome)
+                            self.relocationCareLoss.append(relocationNetLoss)
+                            
+                            deltaIncomeFactor = math.exp(self.p['deltaIncomeExp']*deltaIncome) # Min-Max: -100 - 100
+                            careLossFactor = 1/math.exp(self.p['relocationCareLossExp']*relocationNetLoss) # Min-Max: 0 - 10
                             changeWeight = deltaIncomeFactor*careLossFactor
                             changeWeights.append(changeWeight)
                             person.searchJob = False
@@ -1993,9 +2484,17 @@ class Sim:
         income = marketWage*self.p['weeklyHours']
         townIndex = self.map.towns.index(town)
         townJobDensity = self.jobMarketMap[person.classRank][townIndex]
-        townFactor = math.exp(self.p['incomeDiscountingExponent']*(townJobDensity + self.p['incomeDiscountingParam']))
-        discountingFactor = 1 - person.unemploymentRate/townFactor
-        expIncome = income*discountingFactor
+        
+        # Check variable
+        self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.001 - 0.1
+        
+        townFactor = math.exp(self.p['incomeDiscountingExponent']*townJobDensity) # + self.p['incomeDiscountingParam']))
+        discountingFactor = person.unemploymentRate/townFactor
+        
+        # Check variable
+        self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.99 - 0.999
+        
+        expIncome = income*math.exp(-1*person.unemploymentRate/townFactor)#discountingFactor
         return (expIncome)
         
     def statusQuo(self, agent):
@@ -2027,25 +2526,16 @@ class Sim:
         unemploymentRate = lowerAgeBandRate*ageBias[ageBand]
         return (unemploymentRate)
     
-    def computeRelocationsCostSpouses(self, agent):
-        rcA = math.pow(float(agent.yearsInTown), self.p['yearsInTownSensitivityParam'])
-        children = [x for x in agent.children if x.dead == False and x.house == agent.house]
+    def computeTownSocialAttraction(self, agent):
+        rcA = math.pow(float(agent.partner.yearsInTown), self.p['yearsInTownSensitivityParam'])
+        children = [x for x in agent.partner.children if x.dead == False and x.house == agent.partner.house]
         for child in children:
             rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
         rcA *= self.p['relocationCostParam']
-        
-        socialAttractions = []
-        index = 0
-        for town in self.map.towns:
-            if town == agent.house.town:
-                socialAttraction = agent.socialCareMap[index]
-            else:
-                socialAttraction = agent.socialCareMap[index] - rcA
-            attractionFactor = math.exp(self.p['propensityRelocationParam']*socialAttraction)
-            relativeAttraction = attractionFactor/(attractionFactor + 1)    
-            socialAttractions.append(relativeAttraction)
-            index += 1
-        return (socialAttractions)
+        socialAttraction = self.spousesCareLocation(agent) - rcA
+        attractionFactor = math.exp(self.p['propensityRelocationParam']*socialAttraction)
+        relativeAttraction = attractionFactor/(attractionFactor + 1)
+        return (relativeAttraction)
     
     def computeRelocationsCost(self, agent):
         rcA = math.pow(float(agent.yearsInTown), self.p['yearsInTownSensitivityParam'])
@@ -2060,13 +2550,17 @@ class Sim:
             children = list(set(childrenAgent+childrenPartner))
             for child in children:
                 rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
+        
+        # Check variable
+        self.relocationCost.append(rcA)  # Min-Max: 0 - 10
+        
         rcA *= self.p['relocationCostParam']
 
         townAttractions = []
         index = 0
         for town in self.map.towns:
             if town == agent.house.town:
-                townAttraction = agent.socialCareMap[index]
+                townAttraction = agent.socialCareMap[index] # Min-Max: -5000 - 5000 (*networkSocialCareParam)
             else:
                 townAttraction = agent.socialCareMap[index] - rcA
             townAttractions.append(townAttraction)
@@ -2086,8 +2580,12 @@ class Sim:
         index = 0
         for town in self.map.towns:
             relativeAttraction = relocationCost[index]/perCapitaIncome
+            
+            # Check variable
+            self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.05 - 0
+            
             attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
-            rp = attractionFactor/(attractionFactor + 1.0)
+            rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
             propensities.append(rp)
             index += 1
         return(propensities)
@@ -2106,8 +2604,9 @@ class Sim:
         a.jobTenure = 0
         a.searchJob = False
         if a.independentStatus == False:
-            self.findNewHouse([a], a.newTown)
-            a.independentStatus = True
+            if a.jobLocation != a.house.town:
+                self.findNewHouse([a], a.newTown)
+                a.independentStatus = True
                     
     def leaveJob(self, person):
             self.exitWork += 1
@@ -2250,8 +2749,17 @@ class Sim:
                         print(member.dead)
                         
                 self.totalRelocations += 1 
-                self.jobRelocations += 1 
-                
+                classRank = max([x.classRank for x in peopleToMove])
+                if classRank == 0:
+                    self.jobRelocations_1 += 1 
+                if classRank == 1:
+                    self.jobRelocations_2 += 1 
+                if classRank == 2:
+                    self.jobRelocations_3 += 1 
+                if classRank == 3:
+                    self.jobRelocations_4 += 1 
+                if classRank == 4:
+                    self.jobRelocations_5 += 1 
                 
                 self.findNewHouse(peopleToMove, person.jobLocation)
                 
@@ -2266,20 +2774,20 @@ class Sim:
 
                 #person.movedThisYear = True
                 #person.partner.movedThisYear = True
-
-                relocationCost = self.computeRelocationsCostSpouses(person)
-                personTownIndex = self.map.towns.index(person.house.town)
-                personTownAttraction = relocationCost[personTownIndex]
-                relocationCost = self.computeRelocationsCostSpouses(person.partner)
-                partnerTownIndex = self.map.towns.index(person.partner.house.town)
-                partnerTownAttraction = relocationCost[partnerTownIndex]
+                if person.house.town != person.partner.house.town:
+                    personTownAttraction = self.computeTownSocialAttraction(person)
+                    partnerTownAttraction = self.computeTownSocialAttraction(person.partner)
+                else:
+                    personTownAttraction = 1.0
+                    partnerTownAttraction = 1.0
                 
                 # 1st case: both partners living with parents.
                 # Find a new home near the highest earning partner
+                check = 0
                 if person.independentStatus + person.partner.independentStatus == 0:
-                    print('Warning: they should not be married')
-                    # person.independentStatus = True
-                    # person.partner.independentStatus = True
+                    check = 1
+                    person.independentStatus = True
+                    person.partner.independentStatus = True
                     if person.income*personTownAttraction > person.partner.income*partnerTownAttraction:
                         peopleToMove = [person, person.partner]
                         destination = person.house.town
@@ -2302,6 +2810,7 @@ class Sim:
                     person.independentStatus = True
                     person.partner.independentStatus = True
                     self.findNewHouse(peopleToMove, destination)
+                    self.spousesSocialCareMap(person)
                     continue
                 
                 # 2nd case: one living alone and the other living with parents
@@ -2311,8 +2820,11 @@ class Sim:
                 #                        near other partner.
                 
                 
-                if ( person.independentStatus + person.partner.independentStatus == 1):
-                    
+                elif person.independentStatus + person.partner.independentStatus == 1:
+                    if check == 1:
+                        print('Error: couple already joined')
+                    else:
+                        check = 1
                     if ( person.independentStatus == True and person.partner.independentStatus == False):
                         
                         # person.partner.independentStatus = True
@@ -2330,7 +2842,7 @@ class Sim:
                     childrenWithPartner = self.kidsWithPartner(a)
                     childrenWithPerson = self.kidsWithPerson(a)
                     
-                    if ( a.house.town == b.house.town ):
+                    if a.house.town == b.house.town:
                         newOcc = 1 + len(childrenWithPartner)
                         oldOcc = len(a.house.occupants)
                         pReloc = self.relocationProb(newOcc, oldOcc, a.house.initialOccupants)
@@ -2356,6 +2868,7 @@ class Sim:
                             self.marriageRelocations += 1
                             b.independentStatus = True
                             self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
+                            self.spousesSocialCareMap(a)
                             continue
                         
                         else:
@@ -2371,6 +2884,7 @@ class Sim:
                             self.marriageRelocations += 1
                             b.independentStatus = True
                             self.findNewHouse(peopleToMove, destination)
+                            self.spousesSocialCareMap(a)
                             continue
                     else:
                         if a.income*aTownCare > b.income*bTownCare:
@@ -2401,6 +2915,7 @@ class Sim:
                                 self.marriageRelocations += 1   
                                 b.independentStatus = True
                                 self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
+                                self.spousesSocialCareMap(a)
                                 continue   
                             else:
                                 destination = a.house.town
@@ -2418,6 +2933,7 @@ class Sim:
                                 self.marriageRelocations += 1
                                 b.independentStatus = True
                                 self.findNewHouse(peopleToMove, destination)
+                                self.spousesSocialCareMap(a)
                                 continue
                         else:
                             destination = b.house.town
@@ -2435,12 +2951,16 @@ class Sim:
                             self.marriageRelocations += 1
                             b.independentStatus = True
                             self.findNewHouse(peopleToMove, destination)
+                            self.spousesSocialCareMap(a)
                             continue
                         
                 # 3rd case: both living alone
                 
-                if ( person.independentStatus + person.partner.independentStatus == 2):
-                    
+                elif person.independentStatus + person.partner.independentStatus == 2:
+                    if check == 1:
+                        print('Error: couple already joined')
+                    else:
+                        check = 1
                     childrenWithPartner = self.kidsWithPartner(person)
                     childrenWithPerson = self.kidsWithPerson(person)
                     
@@ -2484,6 +3004,7 @@ class Sim:
                                 self.marriageRelocations += 1
                                 
                                 self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
+                                self.spousesSocialCareMap(a)
                                 continue    
                         else:
                                 peopleToMove = [a, b]
@@ -2498,6 +3019,7 @@ class Sim:
                                 self.marriageRelocations += 1
                                 
                                 self.findNewHouse(peopleToMove, a.house.town)
+                                self.spousesSocialCareMap(a)
                                 continue
                     # If different town: move into house of higher income partner
                     else:
@@ -2541,6 +3063,7 @@ class Sim:
                             self.marriageRelocations += 1
                             
                             self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove)
+                            self.spousesSocialCareMap(a)
                             continue        
                         else:
                             peopleToMove = [a, b]
@@ -2557,6 +3080,7 @@ class Sim:
                             self.marriageRelocations += 1
                     
                             self.findNewHouse(peopleToMove, a.house.town)
+                            self.spousesSocialCareMap(a)
                             continue
                 
                 
@@ -2702,11 +3226,15 @@ class Sim:
                 if len(x.occupants) == 0:
                     continue
                 if x.occupants[0].classRank == classRank:
-                    count += 1/math.pow(self.manhattanDistance(h, x), self.p['geoDistanceSensitivityParam'])
+                    count += self.p['classAffinityWeight']/math.pow(self.manhattanDistance(h, x), self.p['geoDistanceSensitivityParam'])
                 else:
                     socialDistance = math.pow(abs(x.occupants[0].classRank-classRank), self.p['socDistanceSensitivityParam'])
                     count -= socialDistance/math.pow(self.manhattanDistance(h, x), self.p['geoDistanceSensitivityParam'])
                 # Softmax function
+                
+            # Check variable
+            self.houseScore.append(count) # Min-Max: -10 - 1
+            
             socialDesirability.append(math.exp(self.p['distanceSensitivityParam']*count))
         denProb = sum(socialDesirability)
         if sum(socialDesirability) == 0:
@@ -2787,45 +3315,58 @@ class Sim:
         self.pops.append(currentPop)
         unskilled = [x for x in self.pop.livingPeople if x.classRank == 0]
         print(float(len(unskilled))/currentPop)
-        self.unskilledPop.append(len(unskilled)/currentPop)
+        self.unskilledPop.append(len(unskilled))
         skilled = [x for x in self.pop.livingPeople if x.classRank == 1]
         print(float(len(skilled))/currentPop)
-        self.skilledPop.append(len(skilled)/currentPop)
+        self.skilledPop.append(len(skilled))
         lowerclass = [x for x in self.pop.livingPeople if x.classRank == 2]
         print(float(len(lowerclass))/currentPop)
-        self.lowerclassPop.append(len(lowerclass)/currentPop)
+        self.lowerclassPop.append(len(lowerclass))
         middelclass = [x for x in self.pop.livingPeople if x.classRank == 3]
         print(float(len(middelclass))/currentPop)
-        self.middleclassPop.append(len(middelclass)/currentPop)
+        self.middleclassPop.append(len(middelclass))
         upperclass = [x for x in self.pop.livingPeople if x.classRank == 4]
         print(float(len(upperclass))/currentPop)
-        self.upperclassPop.append(len(upperclass)/currentPop)
+        self.upperclassPop.append(len(upperclass))
         
+        tally_1to1 = 0
         tally_1to2 = 0
         tally_1to3 = 0
         tally_1to4 = 0
         tally_1to5 = 0
         tally_2to1 = 0
+        tally_2to2 = 0
         tally_2to3 = 0
         tally_2to4 = 0
         tally_2to5 = 0
         tally_3to1 = 0
         tally_3to2 = 0
+        tally_3to3 = 0
         tally_3to4 = 0
         tally_3to5 = 0
         tally_4to1 = 0
         tally_4to2 = 0
         tally_4to3 = 0
+        tally_4to4 = 0
         tally_4to5 = 0
         tally_5to1 = 0
         tally_5to2 = 0
         tally_5to3 = 0
         tally_5to4 = 0
+        tally_5to5 = 0
         
         workingPop = [x for x in self.pop.livingPeople if x.age == 24]
+        classRank_1 = [x for x in self.pop.livingPeople if x.age == 24 and x.classRank == 0]
+        classRank_2 = [x for x in self.pop.livingPeople if x.age == 24 and x.classRank == 1]
+        classRank_3 = [x for x in self.pop.livingPeople if x.age == 24 and x.classRank == 2]
+        classRank_4 = [x for x in self.pop.livingPeople if x.age == 24 and x.classRank == 3]
+        classRank_5 = [x for x in self.pop.livingPeople if x.age == 24 and x.classRank == 4]
+        
         for person in workingPop:
             if person.father != None:
                 
+                if person.classRank == 0 and person.father.classRank == 0:
+                    tally_1to1 += 1
                 if person.classRank == 1 and person.father.classRank == 0:
                     tally_1to2 += 1
                 if person.classRank == 2 and person.father.classRank == 0:
@@ -2837,6 +3378,8 @@ class Sim:
                     
                 if person.classRank == 0 and person.father.classRank == 1:
                     tally_2to1 += 1
+                if person.classRank == 1 and person.father.classRank == 1:
+                    tally_2to2 += 1
                 if person.classRank == 2 and person.father.classRank == 1:
                     tally_2to3 += 1
                 if person.classRank == 3 and person.father.classRank == 1:
@@ -2848,6 +3391,8 @@ class Sim:
                     tally_3to1 += 1
                 if person.classRank == 1 and person.father.classRank == 2:
                     tally_3to2 += 1
+                if person.classRank == 2 and person.father.classRank == 2:
+                    tally_3to3 += 1
                 if person.classRank == 3 and person.father.classRank == 2:
                     tally_3to4 += 1 
                 if person.classRank == 4 and person.father.classRank == 2:
@@ -2859,6 +3404,8 @@ class Sim:
                     tally_4to2 += 1
                 if person.classRank == 2 and person.father.classRank == 3:
                     tally_4to3 += 1
+                if person.classRank == 3 and person.father.classRank == 3:
+                    tally_4to4 += 1
                 if person.classRank == 4 and person.father.classRank == 3:
                     tally_4to5 += 1
                     
@@ -2870,29 +3417,73 @@ class Sim:
                     tally_5to3 += 1
                 if person.classRank == 3 and person.father.classRank == 4:
                     tally_5to4 += 1
-                    
-        self.socialMobility_1to2.append(tally_1to2)
-        self.socialMobility_1to3.append(tally_1to3)
-        self.socialMobility_1to4.append(tally_1to4)
-        self.socialMobility_1to5.append(tally_1to5)
-        self.socialMobility_2to1.append(tally_2to1)
-        self.socialMobility_2to3.append(tally_2to3)
-        self.socialMobility_2to4.append(tally_2to4)
-        self.socialMobility_2to5.append(tally_2to5)
-        self.socialMobility_3to1.append(tally_3to1)
-        self.socialMobility_3to2.append(tally_3to2)
-        self.socialMobility_3to4.append(tally_3to4)
-        self.socialMobility_3to5.append(tally_3to5)
-        self.socialMobility_4to1.append(tally_4to1)
-        self.socialMobility_4to2.append(tally_4to2)
-        self.socialMobility_4to3.append(tally_4to3)
-        self.socialMobility_4to5.append(tally_4to5)
-        self.socialMobility_5to1.append(tally_5to1)
-        self.socialMobility_5to2.append(tally_5to2)
-        self.socialMobility_5to3.append(tally_5to3)
-        self.socialMobility_5to4.append(tally_5to4)
+                if person.classRank == 4 and person.father.classRank == 4:
+                    tally_5to5 += 1
         
+        if len(classRank_1) > 0:
+            self.socialMobility_1to1.append(tally_1to1/len(classRank_1))
+            self.socialMobility_1to2.append(tally_1to2/len(classRank_1))
+            self.socialMobility_1to3.append(tally_1to3/len(classRank_1))
+            self.socialMobility_1to4.append(tally_1to4/len(classRank_1))
+            self.socialMobility_1to5.append(tally_1to5/len(classRank_1))
+        else:
+            self.socialMobility_1to1.append(0)
+            self.socialMobility_1to2.append(0)
+            self.socialMobility_1to3.append(0)
+            self.socialMobility_1to4.append(0)
+            self.socialMobility_1to5.append(0)
+            
+        if len(classRank_2) > 0:
+            self.socialMobility_2to1.append(tally_2to1/len(classRank_2))
+            self.socialMobility_2to2.append(tally_2to2/len(classRank_2))
+            self.socialMobility_2to3.append(tally_2to3/len(classRank_2))
+            self.socialMobility_2to4.append(tally_2to4/len(classRank_2))
+            self.socialMobility_2to5.append(tally_2to5/len(classRank_2))
+        else:
+            self.socialMobility_2to1.append(0)
+            self.socialMobility_2to2.append(0)
+            self.socialMobility_2to3.append(0)
+            self.socialMobility_2to4.append(0)
+            self.socialMobility_2to5.append(0)
+            
+        if len(classRank_3) > 0:
+            self.socialMobility_3to1.append(tally_3to1/len(classRank_3))
+            self.socialMobility_3to2.append(tally_3to2/len(classRank_3))
+            self.socialMobility_3to3.append(tally_3to3/len(classRank_3))
+            self.socialMobility_3to4.append(tally_3to4/len(classRank_3))
+            self.socialMobility_3to5.append(tally_3to5/len(classRank_3))
+        else:
+            self.socialMobility_3to1.append(0)
+            self.socialMobility_3to2.append(0)
+            self.socialMobility_3to3.append(0)
+            self.socialMobility_3to4.append(0)
+            self.socialMobility_3to5.append(0)
         
+        if len(classRank_4) > 0:
+            self.socialMobility_4to1.append(tally_4to1/len(classRank_4))
+            self.socialMobility_4to2.append(tally_4to2/len(classRank_4))
+            self.socialMobility_4to3.append(tally_4to3/len(classRank_4))
+            self.socialMobility_4to4.append(tally_4to4/len(classRank_4))
+            self.socialMobility_4to5.append(tally_4to5/len(classRank_4))
+        else:
+            self.socialMobility_4to1.append(0)
+            self.socialMobility_4to2.append(0)
+            self.socialMobility_4to3.append(0)
+            self.socialMobility_4to4.append(0)
+            self.socialMobility_4to5.append(0)
+            
+        if len(classRank_5) > 0:
+            self.socialMobility_5to1.append(tally_5to1/len(classRank_5))
+            self.socialMobility_5to2.append(tally_5to2/len(classRank_5))
+            self.socialMobility_5to3.append(tally_5to3/len(classRank_5))
+            self.socialMobility_5to4.append(tally_5to4/len(classRank_5))
+            self.socialMobility_5to5.append(tally_5to5/len(classRank_5))
+        else:
+            self.socialMobility_5to1.append(0)
+            self.socialMobility_5to2.append(0)
+            self.socialMobility_5to3.append(0)
+            self.socialMobility_5to4.append(0)
+            self.socialMobility_5to5.append(0)
         
         ## Check for double-included houses by converting to a set and back again
         pre_checkLength = len(self.map.occupiedHouses)
@@ -2975,92 +3566,245 @@ class Sim:
         ####### Social Care Outputs ################################################################
         
         
+        
         ## Care demand calculations: first, what's the basic demand and theoretical supply?
         totalCareNeed = sum([x.hoursDemand for x in self.pop.livingPeople])
         socialCareNeed = sum([x.hoursDemand for x in self.pop.livingPeople if x.age > 15])
         childCareNeed = totalCareNeed - socialCareNeed
+        self.totalCareDemand.append(totalCareNeed)
+        self.perCapitaCareDemand.append(totalCareNeed/currentPop)
+        self.perCapitaSocialCareDemand.append(socialCareNeed/currentPop)
+        self.perCapitaChildCareDemand.append(childCareNeed/currentPop)
+        self.totalSocialCareDemand.append(socialCareNeed)  
+        self.totalChildCareDemand.append(childCareNeed)
+        if totalCareNeed > 0:
+            self.shareSocialCareDemand.append(socialCareNeed/totalCareNeed)
+        else:
+            self.shareSocialCareDemand.append(0)
+        
         informalCareSupply = sum([x.hoursInformalSupply for x in self.pop.livingPeople])
         formalCareSupply = sum([x.hoursFormalSupply for x in self.pop.livingPeople])
         totalCareSupply = informalCareSupply + formalCareSupply
+        self.totalInformalCareSupply.append(informalCareSupply) 
+        self.totalFormalCareSupply.append(formalCareSupply) 
+        self.totalCareSupply.append(totalCareSupply) 
+        if totalCareSupply > 0:
+            self.shareInformalCareSupply.append(informalCareSupply/totalCareSupply)
+        else:
+            self.shareInformalCareSupply.append(0)
         informalCareReceived = sum([x.informalCare for x in self.pop.livingPeople])
         formalCareReceived = sum([x.formalCare for x in self.pop.livingPeople])
         totalCareReceived = informalCareReceived + formalCareReceived
+        totalUnnmetCareNeed = sum([x.residualNeed for x in self.pop.livingPeople])
+        totalCareReceivers = len([x for x in self.pop.livingPeople if x.hoursDemand > 0])
+        totalCareSuppliers = len([x for x in self.pop.livingPeople if x.hoursDemand == 0])
+        self.shareCareGivers.append(float(totalCareSuppliers)/currentPop)
+        totalCareEmployed = len([x for x in self.pop.livingPeople if x.hoursDemand == 0 and x.status == 'employed'])
+        self.totalInformalCareReceived.append(informalCareReceived)
+        self.totalFormalCareReceived.append(formalCareReceived)
+        self.totalCareReceived.append(totalCareReceived) # New!
+        if totalCareReceivers > 0:
+            self.averageCareReceived.append(totalCareReceived/totalCareReceivers)
+            self.averageInformalCareReceived.append(informalCareReceived/totalCareReceivers)
+            self.averageFormalCareReceived.append(formalCareReceived/totalCareReceivers)
+            self.averageUnmetCareDemand.append(totalUnnmetCareNeed/totalCareReceivers)
+        else:
+            self.averageCareReceived.append(0)
+            self.averageInformalCareReceived.append(0)
+            self.averageFormalCareReceived.append(0)
+            self.averageUnmetCareDemand.append(0)
+        if totalCareSuppliers > 0:
+            self.averageCareSupplied.append(totalCareReceived/totalCareSuppliers)
+            self.averageInformalCareSupplied.append(informalCareReceived/totalCareSuppliers)
+        else:
+            self.averageCareSupplied.append(0)
+            self.averageInformalCareSupplied.append(0)
+        if totalCareEmployed > 0:
+            self.averageFormalCareSupplied.append(formalCareReceived/totalCareEmployed)
+        else:
+            self.averageFormalCareSupplied.append(0)
+        if totalCareReceived > 0:
+            self.shareInformalCareReceived.append(informalCareReceived/totalCareReceived)
+        else:
+            self.shareInformalCareReceived.append(0)
+        self.totalUnmetCareDemand.append(totalUnnmetCareNeed)
+        if totalCareNeed > 0:
+            self.shareUnmetCareDemand.append(totalUnnmetCareNeed/totalCareNeed)
+        else:
+            self.shareUnmetCareDemand.append(0)
+        self.perCapitaUnmetCareDemand.append(totalUnnmetCareNeed/currentPop)
+        
+        
         informalSocialCareReceived = sum([x.informalCare for x in self.pop.livingPeople if x.age > 15])
         formalSocialCareReceived = sum([x.formalCare for x in self.pop.livingPeople if x.age > 15])
         socialCareReceived = informalSocialCareReceived + formalSocialCareReceived
+        totalUnmetSocialCareNeed = sum([x.residualNeed for x in self.pop.livingPeople if x.age > 15])
+        socialCareReceivers = [x for x in self.pop.livingPeople if x.hoursDemand > 0 and x.age > 15]
+        totalSocialCareReceivers = float(len(socialCareReceivers))
+        totalSocialCareReceivers_N1 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 1]))
+        totalSocialCareReceivers_N2 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 2]))
+        totalSocialCareReceivers_N3 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 3]))
+        totalSocialCareReceivers_N4 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 4]))
+        if totalSocialCareReceivers > 0:
+            self.shareSocialCareTakers_N1.append(totalSocialCareReceivers_N1/totalSocialCareReceivers)
+            self.shareSocialCareTakers_N2.append(totalSocialCareReceivers_N2/totalSocialCareReceivers)
+            self.shareSocialCareTakers_N3.append(totalSocialCareReceivers_N3/totalSocialCareReceivers)
+            self.shareSocialCareTakers_N4.append(totalSocialCareReceivers_N4/totalSocialCareReceivers)
+        else:
+            self.shareSocialCareTakers_N1.append(0)
+            self.shareSocialCareTakers_N2.append(0)
+            self.shareSocialCareTakers_N3.append(0)
+            self.shareSocialCareTakers_N4.append(0)
+        self.totalInformalSocialCareReceived.append(informalSocialCareReceived)
+        self.totalFormalSocialCareReceived.append(formalSocialCareReceived)
+        self.totalSocialCareReceived.append(socialCareReceived) #New!
+        if totalSocialCareReceivers > 0:
+            self.averageSocialCareReceived.append(socialCareReceived/totalSocialCareReceivers)
+            self.averageInformalSocialCareReceived.append(informalSocialCareReceived/totalSocialCareReceivers)
+            self.averageFormalSocialCareReceived.append(formalSocialCareReceived/totalSocialCareReceivers)
+            self.averageUnmetSocialCareDemand.append(totalUnmetSocialCareNeed/totalSocialCareReceivers)
+        else:
+            self.averageSocialCareReceived.append(0)
+            self.averageInformalSocialCareReceived.append(0)
+            self.averageFormalSocialCareReceived.append(0)
+            self.averageUnmetSocialCareDemand.append(0)
+        if totalCareSuppliers > 0:
+            self.averageSocialCareSupplied.append(socialCareReceived/totalCareSuppliers)
+            self.averageInformalSocialCareSupplied.append(informalSocialCareReceived/totalCareSuppliers)
+        else:
+            self.averageSocialCareSupplied.append(0)
+            self.averageInformalSocialCareSupplied.append(0)
+        if totalCareEmployed > 0:
+            self.averageFormalSocialCareSupplied.append(formalSocialCareReceived/totalCareEmployed)
+        else:
+            self.averageFormalSocialCareSupplied.append(0)
+        if socialCareReceived > 0:
+            self.shareInformalSocialCareReceived.append(informalSocialCareReceived/socialCareReceived)
+        else:
+            self.shareInformalSocialCareReceived.append(0)
+        self.totalSocialCareUnmetDemand.append(totalUnmetSocialCareNeed) # New!
+        self.perCapitaUnmetSocialCareDemand.append(totalUnmetSocialCareNeed/currentPop)
+        if socialCareNeed > 0:
+            self.shareUnmetSocialCareDemand.append(totalUnmetSocialCareNeed/socialCareNeed)
+        else:
+            self.shareUnmetSocialCareDemand.append(0)
+        
         informalChildCareReceived = informalCareReceived - informalSocialCareReceived
         formalChildCareReceived = formalCareReceived - formalSocialCareReceived
         childCareReceived = informalChildCareReceived + formalChildCareReceived
-        totalUnnmetCareNeed = sum([x.residualNeed for x in self.pop.livingPeople])
-        totalUnmetSocialCareNeed = sum([x.residualNeed for x in self.pop.livingPeople if x.age > 15])
         totalUnmetChildCareNeed = totalUnnmetCareNeed - totalUnmetSocialCareNeed
+        totalChildCareReceivers = len([x for x in self.pop.livingPeople if x.hoursDemand > 0 and x.age < 16])
+        self.totalInformalChildCareReceived.append(informalChildCareReceived)
+        self.totalFormalChildCareReceived.append(formalChildCareReceived)
+        self.totalChildCareReceived.append(childCareReceived) #New!
+        if totalChildCareReceivers > 0:
+            self.averageChildCareReceived.append(childCareReceived/totalChildCareReceivers)
+            self.averageInformalChildCareReceived.append(informalChildCareReceived/totalChildCareReceivers)
+            self.averageFormalChildCareReceived.append(formalChildCareReceived/totalChildCareReceivers)
+            self.averageUnmetChildCareDemand.append(totalUnmetChildCareNeed/totalChildCareReceivers)
+        else:
+            self.averageChildCareReceived.append(0)
+            self.averageInformalChildCareReceived.append(0)
+            self.averageFormalChildCareReceived.append(0)
+            self.averageUnmetChildCareDemand.append(0)
+        if totalCareSuppliers > 0:
+            self.averageChildCareSupplied.append(childCareReceived/totalCareSuppliers)
+            self.averageInformalChildCareSupplied.append(informalChildCareReceived/totalCareSuppliers)
+        else:
+            self.averageChildCareSupplied.append(0)
+            self.averageInformalChildCareSupplied.append(0)
+        if totalCareEmployed > 0:
+            self.averageFormalChildCareSupplied.append(formalChildCareReceived/totalCareEmployed)
+        else:
+            self.averageFormalChildCareSupplied.append(0)
+        if childCareReceived > 0:
+            self.shareInformalChildCareReceived.append(informalChildCareReceived/childCareReceived)
+        else:
+            self.shareInformalChildCareReceived.append(0)
+        self.totalChildCareUnmetDemand.append(totalUnmetChildCareNeed) # New!
+        self.perCapitaUnmetChildCareDemand.append(totalUnmetChildCareNeed/currentPop)
+        if childCareNeed > 0:
+            self.shareUnmetChildCareDemand.append(totalUnmetChildCareNeed/childCareNeed)
+        else:
+            self.shareUnmetChildCareDemand.append(0)
+        
         totalInformalCareSupplied = sum([x.socialWork for x in self.pop.livingPeople])
         totalFormalCareSupplied = sum([x.workToCare for x in self.pop.livingPeople])
         totalCareSupplied = totalInformalCareSupplied + totalFormalCareSupplied
-        
+    
         totalInformalCareSuppliedMale = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'male'])
         informalCareSuppliedMale_1 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'male' and x.classRank == 0])
         informalCareSuppliedMale_2 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'male' and x.classRank == 1])
         informalCareSuppliedMale_3 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'male' and x.classRank == 2])
         informalCareSuppliedMale_4 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'male' and x.classRank == 3])
         informalCareSuppliedMale_5 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'male' and x.classRank == 4])
+        self.totalInformalCareSuppliedMale.append(totalInformalCareSuppliedMale) 
+        self.totalInformalCareSuppliedMale_1.append(informalCareSuppliedMale_1)
+        self.totalInformalCareSuppliedMale_2.append(informalCareSuppliedMale_2)
+        self.totalInformalCareSuppliedMale_3.append(informalCareSuppliedMale_3)
+        self.totalInformalCareSuppliedMale_4.append(informalCareSuppliedMale_4)
+        self.totalInformalCareSuppliedMale_5.append(informalCareSuppliedMale_5)
         
-        totalFormalCareSuppliedMale = sum([x.workToCare for x in self.pop.livingPeople if x.sex == 'male'])
-        totalCareSuppliedMale = totalInformalCareSuppliedMale + totalFormalCareSuppliedMale
         totalInformalCareSuppliedFemale = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female'])
         informalCareSuppliedFemale_1 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female' and x.classRank == 0])
         informalCareSuppliedFemale_2 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female' and x.classRank == 1])
         informalCareSuppliedFemale_3 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female' and x.classRank == 2])
         informalCareSuppliedFemale_4 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female' and x.classRank == 3])
         informalCareSuppliedFemale_5 = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female' and x.classRank == 4])
-        
-        totalFormalCareSuppliedFemale = sum([x.workToCare for x in self.pop.livingPeople if x.sex == 'female'])
-        totalCareSuppliedFemale = totalInformalCareSuppliedFemale + totalFormalCareSuppliedFemale
-        
-        self.totalCareDemand.append(totalCareNeed)
-        self.totalSocialCareDemand.append(socialCareNeed)  # New!
-        self.totalChildCareDemand.append(childCareNeed)
-        self.totalCareSupply.append(totalCareSupply) # New!
-        self.totalInformalCareSupply.append(informalCareSupply) # New!
-        self.totalFormalCareSupply.append(formalCareSupply) # New!
-        self.totalCareReceived.append(totalCareReceived) # New!
-        self.totalSocialCareReceived.append(socialCareReceived) #New!
-        self.totalChildCareReceived.append(childCareReceived) #New!
-        self.totalInformalCareReceived.append(informalCareReceived)
-        self.totalFormalCareReceived.append(formalCareReceived)
-        self.totalInformalSocialCareReceived.append(informalSocialCareReceived)
-        self.totalFormalSocialCareReceived.append(formalSocialCareReceived)
-        self.totalInformalChildCareReceived.append(informalChildCareReceived)
-        self.totalFormalChildCareReceived.append(formalChildCareReceived)
-        self.totalUnmetDemand.append(totalUnnmetCareNeed)
-        self.totalSocialCareUnmetDemand.append(totalUnmetSocialCareNeed) # New!
-        self.totalChildCareUnmetDemand.append(totalUnmetChildCareNeed) # New!
-        self.totalCareSuppliedMale.append(totalCareSuppliedMale) # New!
-        self.totalInformalCareSuppliedMale.append(totalInformalCareSuppliedMale) # New!
-        self.totalInformalCareSuppliedMale_1.append(informalCareSuppliedMale_1)
-        self.totalInformalCareSuppliedMale_2.append(informalCareSuppliedMale_2)
-        self.totalInformalCareSuppliedMale_3.append(informalCareSuppliedMale_3)
-        self.totalInformalCareSuppliedMale_4.append(informalCareSuppliedMale_4)
-        self.totalInformalCareSuppliedMale_5.append(informalCareSuppliedMale_5)
-        self.totalFormalCareSuppliedMale.append(totalFormalCareSuppliedMale) # New!
-        self.totalCareSuppliedFemale.append(totalCareSuppliedFemale) # New!
-        self.totalInformalCareSuppliedFemale.append(totalInformalCareSuppliedFemale) # New!
+        self.totalInformalCareSuppliedFemale.append(totalInformalCareSuppliedFemale)  
         self.totalInformalCareSuppliedFemale_1.append(informalCareSuppliedFemale_1)
         self.totalInformalCareSuppliedFemale_2.append(informalCareSuppliedFemale_2)
         self.totalInformalCareSuppliedFemale_3.append(informalCareSuppliedFemale_3)
         self.totalInformalCareSuppliedFemale_4.append(informalCareSuppliedFemale_4)
         self.totalInformalCareSuppliedFemale_5.append(informalCareSuppliedFemale_5)
-        self.totalFormalCareSuppliedFemale.append(totalCareSuppliedFemale) # New!
+        totalInformalCare = totalInformalCareSuppliedMale + totalInformalCareSuppliedFemale
+        totalInformalCare_1 = informalCareSuppliedMale_1 + informalCareSuppliedFemale_1
+        totalInformalCare_2 = informalCareSuppliedMale_2 + informalCareSuppliedFemale_2
+        totalInformalCare_3 = informalCareSuppliedMale_3 + informalCareSuppliedFemale_3
+        totalInformalCare_4 = informalCareSuppliedMale_4 + informalCareSuppliedFemale_4
+        totalInformalCare_5 = informalCareSuppliedMale_5 + informalCareSuppliedFemale_5
+        if totalInformalCare > 0:
+            self.shareFemaleInformalCareSupplied.append(totalInformalCareSuppliedFemale/totalInformalCare)
+        else:
+            self.shareFemaleInformalCareSupplied.append(0)
+        if totalInformalCare_1 > 0:
+            self.shareFemaleInformalCareSupplied_1.append(informalCareSuppliedFemale_1/totalInformalCare_1)
+        else:
+            self.shareFemaleInformalCareSupplied_1.append(0)
+        if totalInformalCare_2 > 0:
+            self.shareFemaleInformalCareSupplied_2.append(informalCareSuppliedFemale_2/totalInformalCare_2)
+        else:
+            self.shareFemaleInformalCareSupplied_2.append(0)
+        if totalInformalCare_3 > 0:
+            self.shareFemaleInformalCareSupplied_3.append(informalCareSuppliedFemale_3/totalInformalCare_3)
+        else:
+            self.shareFemaleInformalCareSupplied_3.append(0)
+        if totalInformalCare_4 > 0:
+            self.shareFemaleInformalCareSupplied_4.append(informalCareSuppliedFemale_4/totalInformalCare_4)
+        else:
+            self.shareFemaleInformalCareSupplied_4.append(0)
+        if totalInformalCare_5 > 0:
+            self.shareFemaleInformalCareSupplied_5.append(informalCareSuppliedFemale_5/totalInformalCare_5)
+        else:
+            self.shareFemaleInformalCareSupplied_5.append(0)
         
         class1 = [x for x in self.pop.livingPeople if x.classRank == 0]
         totalCareDemandHours = 0
         totalUnmetDemandHours = 0
+        totalSocialCare = 0
+        totalChildCare = 0
         totalInformalCareSupplyHours = 0
         totalFormalCareSupplyHours = 0
         numberOfRecipients = 0
         numberOfCarers = 0
         for person in class1:
             if person.hoursDemand > 0:
+                if person.age < 16:
+                    totalChildCare += person.informalCare
+                    totalChildCare += person.formalCare
+                else:
+                    totalSocialCare += person.informalCare
+                    totalSocialCare += person.formalCare
                 totalCareDemandHours += person.hoursDemand
                 totalUnmetDemandHours += person.residualNeed
                 numberOfRecipients += 1
@@ -3068,12 +3812,31 @@ class Sim:
                 totalInformalCareSupplyHours += person.socialWork
                 totalFormalCareSupplyHours += person.workToCare
                 numberOfCarers += 1
-                
+        if len(class1) > 0:
+            self.shareCareGivers_1.append(float(numberOfCarers)/float(len(class1)))
+        else:
+            self.shareCareGivers_1.append(0)
+        totalSupply = totalInformalCareSupplyHours + totalFormalCareSupplyHours
+        totalCare = totalSocialCare + totalChildCare
+        if totalCare > 0:
+            self.shareSocialCare_1.append(totalSocialCare/totalCare)
+        else:
+            self.shareSocialCare_1.append(0)
         self.totalCareDemand_1.append(totalCareDemandHours)
-        self.totalCareSupply_1.append(totalInformalCareSupplyHours + totalFormalCareSupplyHours)   
+        self.totalCareSupply_1.append(totalSupply) 
         self.totalUnmetDemand_1.append(totalUnmetDemandHours) 
         self.totalInformalSupply_1.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_1.append(totalFormalCareSupplyHours)
+        if totalSupply > 0:
+            self.shareInformalSupply_1.append(totalInformalCareSupplyHours/totalSupply)
+        else:
+            self.shareInformalSupply_1.append(0)
+        if totalCareDemandHours > 0:
+            self.shareUnmetCareDemand_1.append(totalUnmetDemandHours/totalCareDemandHours)
+        else:
+            self.shareUnmetCareDemand_1.append(0)
+        self.perCapitaUnmetCareDemand_1.append(totalUnmetDemandHours/currentPop)
+        
         if numberOfRecipients > 0:
             self.totalInformalCarePerRecipient_1.append(totalInformalCareSupplyHours/numberOfRecipients)
             self.totalFormalCarePerRecipient_1.append(totalFormalCareSupplyHours/numberOfRecipients)
@@ -3092,12 +3855,20 @@ class Sim:
         class2 = [x for x in self.pop.livingPeople if x.classRank == 1]
         totalCareDemandHours = 0
         totalUnmetDemandHours = 0
+        totalSocialCare = 0
+        totalChildCare = 0
         totalInformalCareSupplyHours = 0
         totalFormalCareSupplyHours = 0
         numberOfRecipients = 0
         numberOfCarers = 0
         for person in class2:
             if person.hoursDemand > 0:
+                if person.age < 16:
+                    totalChildCare += person.informalCare
+                    totalChildCare += person.formalCare
+                else:
+                    totalSocialCare += person.informalCare
+                    totalSocialCare += person.formalCare
                 totalCareDemandHours += person.hoursDemand
                 totalUnmetDemandHours += person.residualNeed
                 numberOfRecipients += 1
@@ -3105,12 +3876,32 @@ class Sim:
                 totalInformalCareSupplyHours += person.socialWork
                 totalFormalCareSupplyHours += person.workToCare
                 numberOfCarers += 1
-                
+        
+        if len(class2) > 0:
+            self.shareCareGivers_2.append(float(numberOfCarers)/float(len(class2)))
+        else:
+            self.shareCareGivers_2.append(0)
+        totalSupply = totalInformalCareSupplyHours + totalFormalCareSupplyHours
+        totalCare = totalSocialCare + totalChildCare
+        if totalCare > 0:
+            self.shareSocialCare_2.append(totalSocialCare/totalCare)
+        else:
+            self.shareSocialCare_2.append(0)
         self.totalCareDemand_2.append(totalCareDemandHours)
         self.totalCareSupply_2.append(totalInformalCareSupplyHours + totalFormalCareSupplyHours)   
         self.totalUnmetDemand_2.append(totalUnmetDemandHours) 
         self.totalInformalSupply_2.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_2.append(totalFormalCareSupplyHours)
+        if totalSupply > 0:
+            self.shareInformalSupply_2.append(totalInformalCareSupplyHours/totalSupply)
+        else:
+            self.shareInformalSupply_2.append(0)
+        if totalCareDemandHours > 0:
+            self.shareUnmetCareDemand_2.append(totalUnmetDemandHours/totalCareDemandHours)
+        else:
+            self.shareUnmetCareDemand_2.append(0)
+        self.perCapitaUnmetCareDemand_2.append(totalUnmetDemandHours/currentPop)
+        
         if numberOfRecipients > 0:
             self.totalInformalCarePerRecipient_2.append(totalInformalCareSupplyHours/numberOfRecipients)
             self.totalFormalCarePerRecipient_2.append(totalFormalCareSupplyHours/numberOfRecipients)
@@ -3129,12 +3920,20 @@ class Sim:
         class3 = [x for x in self.pop.livingPeople if x.classRank == 2]
         totalCareDemandHours = 0
         totalUnmetDemandHours = 0
+        totalSocialCare = 0
+        totalChildCare = 0
         totalInformalCareSupplyHours = 0
         totalFormalCareSupplyHours = 0
         numberOfRecipients = 0
         numberOfCarers = 0
         for person in class3:
             if person.hoursDemand > 0:
+                if person.age < 16:
+                    totalChildCare += person.informalCare
+                    totalChildCare += person.formalCare
+                else:
+                    totalSocialCare += person.informalCare
+                    totalSocialCare += person.formalCare
                 totalCareDemandHours += person.hoursDemand
                 totalUnmetDemandHours += person.residualNeed
                 numberOfRecipients += 1
@@ -3142,12 +3941,32 @@ class Sim:
                 totalInformalCareSupplyHours += person.socialWork
                 totalFormalCareSupplyHours += person.workToCare
                 numberOfCarers += 1
-                
+        
+        if len(class3) > 0:
+            self.shareCareGivers_3.append(float(numberOfCarers)/float(len(class3)))
+        else:
+            self.shareCareGivers_3.append(0)
+        totalSupply = totalInformalCareSupplyHours + totalFormalCareSupplyHours
+        totalCare = totalSocialCare + totalChildCare
+        if totalCare > 0:
+            self.shareSocialCare_3.append(totalSocialCare/totalCare)
+        else:
+            self.shareSocialCare_3.append(0)
         self.totalCareDemand_3.append(totalCareDemandHours)
         self.totalCareSupply_3.append(totalInformalCareSupplyHours + totalFormalCareSupplyHours)   
         self.totalUnmetDemand_3.append(totalUnmetDemandHours) 
         self.totalInformalSupply_3.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_3.append(totalFormalCareSupplyHours)
+        if totalSupply > 0:
+            self.shareInformalSupply_3.append(totalInformalCareSupplyHours/totalSupply)
+        else:
+            self.shareInformalSupply_3.append(0)
+        if totalCareDemandHours > 0:
+            self.shareUnmetCareDemand_3.append(totalUnmetDemandHours/totalCareDemandHours)
+        else:
+            self.shareUnmetCareDemand_3.append(0)
+        self.perCapitaUnmetCareDemand_3.append(totalUnmetDemandHours/currentPop)
+        
         if numberOfRecipients > 0:
             self.totalInformalCarePerRecipient_3.append(totalInformalCareSupplyHours/numberOfRecipients)
             self.totalFormalCarePerRecipient_3.append(totalFormalCareSupplyHours/numberOfRecipients)
@@ -3166,12 +3985,20 @@ class Sim:
         class4 = [x for x in self.pop.livingPeople if x.classRank == 3]
         totalCareDemandHours = 0
         totalUnmetDemandHours = 0
+        totalSocialCare = 0
+        totalChildCare = 0
         totalInformalCareSupplyHours = 0
         totalFormalCareSupplyHours = 0
         numberOfRecipients = 0
         numberOfCarers = 0
         for person in class4:
             if person.hoursDemand > 0:
+                if person.age < 16:
+                    totalChildCare += person.informalCare
+                    totalChildCare += person.formalCare
+                else:
+                    totalSocialCare += person.informalCare
+                    totalSocialCare += person.formalCare
                 totalCareDemandHours += person.hoursDemand
                 totalUnmetDemandHours += person.residualNeed
                 numberOfRecipients += 1
@@ -3179,12 +4006,32 @@ class Sim:
                 totalInformalCareSupplyHours += person.socialWork
                 totalFormalCareSupplyHours += person.workToCare
                 numberOfCarers += 1
-                
+        
+        if len(class4) > 0:
+            self.shareCareGivers_4.append(float(numberOfCarers)/float(len(class4)))
+        else:
+            self.shareCareGivers_4.append(0)
+        totalSupply = totalInformalCareSupplyHours + totalFormalCareSupplyHours
+        totalCare = totalSocialCare + totalChildCare
+        if totalCare > 0:
+            self.shareSocialCare_4.append(totalSocialCare/totalCare)
+        else:
+            self.shareSocialCare_4.append(0)      
         self.totalCareDemand_4.append(totalCareDemandHours)
         self.totalCareSupply_4.append(totalInformalCareSupplyHours + totalFormalCareSupplyHours)   
         self.totalUnmetDemand_4.append(totalUnmetDemandHours) 
         self.totalInformalSupply_4.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_4.append(totalFormalCareSupplyHours)
+        if totalSupply > 0:
+            self.shareInformalSupply_4.append(totalInformalCareSupplyHours/totalSupply)
+        else:
+            self.shareInformalSupply_4.append(0)
+        if totalCareDemandHours > 0:
+            self.shareUnmetCareDemand_4.append(totalUnmetDemandHours/totalCareDemandHours)
+        else:
+            self.shareUnmetCareDemand_4.append(0)
+        self.perCapitaUnmetCareDemand_4.append(totalUnmetDemandHours/currentPop)
+        
         if numberOfRecipients > 0:
             self.totalInformalCarePerRecipient_4.append(totalInformalCareSupplyHours/numberOfRecipients)
             self.totalFormalCarePerRecipient_4.append(totalFormalCareSupplyHours/numberOfRecipients)
@@ -3203,12 +4050,20 @@ class Sim:
         class5 = [x for x in self.pop.livingPeople if x.classRank == 4]
         totalCareDemandHours = 0
         totalUnmetDemandHours = 0
+        totalSocialCare = 0
+        totalChildCare = 0
         totalInformalCareSupplyHours = 0
         totalFormalCareSupplyHours = 0
         numberOfRecipients = 0
         numberOfCarers = 0
         for person in class5:
             if person.hoursDemand > 0:
+                if person.age < 16:
+                    totalChildCare += person.informalCare
+                    totalChildCare += person.formalCare
+                else:
+                    totalSocialCare += person.informalCare
+                    totalSocialCare += person.formalCare
                 totalCareDemandHours += person.hoursDemand
                 totalUnmetDemandHours += person.residualNeed
                 numberOfRecipients += 1
@@ -3216,12 +4071,32 @@ class Sim:
                 totalInformalCareSupplyHours += person.socialWork
                 totalFormalCareSupplyHours += person.workToCare
                 numberOfCarers += 1
-                
+        
+        if len(class5) > 0:
+            self.shareCareGivers_5.append(float(numberOfCarers)/float(len(class5)))
+        else:
+            self.shareCareGivers_5.append(0)
+        totalSupply = totalInformalCareSupplyHours + totalFormalCareSupplyHours
+        totalCare = totalSocialCare + totalChildCare
+        if totalCare > 0:
+            self.shareSocialCare_5.append(totalSocialCare/totalCare)
+        else:
+            self.shareSocialCare_5.append(0)
         self.totalCareDemand_5.append(totalCareDemandHours)
         self.totalCareSupply_5.append(totalInformalCareSupplyHours + totalFormalCareSupplyHours)   
         self.totalUnmetDemand_5.append(totalUnmetDemandHours) 
         self.totalInformalSupply_5.append(totalInformalCareSupplyHours)
         self.totalFormalSupply_5.append(totalFormalCareSupplyHours)
+        if totalSupply > 0:
+            self.shareInformalSupply_5.append(totalInformalCareSupplyHours/totalSupply)
+        else:
+            self.shareInformalSupply_5.append(0)
+        if totalCareDemandHours > 0:
+            self.shareUnmetCareDemand_5.append(totalUnmetDemandHours/totalCareDemandHours)
+        else:
+            self.shareUnmetCareDemand_5.append(0)
+        self.perCapitaUnmetCareDemand_5.append(totalUnmetDemandHours/currentPop)
+        
         if numberOfRecipients > 0:
             self.totalInformalCarePerRecipient_5.append(totalInformalCareSupplyHours/numberOfRecipients)
             self.totalFormalCarePerRecipient_5.append(totalFormalCareSupplyHours/numberOfRecipients)
@@ -3331,106 +4206,174 @@ class Sim:
         # print('Job Change Rate: ' + str(jobChangeRate))
         
         employedMales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'male']
-        malesIncome = sum([x.income for x in employedMales])
         if len(employedMales) > 0:
-            self.averageIncome_M.append(malesIncome/float(len(employedMales)))
+            averageMalesIncome = sum([x.income for x in employedMales])/float(len(employedMales))
         else:
-            self.averageIncome_M.append(0)
+            averageMalesIncome = 0
+        self.averageIncome_M.append(averageMalesIncome)
         
         employedFemales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'female']
-        femalesIncome = sum([x.income for x in employedFemales])
         if len(employedFemales) > 0:
-            self.averageIncome_F.append(femalesIncome/float(len(employedFemales)))
+            averageFemalesIncome = sum([x.income for x in employedFemales])/float(len(employedFemales))
         else:
-            self.averageIncome_F.append(0)
+            averageFemalesIncome = 0
+        self.averageIncome_F.append(averageFemalesIncome)
+        
+        if averageMalesIncome > 0:
+            self.ratioWomenMaleIncome.append(averageFemalesIncome/averageMalesIncome)
+        else:
+            self.ratioWomenMaleIncome.append(0)
         
         income_1 = sum([x.income for x in employed_1])
         income_1_Males = sum([x.income for x in employed_1_Males])
         income_1_Females = sum([x.income for x in employed_1_Females])
         if len(employed_1) > 0:
-            self.averageIncome_1.append(income_1/float(len(employed_1)))
+            averageIncome = income_1/float(len(employed_1))
         else:
-            self.averageIncome_1.append(0)
+            averageIncome = 0
+        self.averageIncome_1.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
         if len(employed_1_Males) > 0:
-            self.averageIncome_1_Males.append(income_1_Males/float(len(employed_1_Males)))
+            averageIncome_M = income_1_Males/float(len(employed_1_Males))
         else:
-            self.averageIncome_1_Males.append(0)
+            averageIncome_M = 0
+        self.averageIncome_1_Males.append(averageIncome_M)
         if len(employed_1_Females) > 0:
-            self.averageIncome_1_Females.append(income_1_Females/float(len(employed_1_Females)))
+            averageIncome_F = income_1_Females/float(len(employed_1_Females))
         else:
-            self.averageIncome_1_Females.append(0)
+            averageIncome_F = 0
+        self.averageIncome_1_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_1.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_1.append(0)
         
         income_2 = sum([x.income for x in employed_2])
         income_2_Males = sum([x.income for x in employed_2_Males])
         income_2_Females = sum([x.income for x in employed_2_Females])
         if len(employed_2) > 0:
-            self.averageIncome_2.append(income_2/float(len(employed_2)))
+            averageIncome = income_2/float(len(employed_2))
         else:
-            self.averageIncome_2.append(0)
+            averageIncome = 0
+        self.averageIncome_2.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
         if len(employed_2_Males) > 0:
-            self.averageIncome_2_Males.append(income_2_Males/float(len(employed_2_Males)))
+            averageIncome_M = income_2_Males/float(len(employed_2_Males))
         else:
-            self.averageIncome_2_Males.append(0)
+            averageIncome_M = 0
+        self.averageIncome_2_Males.append(averageIncome_M)
         if len(employed_2_Females) > 0:
-            self.averageIncome_2_Females.append(income_2_Females/float(len(employed_2_Females)))
+            averageIncome_F = income_2_Females/float(len(employed_2_Females))
         else:
-            self.averageIncome_2_Females.append(0)
+            averageIncome_F = 0
+        self.averageIncome_2_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_2.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_2.append(0)
         
         income_3 = sum([x.income for x in employed_3])
         income_3_Males = sum([x.income for x in employed_3_Males])
         income_3_Females = sum([x.income for x in employed_3_Females])
         if len(employed_3) > 0:
-            self.averageIncome_3.append(income_3/float(len(employed_3)))
+            averageIncome = income_3/float(len(employed_3))
         else:
-            self.averageIncome_3.append(0)
+            averageIncome = 0
+        self.averageIncome_3.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
         if len(employed_3_Males) > 0:
-            self.averageIncome_3_Males.append(income_3_Males/float(len(employed_3_Males)))
+            averageIncome_M = income_3_Males/float(len(employed_3_Males))
         else:
-            self.averageIncome_3_Males.append(0)
+            averageIncome_M = 0
+        self.averageIncome_3_Males.append(averageIncome_M)
         if len(employed_3_Females) > 0:
-            self.averageIncome_3_Females.append(income_3_Females/float(len(employed_3_Females)))
+            averageIncome_F = income_3_Females/float(len(employed_3_Females))
         else:
-            self.averageIncome_3_Females.append(0)
+            averageIncome_F = 0
+        self.averageIncome_3_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_3.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_3.append(0)
         
         income_4 = sum([x.income for x in employed_4])
         income_4_Males = sum([x.income for x in employed_4_Males])
         income_4_Females = sum([x.income for x in employed_4_Females])
         if len(employed_4) > 0:
-            self.averageIncome_4.append(income_4/float(len(employed_4)))
+            averageIncome = income_4/float(len(employed_4))
         else:
-            self.averageIncome_4.append(0)
+            averageIncome = 0
+        self.averageIncome_4.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
         if len(employed_4_Males) > 0:
-            self.averageIncome_4_Males.append(income_4_Males/float(len(employed_4_Males)))
+            averageIncome_M = income_4_Males/float(len(employed_4_Males))
         else:
-            self.averageIncome_4_Males.append(0)
+            averageIncome_M = 0
+        self.averageIncome_4_Males.append(averageIncome_M)
         if len(employed_4_Females) > 0:
-            self.averageIncome_4_Females.append(income_4_Females/float(len(employed_4_Females)))
+            averageIncome_F = income_4_Females/float(len(employed_4_Females))
         else:
-            self.averageIncome_4_Females.append(0)
+            averageIncome_F = 0
+        self.averageIncome_4_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_4.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_4.append(0)
         
         income_5 = sum([x.income for x in employed_5])
         income_5_Males = sum([x.income for x in employed_5_Males])
         income_5_Females = sum([x.income for x in employed_5_Females])
         if len(employed_5) > 0:
-            self.averageIncome_5.append(income_5/float(len(employed_5)))
+            averageIncome = income_5/float(len(employed_5))
         else:
-            self.averageIncome_5.append(0)
+            averageIncome = 0
+        self.averageIncome_5.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
         if len(employed_5_Males) > 0:
-            self.averageIncome_5_Males.append(income_5_Males/float(len(employed_5_Males)))
+            averageIncome_M = income_5_Males/float(len(employed_5_Males))
         else:
-            self.averageIncome_5_Males.append(0)
+            averageIncome_M = 0
+        self.averageIncome_5_Males.append(averageIncome_M)
         if len(employed_5_Females) > 0:
-            self.averageIncome_5_Females.append(income_5_Females/float(len(employed_5_Females)))
+            averageIncome_F = income_5_Females/float(len(employed_5_Females))
         else:
-            self.averageIncome_5_Females.append(0)
+            averageIncome_F = 0
+        self.averageIncome_5_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_5.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_5.append(0)
         
         ####### Mobility Outputs ################################################################
         
         self.numberRelocations.append(self.totalRelocations)
         self.totalRelocations = 0
         
-        self.numJobRelocations.append(self.jobRelocations)
-        self.jobRelocations = 0
+        self.numJobRelocations_1.append(self.jobRelocations_1)
+        self.jobRelocations_1 = 0
+        self.numJobRelocations_2.append(self.jobRelocations_2)
+        self.jobRelocations_2 = 0
+        self.numJobRelocations_3.append(self.jobRelocations_3)
+        self.jobRelocations_3 = 0
+        self.numJobRelocations_4.append(self.jobRelocations_4)
+        self.jobRelocations_4 = 0
+        self.numJobRelocations_5.append(self.jobRelocations_5)
+        self.jobRelocations_5 = 0
         
         self.numMarriageRelocations.append(self.marriageRelocations)
         self.marriageRelocations = 0
@@ -3501,7 +4444,11 @@ class Sim:
         alfa = self.p['baseRelocatingProb']/(1+self.p['baseRelocatingProb'])
         totOcc = float(newocc+oldocc)
         deltaOccupants = (totOcc-firstocc)/float(firstocc)
-        prob = 1.0 - 1.0/math.exp(self.p['relocationParameter']*math.pow(deltaOccupants, self.p['expReloc']))
+        
+        # Check variable
+        self.deltaHouseOccupants.append(deltaOccupants) # Min-Max: -0.5 - 2
+        
+        prob = 1.0 - 1.0/math.exp(self.p['relocationParameter']*deltaOccupants)
         if prob < 0.0:
             prob = 0.0
         return (prob)
@@ -3895,10 +4842,137 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 2: total informal and formal care received and unmet care needs (from 1960 to 2020)
+        # Chart 2: shares of care givers, total and by class
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.shareCareGivers, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.shareCareGivers_1, label = 'Class I')
+        p3, = ax.plot(years, self.shareCareGivers_2, label = 'Class II')
+        p4, = ax.plot(years, self.shareCareGivers_3, label = 'Class III')
+        p5, = ax.plot(years, self.shareCareGivers_4, label = 'Class IV')
+        p6, = ax.plot(years, self.shareCareGivers_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Share of Population')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Share of Care Givers')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/ShareCareGiversChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 3: shares of care takers by level of care need
+        fig, ax = plt.subplots()
+        ax.stackplot(years, self.shareSocialCareTakers_N1, self.shareSocialCareTakers_N2, 
+                      self.shareSocialCareTakers_N3, self.shareSocialCareTakers_N4,
+                      labels = ['Need Level 1','Need Level 2', 'Need Level 3', 'Need level 4'])
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Share of Care Takers')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Share of Care Takers by Care Need Level')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/ShareByNeedLevelsStackedChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 4: Share of Social Care Needs (1960-2020)
+        
+        self.sharesSocialCare_M.append(np.mean(self.shareSocialCareDemand[-20:]))
+        self.sharesSocialCare_SD.append(np.std(self.shareSocialCareDemand[-20:]))
+        
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.shareSocialCareDemand, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.shareSocialCare_1, label = 'Class I')
+        p3, = ax.plot(years, self.shareSocialCare_2, label = 'Class II')
+        p4, = ax.plot(years, self.shareSocialCare_3, label = 'Class III')
+        p5, = ax.plot(years, self.shareSocialCare_4, label = 'Class IV')
+        p6, = ax.plot(years, self.shareSocialCare_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Share of Social Care Needs')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/ShareSocialCareNeedsChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 5: Per Capita total care demand and unmet care demand (1960-2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.perCapitaCareDemand, label = 'Total Care Needs')
+        p2, = ax.plot(years, self.perCapitaUnmetCareDemand, label = 'Unmet Care Needs')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Per Capita Care and Unmet Care')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/PerCapitaCareUnmetCareChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 6: Per Capita total social care demand and unmet social care demand (1960-2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.perCapitaSocialCareDemand, label = 'Total Care Needs')
+        p2, = ax.plot(years, self.perCapitaUnmetSocialCareDemand, label = 'Unmet Care Needs')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Per Capita Demand and Unmet Social Care')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/PerCapitaDemandUnmetSocialCareChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 7: Per Capita total child care demand and unmet child care demand (1960-2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.perCapitaChildCareDemand, label = 'Total Care Needs')
+        p2, = ax.plot(years, self.perCapitaUnmetChildCareDemand, label = 'Unmet Care Needs')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Per Capita Demand and Unmet Child Care')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/PerCapitaDemandUnmetChildCareChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 8: total informal and formal care received and unmet care needs (from 1960 to 2020)
         fig, ax = plt.subplots()
         ax.stackplot(years, self.totalInformalCareReceived, self.totalFormalCareReceived, 
-                      self.totalUnmetDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
+                      self.totalUnmetCareDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
         ax.set_xlabel('Year')
@@ -3914,7 +4988,34 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 3: total informal and formal social care received and unmet social care needs (from 1960 to 2020)
+        # Chart 9: Shares informal care received (from 1960 to 2020)
+        
+        self.sharesInformalCare_M.append(np.mean(self.shareInformalCareReceived[-20:]))
+        self.sharesInformalCare_SD.append(np.std(self.shareInformalCareReceived[-20:]))
+        
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.shareInformalCareReceived, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.shareInformalSupply_1, label = 'Class I')
+        p3, = ax.plot(years, self.shareInformalSupply_2, label = 'Class II')
+        p4, = ax.plot(years, self.shareInformalSupply_3, label = 'Class III')
+        p5, = ax.plot(years, self.shareInformalSupply_4, label = 'Class IV')
+        p6, = ax.plot(years, self.shareInformalSupply_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Share of Informal Care Received')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/ShareInformalCareReceivedChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 10: total informal and formal social care received and unmet social care needs (from 1960 to 2020)
         fig, ax = plt.subplots()
         ax.stackplot(years, self.totalInformalSocialCareReceived, self.totalFormalSocialCareReceived, 
                       self.totalSocialCareUnmetDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
@@ -3933,7 +5034,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 4: total informal and formal child care received and unmet child care needs (from 1960 to 2020)
+        # Chart 11: total informal and formal child care received and unmet child care needs (from 1960 to 2020)
         fig, ax = plt.subplots()
         ax.stackplot(years, self.totalInformalChildCareReceived, self.totalFormalChildCareReceived, 
                       self.totalChildCareUnmetDemand, labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
@@ -3952,7 +5053,84 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 5: informal and formal care received and unmet care needs per recipient by social class (mean of last 20 years)
+        # Chart 12: Share of Unmet Care Need, total and by social class (from 1960 to 2020)
+        
+        self.sharesUnmetCare_M.append(np.mean(self.shareUnmetCareDemand[-20:]))
+        self.sharesUnmetCare_SD.append(np.std(self.shareUnmetCareDemand[-20:]))
+        
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.shareUnmetCareDemand, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.shareUnmetCareDemand_1, label = 'Class I')
+        p3, = ax.plot(years, self.shareUnmetCareDemand_2, label = 'Class II')
+        p4, = ax.plot(years, self.shareUnmetCareDemand_3, label = 'Class III')
+        p5, = ax.plot(years, self.shareUnmetCareDemand_4, label = 'Class IV')
+        p6, = ax.plot(years, self.shareUnmetCareDemand_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Share of Unmet Care Need')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/ShareUnmetCareNeedChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 13: Per Capita Unmet Care Need, total and by social class (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.perCapitaUnmetCareDemand, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.perCapitaUnmetCareDemand_1, label = 'Class I')
+        p3, = ax.plot(years, self.perCapitaUnmetCareDemand_2, label = 'Class II')
+        p4, = ax.plot(years, self.perCapitaUnmetCareDemand_3, label = 'Class III')
+        p5, = ax.plot(years, self.perCapitaUnmetCareDemand_4, label = 'Class IV')
+        p6, = ax.plot(years, self.perCapitaUnmetCareDemand_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Per Capita Unmet Care Need')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/PerCapitaUnmetCareNeedChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 14: Average Unmet Care Need, total and by social class (from 1960 to 2020)
+        
+        self.averagesUnmetCare_M.append(np.mean(self.averageUnmetCareDemand[-20:]))
+        self.averagesUnmetCare_SD.append(np.std(self.averageUnmetCareDemand[-20:]))
+        
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.averageUnmetCareDemand, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.totalUnmetNeedPerRecipient_1, label = 'Class I')
+        p3, = ax.plot(years, self.totalUnmetNeedPerRecipient_2, label = 'Class II')
+        p4, = ax.plot(years, self.totalUnmetNeedPerRecipient_3, label = 'Class III')
+        p5, = ax.plot(years, self.totalUnmetNeedPerRecipient_4, label = 'Class IV')
+        p6, = ax.plot(years, self.totalUnmetNeedPerRecipient_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Average Unmet Care Need')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/AverageUnmetCareNeedChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 15: informal and formal care received and unmet care needs per recipient by social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         meanInformalCareReceived_1 = np.mean(self.totalInformalCarePerRecipient_1[-20:])
         meanFormalCareReceived_1 = np.mean(self.totalFormalCarePerRecipient_1[-20:])
@@ -3996,7 +5174,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 6: informal and formal care supplied per carer by social class (mean of last 20 years)
+        # Chart 16: informal and formal care supplied per carer by social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         meanInformalCareSupplied_1 = np.mean(self.totalInformalCarePerCarer_1[-20:])
         meanFormalCareSupplied_1 = np.mean(self.totalFormalCarePerCarer_1[-20:])
@@ -4030,7 +5208,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 7: informal and formal care supplied by kinship network distance (mean of last 20 years)
+        # Chart 17: informal and formal care supplied by kinship network distance (mean of last 20 years)
         n_groups = 4
         meanInformalCareHousehold = np.mean(self.totalInformalSupplyHousehold[-20:])
         meanFormalCareHousehold = np.mean(self.totalFormalSupplyHousehold[-20:])
@@ -4060,26 +5238,30 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 8: Care supplied by gender (from 1960 to 2020)
+        # Chart 18: Share of Care supplied by Women, total and by social class (from 1960 to 2020)
         fig, ax = plt.subplots()
-        ax.stackplot(years, self.totalCareSuppliedFemale, self.totalCareSuppliedMale, 
-                      labels = ['Care by Women', 'Care by Men'])
+        p1, = ax.plot(years, self.shareFemaleInformalCareSupplied, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.shareFemaleInformalCareSupplied_1, label = 'Class I')
+        p3, = ax.plot(years, self.shareFemaleInformalCareSupplied_2, label = 'Class II')
+        p4, = ax.plot(years, self.shareFemaleInformalCareSupplied_3, label = 'Class III')
+        p5, = ax.plot(years, self.shareFemaleInformalCareSupplied_4, label = 'Class IV')
+        p6, = ax.plot(years, self.shareFemaleInformalCareSupplied_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
-        ax.set_title('Care supplied by gender')
+        ax.legend(loc = 'upper left')
+        ax.set_title('Share of Care supplied by Women')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         fig.tight_layout()
-        filename = folder + '/CareSuppliedByGenderStackedChart.pdf'
+        filename = folder + '/ShareCareWomedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
         pp.savefig(fig)
         pp.close()
         
-        # Chart 9: informal care provided by gender per social class (mean of last 20 years)
+        # Chart 19: informal care provided by gender per social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         informalCareMales_1 = np.mean(self.totalInformalCareSuppliedMale_1[-20:])
         informalCareMales_2 = np.mean(self.totalInformalCareSuppliedMale_2[-20:])
@@ -4120,7 +5302,30 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 10: income by gender per social class (mean of last 20 years)
+        # Chart 20: Ratio Women Income and Men Income, total and by social class (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.ratioWomenMaleIncome, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.ratioWomenMaleIncome_1, label = 'Class I')
+        p3, = ax.plot(years, self.ratioWomenMaleIncome_2, label = 'Class II')
+        p4, = ax.plot(years, self.ratioWomenMaleIncome_3, label = 'Class III')
+        p5, = ax.plot(years, self.ratioWomenMaleIncome_4, label = 'Class IV')
+        p6, = ax.plot(years, self.ratioWomenMaleIncome_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Women and Men Income Ratio')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        fig.tight_layout()
+        filename = folder + '/WomenMenIncomeRatioChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 21: income by gender per social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         incomeMales_1 = np.mean(self.averageIncome_1_Males[-20:])
         incomeMales_2 = np.mean(self.averageIncome_2_Males[-20:])
@@ -4162,7 +5367,7 @@ class Sim:
         pp.close()
         
         ################################################################## 
-        # Chart 11: Population by social class and number of taxpayers (1960-2020)
+        # Chart 22: Population by social class and number of taxpayers (1960-2020)
         fig, ax = plt.subplots()
         ax.plot(years, self.numTaxpayers, linewidth = 3, label = 'Number of Taxpayers', color = 'yellow')
         ax.stackplot(years, self.unskilledPop, self.skilledPop, self.lowerclassPop,
@@ -4183,7 +5388,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 12: Average Household size (1960-2020)
+        # Chart 23: Average Household size (1960-2020)
         fig, ax = plt.subplots()
         p1, = ax.plot(years, self.avgHouseholdSize_1, label = 'Class I')
         p2, = ax.plot(years, self.avgHouseholdSize_2, label = 'Class II')
@@ -4215,7 +5420,7 @@ class Sim:
 ##        pylab.xlabel('Year')
 ##        pylab.savefig('numDivorces.pdf')
         
-        # Chart 13: Average Tax Burden (1960-2020)
+        # Chart 24: Average Tax Burden (1960-2020)
         fig, ax = plt.subplots()
         ax.plot(years, self.totalTaxBurden, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
@@ -4231,7 +5436,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()  
       
-        # Chart 14: Proportion of married adult women (1960-2020)
+        # Chart 25: Proportion of married adult women (1960-2020)
         fig, ax = plt.subplots()
         ax.plot(years, self.marriageProp, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
@@ -4247,6 +5452,417 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
+        ####  Empty Time Series
+        self.times = []
+        self.pops = []
+        self.births_1 = []
+        self.births_2 = []
+        self.births_3 = []
+        self.births_4 = []
+        self.births_5 = []
+        self.deaths_1 = []
+        self.deaths_2 = []
+        self.deaths_3 = []
+        self.deaths_4 = []
+        self.deaths_5 = []
+        self.unskilledPop = []
+        self.skilledPop = []
+        self.lowerclassPop = []
+        self.middleclassPop = []
+        self.upperclassPop = []
+        self.socialMobility_1to1 = []
+        self.socialMobility_1to2 = []
+        self.socialMobility_1to3 = []
+        self.socialMobility_1to4 = []
+        self.socialMobility_1to5 = []
+        self.socialMobility_2to1 = []
+        self.socialMobility_2to2 = []
+        self.socialMobility_2to3 = []
+        self.socialMobility_2to4 = []
+        self.socialMobility_2to5 = []
+        self.socialMobility_3to1 = []
+        self.socialMobility_3to2 = []
+        self.socialMobility_3to3 = []
+        self.socialMobility_3to4 = []
+        self.socialMobility_3to5 = []
+        self.socialMobility_4to1 = []
+        self.socialMobility_4to2 = []
+        self.socialMobility_4to3 = []
+        self.socialMobility_4to4 = []
+        self.socialMobility_4to5 = []
+        self.socialMobility_5to1 = []
+        self.socialMobility_5to2 = []
+        self.socialMobility_5to3 = []
+        self.socialMobility_5to4 = []
+        self.socialMobility_5to5 = []
+        self.numberHouseholds = []
+        self.numberHouseholds_1 = []
+        self.numberHouseholds_2 = []
+        self.numberHouseholds_3 = []
+        self.numberHouseholds_4 = []
+        self.numberHouseholds_5 = []
+        self.avgHouseholdSize = []
+        self.avgHouseholdSize_1 = []
+        self.avgHouseholdSize_2 = []
+        self.avgHouseholdSize_3 = []
+        self.avgHouseholdSize_4 = []
+        self.avgHouseholdSize_5 = []
+        self.marriageProp = []
+        self.marriageTally = 0
+        self.numMarriages = []
+        self.divorceTally = 0
+        self.numDivorces = []
+        self.shareCareGivers = []
+        self.shareCareGivers_1 = []
+        self.shareCareGivers_2 = []
+        self.shareCareGivers_3 = []
+        self.shareCareGivers_4 = []
+        self.shareCareGivers_5 = []
+        self.shareSocialCareTakers_N1 = []
+        self.shareSocialCareTakers_N2 = []
+        self.shareSocialCareTakers_N3 = []
+        self.shareSocialCareTakers_N4 = []
+        self.totalCareDemand = []
+        self.perCapitaCareDemand = []
+        self.perCapitaSocialCareDemand = []
+        self.perCapitaChildCareDemand = []
+        self.totalChildCareDemand = []
+        self.totalSocialCareDemand = []
+        self.shareSocialCareDemand = []
+        self.totalCareSupply = []
+        self.totalInformalCareSupply = []
+        self.totalFormalCareSupply = []
+        self.shareInformalCareSupply = []
+        self.totalInformalCareReceived = []
+        self.totalFormalCareReceived = []
+        self.totalCareReceived = []
+        self.averageCareReceived = []
+        self.averageInformalCareReceived = []
+        self.averageFormalCareReceived = []
+        self.averageCareSupplied = []
+        self.averageInformalCareSupplied = []
+        self.averageFormalCareSupplied = []
+        self.shareInformalCareReceived = []
+        self.totalUnmetCareDemand = []
+        self.shareUnmetCareDemand = []
+        self.perCapitaUnmetCareDemand = []
+        self.averageUnmetCareDemand = []
+        self.totalInformalSocialCareReceived = []
+        self.totalFormalSocialCareReceived = []
+        self.totalSocialCareReceived = [] 
+        self.averageSocialCareReceived = []
+        self.averageInformalSocialCareReceived = []
+        self.averageFormalSocialCareReceived = []
+        self.averageSocialCareSupplied = []
+        self.averageInformalSocialCareSupplied = []
+        self.averageFormalSocialCareSupplied = []
+        self.shareInformalSocialCareReceived = []
+        self.totalSocialCareUnmetDemand = [] 
+        self.shareUnmetSocialCareDemand = []
+        self.perCapitaUnmetSocialCareDemand = []
+        self.averageUnmetSocialCareDemand = []
+        self.totalInformalChildCareReceived = []
+        self.totalFormalChildCareReceived = []
+        self.totalChildCareReceived = [] 
+        self.averageChildCareReceived = []
+        self.averageInformalChildCareReceived = []
+        self.averageFormalChildCareReceived = []
+        self.averageChildCareSupplied = []
+        self.averageInformalChildCareSupplied = []
+        self.averageFormalChildCareSupplied = []
+        self.shareInformalChildCareReceived = []
+        self.totalChildCareUnmetDemand = [] 
+        self.shareUnmetChildCareDemand = []
+        self.perCapitaUnmetChildCareDemand = []
+        self.averageUnmetChildCareDemand = []
+        self.totalInformalCareSuppliedMale = [] 
+        self.totalInformalCareSuppliedMale_1 = [] 
+        self.totalInformalCareSuppliedMale_2 = [] 
+        self.totalInformalCareSuppliedMale_3 = [] 
+        self.totalInformalCareSuppliedMale_4 = []
+        self.totalInformalCareSuppliedMale_5 = [] 
+        self.totalInformalCareSuppliedFemale = [] 
+        self.totalInformalCareSuppliedFemale_1 = [] 
+        self.totalInformalCareSuppliedFemale_2 = [] 
+        self.totalInformalCareSuppliedFemale_3 = [] 
+        self.totalInformalCareSuppliedFemale_4 = [] 
+        self.totalInformalCareSuppliedFemale_5 = [] 
+        self.shareFemaleInformalCareSupplied = []
+        self.shareFemaleInformalCareSupplied_1 = []
+        self.shareFemaleInformalCareSupplied_2 = []
+        self.shareFemaleInformalCareSupplied_3 = []
+        self.shareFemaleInformalCareSupplied_4 = []
+        self.shareFemaleInformalCareSupplied_5 = []
+        self.totalCareDemand_1 = []
+        self.totalCareSupply_1 = []
+        self.totalUnmetDemand_1 = []
+        self.totalCareDemand_2 = []
+        self.totalCareSupply_2 = []
+        self.totalUnmetDemand_2 = []
+        self.totalCareDemand_3 = []
+        self.totalCareSupply_3 = []
+        self.totalUnmetDemand_3 = []
+        self.totalCareDemand_4 = []
+        self.totalCareSupply_4 = []
+        self.totalUnmetDemand_4 = []
+        self.totalCareDemand_5 = []
+        self.totalCareSupply_5 = []
+        self.totalUnmetDemand_5 = []
+        self.totalInformalSupply = []
+        self.totalFormalSupply = []
+        self.totalInformalSupply_1 = []
+        self.totalFormalSupply_1 = []
+        self.shareSocialCare_1 = []
+        self.totalInformalCarePerRecipient_1 = []
+        self.totalFormalCarePerRecipient_1 = []
+        self.totalUnmetNeedPerRecipient_1 = []
+        self.totalInformalCarePerCarer_1 = []
+        self.totalFormalCarePerCarer_1 = []
+        self.shareInformalSupply_1 = []
+        self.shareUnmetCareDemand_1 = []
+        self.perCapitaUnmetCareDemand_1 = []
+        self.totalInformalSupply_2 = []
+        self.totalFormalSupply_2 = []
+        self.shareSocialCare_2 = []
+        self.totalInformalCarePerRecipient_2 = []
+        self.totalFormalCarePerRecipient_2 = []
+        self.totalUnmetNeedPerRecipient_2 = []
+        self.totalInformalCarePerCarer_2 = []
+        self.totalFormalCarePerCarer_2 = []
+        self.shareInformalSupply_2 = []
+        self.shareUnmetCareDemand_2 = []
+        self.perCapitaUnmetCareDemand_2 = []
+        self.totalInformalSupply_3 = []
+        self.totalFormalSupply_3 = []
+        self.shareSocialCare_3 = []
+        self.totalInformalCarePerRecipient_3 = []
+        self.totalFormalCarePerRecipient_3 = []
+        self.totalUnmetNeedPerRecipient_3 = []
+        self.totalInformalCarePerCarer_3 = []
+        self.totalFormalCarePerCarer_3 = []
+        self.shareInformalSupply_3 = []
+        self.shareUnmetCareDemand_3 = []
+        self.perCapitaUnmetCareDemand_3 = []
+        self.totalInformalSupply_4 = []
+        self.totalFormalSupply_4 = []
+        self.shareSocialCare_4 = []
+        self.totalInformalCarePerRecipient_4 = []
+        self.totalFormalCarePerRecipient_4 = []
+        self.totalUnmetNeedPerRecipient_4 = []
+        self.totalInformalCarePerCarer_4 = []
+        self.totalFormalCarePerCarer_4 = []
+        self.shareInformalSupply_4 = []
+        self.shareUnmetCareDemand_4 = []
+        self.perCapitaUnmetCareDemand_4 = []
+        self.totalInformalSupply_5 = []
+        self.totalFormalSupply_5 = []
+        self.shareSocialCare_5 = []
+        self.totalInformalCarePerRecipient_5 = []
+        self.totalFormalCarePerRecipient_5 = []
+        self.totalUnmetNeedPerRecipient_5 = []
+        self.totalInformalCarePerCarer_5 = []
+        self.totalFormalCarePerCarer_5 = []
+        self.shareInformalSupply_5 = []
+        self.shareUnmetCareDemand_5 = []
+        self.perCapitaUnmetCareDemand_5 = []
+        self.totalSupplyHousehold = []
+        self.totalSupplyNoK_1 = []
+        self.totalSupplyNoK_2 = []
+        self.totalSupplyNoK_3 = []
+        self.totalInformalSupplyHousehold = []
+        self.totalInformalSupplyNoK_1 = []
+        self.totalInformalSupplyNoK_2 = []
+        self.totalInformalSupplyNoK_3 = []
+        self.totalFormalSupplyHousehold = []
+        self.totalFormalSupplyNoK_1 = []
+        self.totalFormalSupplyNoK_2 = []
+        self.totalFormalSupplyNoK_3 = []
+        self.totalEmployment = []
+        self.totalEmployment_1 = []
+        self.totalEmployment_2 = []
+        self.totalEmployment_3 = []
+        self.totalEmployment_4 = []
+        self.totalEmployment_5 = []
+        self.totalJobChanges = []
+        self.averageIncome_M = []
+        self.averageIncome_F = []
+        self.ratioWomenMaleIncome = []
+        self.averageIncome_1 = []
+        self.averageIncome_1_Males = []
+        self.averageIncome_1_Females = []
+        self.ratioWomenMaleIncome_1 = []
+        self.averageIncome_2 = []
+        self.averageIncome_2_Males = []
+        self.averageIncome_2_Females = []
+        self.ratioWomenMaleIncome_2 = []
+        self.averageIncome_3 = []
+        self.averageIncome_3_Males = []
+        self.averageIncome_3_Females = []
+        self.ratioWomenMaleIncome_3 = []
+        self.averageIncome_4 = []
+        self.averageIncome_4_Males = []
+        self.averageIncome_4_Females = []
+        self.ratioWomenMaleIncome_4 = []
+        self.averageIncome_5 = []
+        self.averageIncome_5_Males = []
+        self.averageIncome_5_Females = []
+        self.ratioWomenMaleIncome_5 = []
+        self.totalRelocations = 0
+        self.numberRelocations = []
+        self.jobRelocations_1 = 0
+        self.jobRelocations_2 = 0
+        self.jobRelocations_3 = 0
+        self.jobRelocations_4 = 0
+        self.jobRelocations_5 = 0
+        self.numJobRelocations_1 = []
+        self.numJobRelocations_2 = []
+        self.numJobRelocations_3 = []
+        self.numJobRelocations_4 = []
+        self.numJobRelocations_5 = []
+        self.marriageRelocations = 0
+        self.numMarriageRelocations = []
+        self.sizeRelocations = 0
+        self.numSizeRelocations = []
+        self.retiredRelocations = 0
+        self.numRetiredRelocations = []
+        self.townChanges = 0
+        self.numberTownChanges = []
+        self.numTaxpayers = []
+        self.totalUnmetNeed = []
+        self.totalFamilyCare = []
+        self.totalTaxBurden = []
+        # Check variables
+        self.perCapitaHouseholdIncome = []
+        self.socialCareMapValues = []
+        self.relativeEducationCost = []
+        self.changeJobRate = []
+        self.changeJobdIncome = []
+        self.relocationCareLoss = []
+        self.relocationCost = []
+        self.townJobAttraction = []
+        self.unemployedIncomeDiscountingFactor = []
+        self.relativeTownAttraction = []
+        self.houseScore = []
+        self.deltaHouseOccupants = []
+        
+    def sensitivityGraphs(self, folder):
+        
+        # Sensitivity Chart 1: Shares of Unmet Care Needs
+        lowSharesUnmetCare_M = self.sharesUnmetCare_M[0::2]
+        lowSharesUnmetCare_SD = self.sharesUnmetCare_SD[0::2]
+        highSharesUnmetCare_M = self.sharesUnmetCare_M[1::2]
+        highSharesUnmetCare_SD = self.sharesUnmetCare_SD[1::2]
+        
+        N = len(lowSharesUnmetCare_M)
+        fig, ax = plt.subplots()
+        index = np.arange(N)    # the x locations for the groups
+        bar_width = 0.35         # the width of the bars
+        p1 = ax.bar(index, lowSharesUnmetCare_M, bar_width, color='b', bottom = 0, yerr = lowSharesUnmetCare_SD, 
+                    label = 'Low (half)')
+        p2 = ax.bar(index + bar_width, highSharesUnmetCare_M, bar_width,color='g', bottom = 0, yerr = highSharesUnmetCare_SD, 
+                    label = 'High (double)')
+        ax.set_ylabel('Share of Unmet Care')
+        ax.set_xlabel('Parameters')
+        ax.set_title('Shares of Unmet Care Need')
+        ax.set_xticks(index + bar_width/2)
+        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4', 'P5', 'P6'))
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1])
+        fig.tight_layout()
+        filename = folder + '/SharesUnmetCareSensitivityGroupedBarChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Sensitivity Chart 2: Averages of Unmet Care Needs
+        lowAveragesUnmetCare_M = self.averagesUnmetCare_M[0::2]
+        lowAveragesUnmetCare_SD = self.averagesUnmetCare_SD[0::2]
+        highAveragesUnmetCare_M = self.averagesUnmetCare_M[1::2]
+        highAveragesUnmetCare_SD = self.averagesUnmetCare_SD[1::2]
+        
+        N = len(lowAveragesUnmetCare_M)
+        fig, ax = plt.subplots()
+        index = np.arange(N)    # the x locations for the groups
+        bar_width = 0.35         # the width of the bars
+        p1 = ax.bar(index, lowAveragesUnmetCare_M, bar_width, color='b', bottom = 0, yerr = lowAveragesUnmetCare_SD, 
+                    label = 'Low (half)')
+        p2 = ax.bar(index + bar_width, highAveragesUnmetCare_M, bar_width,color='g', bottom = 0, yerr = highAveragesUnmetCare_SD, 
+                    label = 'High (double)')
+        ax.set_ylabel('Hours of Unmet Care')
+        ax.set_xlabel('Parameters')
+        ax.set_title('Unmet Care per Receiver')
+        ax.set_xticks(index + bar_width/2)
+        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4', 'P5', 'P6'))
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1])
+        fig.tight_layout()
+        filename = folder + '/AveragesUnmetCareSensitivityGroupedBarChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Sensitivity Chart 3: Shares of Social Care
+        lowSharesSocialCare_M = self.sharesSocialCare_M[0::2]
+        lowSharesSocialCare_SD = self.sharesSocialCare_SD[0::2]
+        highSharesSocialCare_M = self.sharesSocialCare_M[1::2]
+        highSharesSocialCare_SD = self.sharesSocialCare_SD[1::2]
+        
+        N = len(lowSharesSocialCare_M)
+        fig, ax = plt.subplots()
+        index = np.arange(N)    # the x locations for the groups
+        bar_width = 0.35         # the width of the bars
+        p1 = ax.bar(index, lowSharesSocialCare_M, bar_width, color='b', bottom = 0, yerr = lowSharesSocialCare_SD, 
+                    label = 'Low (half)')
+        p2 = ax.bar(index + bar_width, highSharesSocialCare_M, bar_width,color='g', bottom = 0, yerr = highSharesSocialCare_SD, 
+                    label = 'High (double)')
+        ax.set_ylabel('Share of Social Care')
+        ax.set_xlabel('Parameters')
+        ax.set_title('Shares of Social Care Received')
+        ax.set_xticks(index + bar_width/2)
+        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4', 'P5', 'P6'))
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1])
+        fig.tight_layout()
+        filename = folder + '/SharesSocialCareSensitivityGroupedBarChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Sensitivity Chart 4: Shares of Informal Care
+        lowSharesInformalCare_M = self.sharesInformalCare_M[0::2]
+        lowSharesInformalCare_SD = self.sharesInformalCare_SD[0::2]
+        highSharesInformalCare_M = self.sharesInformalCare_M[1::2]
+        highSharesInformalCare_SD = self.sharesInformalCare_SD[1::2]
+        
+        N = len(lowSharesSocialCare_M)
+        fig, ax = plt.subplots()
+        index = np.arange(N)    # the x locations for the groups
+        bar_width = 0.35         # the width of the bars
+        p1 = ax.bar(index, lowSharesInformalCare_M, bar_width, color='b', bottom = 0, yerr = lowSharesInformalCare_SD, 
+                    label = 'Low (half)')
+        p2 = ax.bar(index + bar_width, highSharesInformalCare_M, bar_width,color='g', bottom = 0, yerr = highSharesInformalCare_SD, 
+                    label = 'High (double)')
+        ax.set_ylabel('Share of Informal Care')
+        ax.set_xlabel('Parameters')
+        ax.set_title('Shares of Informal Care Received')
+        ax.set_xticks(index + bar_width/2)
+        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4', 'P5', 'P6'))
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1])
+        fig.tight_layout()
+        filename = folder + '/SharesInformalCareSensitivityGroupedBarChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+
 class PopPyramid:
     """Builds a data object for storing population pyramid data in."""
     def __init__ (self, ageClasses, careLevels):
