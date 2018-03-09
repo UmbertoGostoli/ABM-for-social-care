@@ -20,9 +20,9 @@ def init_params():
     # The basics: starting population and year, etc.
     p['initialPop'] = 500
     p['startYear'] = 1860
-    p['endYear'] = 1900
+    p['endYear'] = 2030
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1860
+    p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5

@@ -402,20 +402,20 @@ class Sim:
 
     def run(self):
         # Read parameters 
-        self.parameters = np.genfromtxt('parameters_r.csv',
+        self.parameters = np.genfromtxt('parameters.csv',
                                        skip_header = 1, delimiter=',')
         
         self.parameters = map(list, zip(*self.parameters))
          # Create a list of combinations
         combinations = []
-        defaultValues = [0.1, 0.001, 0.5, 1.0, 1.0, 0.002]
+        defaultValues = [self.p['unmetNeedExponent'], self.p['incomeCareParam'], self.p['excessNeedParam'], self.p['betaGeoExp'], self.p['relocationCostParam'], self.p['propensityRelocationParam']]
         for i in range(len(self.parameters)):
             for j in range(2):
                 runParameters = [x for x in defaultValues]
                 runParameters[i] = self.parameters[i][j]
                 combinations.append(runParameters)
                 
-        folder_S  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
+        folder_S  = 'C:\Social Care Model\Charts\SensitivityCharts'
         if not os.path.isdir(os.path.dirname(folder_S)):
             os.makedirs(folder_S)
             
@@ -427,7 +427,7 @@ class Sim:
             print('Run: ' + str(r))
 
             
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\Run_' + str(r)
+            folder  = 'C:\Social Care Model\Charts\Run_' + str(r)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
