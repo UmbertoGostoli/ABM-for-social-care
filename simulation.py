@@ -371,13 +371,20 @@ class Sim:
         self.sharesInformalCare_SD = []
         
         # Check variables
+        # self.deathProb = []
+        # self.careLevel = []
         self.perCapitaHouseholdIncome = []
         self.socialCareMapValues = []
         self.relativeEducationCost = []
+        self.probKeepStudying = []
+        self.stageStudent = []
         self.changeJobRate = []
         self.changeJobdIncome = []
         self.relocationCareLoss = []
         self.relocationCost = []
+        self.townRelocationAttraction = []
+        self.townRelativeAttraction = []
+        self.townsJobProb = []
         self.townJobAttraction = []
         self.unemployedIncomeDiscountingFactor = []
         self.relativeTownAttraction = []
@@ -408,14 +415,15 @@ class Sim:
         self.parameters = map(list, zip(*self.parameters))
          # Create a list of combinations
         combinations = []
-        defaultValues = [self.p['unmetNeedExponent'], self.p['incomeCareParam'], self.p['excessNeedParam'], self.p['betaGeoExp'], self.p['relocationCostParam'], self.p['propensityRelocationParam']]
+        defaultValues = [self.p['unmetNeedExponent'], self.p['incomeCareParam'], self.p['excessNeedParam'], 
+                         self.p['betaGeoExp'], self.p['relocationCostParam'], self.p['propensityRelocationParam']]
         for i in range(len(self.parameters)):
             for j in range(2):
                 runParameters = [x for x in defaultValues]
                 runParameters[i] = self.parameters[i][j]
                 combinations.append(runParameters)
                 
-        folder_S  = 'C:\Social Care Model\Charts\SensitivityCharts'
+        folder_S  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
         if not os.path.isdir(os.path.dirname(folder_S)):
             os.makedirs(folder_S)
             
@@ -427,7 +435,7 @@ class Sim:
             print('Run: ' + str(r))
 
             
-            folder  = 'C:\Social Care Model\Charts\Run_' + str(r)
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\Run_' + str(r)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
@@ -437,7 +445,7 @@ class Sim:
             self.p['incomeCareParam'] = combinations[r][1] # Default = 0.001
             self.p['excessNeedParam'] = combinations[r][2] # Default = 1.0
             self.p['betaGeoExp'] = combinations[r][3] # Default = 2.0
-            self.p['relocationCostParameter'] = combinations[r][4]
+            self.p['relocationCostParam'] = combinations[r][4]
             self.p['propensityRelocationParam'] = combinations[r][5]
     
             filename = folder + '/parameterValues.csv'
@@ -585,19 +593,22 @@ class Sim:
                 os.mkdir(os.path.dirname(filename))
             np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
             
-            # Check Values file
+                
+            values = zip(self.perCapitaHouseholdIncome, self.socialCareMapValues, 
+                         self.relativeEducationCost, self.probKeepStudying, self.stageStudent, self.changeJobRate, 
+                         self.changeJobdIncome, self.relocationCareLoss, self.relocationCost, self.townRelocationAttraction, 
+                         self.townRelativeAttraction, self.townsJobProb, self.townJobAttraction, 
+                         self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction, self.houseScore, 
+                         self.deltaHouseOccupants)
             
-            values = zip(self.perCapitaHouseholdIncome, self.socialCareMapValues, self.relativeEducationCost, 
-                         self.changeJobRate, self.changeJobdIncome, self.relocationCareLoss, self.relocationCost,
-                         self.townJobAttraction, self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction,
-                         self.houseScore, self.deltaHouseOccupants)
+            names = ('perCapitaHouseholdIncome, socialCareMapValues, '
+                     'relativeEducationCost, probKeepStudying, stageStudent, changeJobRate, '
+                     'changeJobdIncome, relocationCareLoss, relocationCost, townRelocationAttraction, '
+                     'townRelativeAttraction, townsJobProb, townJobAttraction, '
+                     'unemployedIncomeDiscountingFactor, relativeTownAttraction, houseScore, '
+                     'deltaHouseOccupants')
             
-            names = ('perCapitaHouseholdIncome, socialCareMapValues, relativeEducationCost,' 
-                     'changeJobRate, changeJobdIncome, relocationCareLoss, relocationCost,'
-                     'townJobAttraction, unemployedIncomeDiscountingFactor, relativeTownAttraction,'
-                     'houseScore, deltaHouseOccupants')
-            
-            filename = folder + '/Check_Values.csv'
+            filename = folder + '/Check_Value.csv'
             if not os.path.isdir(os.path.dirname(filename)):
                 os.mkdir(os.path.dirname(filename))
             np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
@@ -706,7 +717,7 @@ class Sim:
     def doOneYear(self):
         """Run one year of simulated time."""
         
-        print('Population: ' + str(len(self.pop.livingPeople)))
+        # print('Population: ' + str(len(self.pop.livingPeople)))
         
         self.computeClassShares()
         
@@ -827,7 +838,9 @@ class Sim:
                     rawRate = self.death_female[age, self.year-1950]
                     
                 dieProb = self.deathProb(rawRate, person.classRank, person.careNeedLevel)
-
+                
+                
+                    
             #############################################################################
             
                 if random.random() < dieProb:
@@ -878,10 +891,12 @@ class Sim:
                                                self.p['femaleAgeScaling'] ) )
                                    * self.p['femaleAgeDieProb'] )
                 rawRate = self.p['baseDieProb'] + babyDieProb + ageDieProb
-                baseRate = self.baseRate(self.socialClassShares, self.p['mortalityBias'], rawRate)
-                dieProb = baseRate*math.pow(self.p['mortalityBias'], person.classRank)
+                dieProb = self.deathProb(rawRate, person.classRank, person.careNeedLevel)
                 
-                
+                # Check variable
+#                if person.age == 40 and person.classRank == 0:
+#                    self.deathProb.append(dieProb) 
+#                    self.careLevel.append(person.careNeedLevel)
                 ####################################################################
                 
                 if random.random() < dieProb:
@@ -930,7 +945,7 @@ class Sim:
         self.deaths_4.append(deaths[3])
         self.deaths_5.append(deaths[4])
         
-        print('the number of people who died is: ' + str(preDeath - postDeath))
+        # print('the number of people who died is: ' + str(preDeath - postDeath))
         
         # print(len(self.pop.livingPeople))
     
@@ -992,7 +1007,7 @@ class Sim:
         self.births_4.append(births[3])
         self.births_5.append(births[4])
         
-        print('the number of births is: ' + str(postBirth - preBirth))
+        # print('the number of births is: ' + str(postBirth - preBirth))
     
     def computeBirthProb(self, classShares, fertilityBias, rawRate, womanRank):
         a = 0
@@ -1315,7 +1330,7 @@ class Sim:
                     # Check variable
                     if deltaHouseholdCare*deltaNetworkCare != 0:
                         self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
-                    # Min-Max: -5000 - 5000
+                    # Min-Max: -6000 - 3000
                     townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
                     for member in household:
                         member.socialCareMap.append(townSCI)
@@ -2024,7 +2039,7 @@ class Sim:
                 relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
                 
                 # Check variable
-                self.relativeEducationCost.append(relCost) 
+                self.relativeEducationCost.append(relCost) # 0.2 - 5
                 
                 incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost) # Min-Max: 0 - 10
                 targetEL = max(person.father.classRank, person.mother.classRank)
@@ -2032,6 +2047,11 @@ class Sim:
                 expEdu = math.exp(self.p['eduRankSensitivity']*dE)
                 educationEffect = expEdu/(expEdu+self.p['costantEduParam'])
                 pStudy = math.pow(incomeEffect, self.p['incEduExp'])*math.pow(educationEffect, 1-self.p['incEduExp'])
+                
+                # Check
+                self.probKeepStudying.append(pStudy)
+                self.stageStudent.append(stage)
+                
             else:
                 pStudy = 0
         else:
@@ -2383,8 +2403,8 @@ class Sim:
                             self.changeJobdIncome.append(deltaIncome)
                             self.relocationCareLoss.append(relocationNetLoss)
                             
-                            deltaIncomeFactor = math.exp(self.p['deltaIncomeExp']*deltaIncome) # Min-Max: -100 - 100
-                            careLossFactor = 1/math.exp(self.p['relocationCareLossExp']*relocationNetLoss) # Min-Max: 0 - 10
+                            deltaIncomeFactor = math.exp(self.p['deltaIncomeExp']*deltaIncome) # Min-Max: -70 - 73
+                            careLossFactor = 1/math.exp(self.p['relocationCareLossExp']*relocationNetLoss) # Min-Max: 0 - 17
                             changeWeight = deltaIncomeFactor*careLossFactor
                             changeWeights.append(changeWeight)
                             person.searchJob = False
@@ -2486,7 +2506,7 @@ class Sim:
         townJobDensity = self.jobMarketMap[person.classRank][townIndex]
         
         # Check variable
-        self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.001 - 0.1
+        self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.006 - 0.07
         
         townFactor = math.exp(self.p['incomeDiscountingExponent']*townJobDensity) # + self.p['incomeDiscountingParam']))
         discountingFactor = person.unemploymentRate/townFactor
@@ -2494,7 +2514,7 @@ class Sim:
         # Check variable
         self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.99 - 0.999
         
-        expIncome = income*math.exp(-1*person.unemploymentRate/townFactor)#discountingFactor
+        expIncome = income*math.exp(-1*discountingFactor*self.p['discountingMultiplier'])#discountingFactor
         return (expIncome)
         
     def statusQuo(self, agent):
@@ -2527,12 +2547,25 @@ class Sim:
         return (unemploymentRate)
     
     def computeTownSocialAttraction(self, agent):
+        potentialIncome = 0
+        household = [agent, agent.partner]
+        household.extend([x for x in agent.partner.children if x.dead == False and x.house == agent.partner.house])
+        household.extend([x for x in agent.children if x.dead == False and x.house == agent.house])
+        for member in household:
+            if member.status == 'employed' or member.status == 'retired':
+                potentialIncome += member.income
+            elif member.status == 'unemployed':
+                potentialIncome += self.expectedIncome(member, member.house.town)
+        perCapitaIncome = potentialIncome/float(len(household))
+        
         rcA = math.pow(float(agent.partner.yearsInTown), self.p['yearsInTownSensitivityParam'])
         children = [x for x in agent.partner.children if x.dead == False and x.house == agent.partner.house]
         for child in children:
             rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
         rcA *= self.p['relocationCostParam']
-        socialAttraction = self.spousesCareLocation(agent) - rcA
+        
+        socialAttraction = (self.spousesCareLocation(agent) - rcA)/perCapitaIncome
+        
         attractionFactor = math.exp(self.p['propensityRelocationParam']*socialAttraction)
         relativeAttraction = attractionFactor/(attractionFactor + 1)
         return (relativeAttraction)
@@ -2552,7 +2585,7 @@ class Sim:
                 rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
         
         # Check variable
-        self.relocationCost.append(rcA)  # Min-Max: 0 - 10
+        self.relocationCost.append(rcA)  # Min-Max: 0 - 8
         
         rcA *= self.p['relocationCostParam']
 
@@ -2560,9 +2593,13 @@ class Sim:
         index = 0
         for town in self.map.towns:
             if town == agent.house.town:
-                townAttraction = agent.socialCareMap[index] # Min-Max: -5000 - 5000 (*networkSocialCareParam)
+                townAttraction = agent.socialCareMap[index] # Min-Max: -60 - +30 (*networkSocialCareParam)
             else:
                 townAttraction = agent.socialCareMap[index] - rcA
+                
+            # Check variable
+            self.townRelocationAttraction.append(townAttraction) 
+            
             townAttractions.append(townAttraction)
             index += 1
         return (townAttractions)
@@ -2581,11 +2618,18 @@ class Sim:
         for town in self.map.towns:
             relativeAttraction = relocationCost[index]/perCapitaIncome
             
+            if relativeAttraction > 0.5:
+                print('Relative Attraction is:')
+                print(relativeAttraction)
             # Check variable
-            self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.05 - 0
+            self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.07 - 0.05
             
             attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
             rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
+            
+            # Check variable
+            self.townRelativeAttraction.append(rp) # 0.87 - 0.9
+            
             propensities.append(rp)
             index += 1
         return(propensities)
@@ -2639,6 +2683,10 @@ class Sim:
         for t in self.map.towns:
             townSocialAttraction = relocPropensity[index]
             townDensity.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
+            
+            # Check
+            self.townsJobProb.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
+            
             index += 1
         sumDensity = sum(townDensity)
         relTownDensity = [i/sumDensity for i in townDensity]
@@ -3314,19 +3362,19 @@ class Sim:
         currentPop = float(len(self.pop.livingPeople))
         self.pops.append(currentPop)
         unskilled = [x for x in self.pop.livingPeople if x.classRank == 0]
-        print(float(len(unskilled))/currentPop)
+        #print(float(len(unskilled))/currentPop)
         self.unskilledPop.append(len(unskilled))
         skilled = [x for x in self.pop.livingPeople if x.classRank == 1]
-        print(float(len(skilled))/currentPop)
+        #print(float(len(skilled))/currentPop)
         self.skilledPop.append(len(skilled))
         lowerclass = [x for x in self.pop.livingPeople if x.classRank == 2]
-        print(float(len(lowerclass))/currentPop)
+        #print(float(len(lowerclass))/currentPop)
         self.lowerclassPop.append(len(lowerclass))
         middelclass = [x for x in self.pop.livingPeople if x.classRank == 3]
-        print(float(len(middelclass))/currentPop)
+        #print(float(len(middelclass))/currentPop)
         self.middleclassPop.append(len(middelclass))
         upperclass = [x for x in self.pop.livingPeople if x.classRank == 4]
-        print(float(len(upperclass))/currentPop)
+        #print(float(len(upperclass))/currentPop)
         self.upperclassPop.append(len(upperclass))
         
         tally_1to1 = 0
@@ -5732,13 +5780,20 @@ class Sim:
         self.totalFamilyCare = []
         self.totalTaxBurden = []
         # Check variables
+        # self.deathProb = []
+        # self.careLevel = []
         self.perCapitaHouseholdIncome = []
         self.socialCareMapValues = []
         self.relativeEducationCost = []
+        self.probKeepStudying = []
+        self.stageStudent = []
         self.changeJobRate = []
         self.changeJobdIncome = []
         self.relocationCareLoss = []
         self.relocationCost = []
+        self.townRelocationAttraction = []
+        self.townRelativeAttraction = []
+        self.townsJobProb = []
         self.townJobAttraction = []
         self.unemployedIncomeDiscountingFactor = []
         self.relativeTownAttraction = []
