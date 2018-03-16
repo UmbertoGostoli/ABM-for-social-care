@@ -68,7 +68,7 @@ def init_params():
     
     # careSupplies getCare and probSuppliers function parameters
     ########   Key parameter 2  ##############
-    p['incomeCareParam'] = 0.001 #[0.0005 - 0.002]
+    p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
     
     p['weeklyHours'] = 40.0
     p['pricePublicSocialCare'] = 20.0
@@ -82,7 +82,7 @@ def init_params():
     p['socialCareWeightBias'] = 1.0
     
     ########   Key parameter 3  ##############
-    p['excessNeedParam'] = 0.01 #1.0 #[0.25 - 1.0]
+    p['excessNeedParam'] = 0.01 #1.0 #[0.005 - 0.02]
     
     p['careSupplyBias'] = 0.5
     p['careIncomeParam'] = 0.001
@@ -96,7 +96,7 @@ def init_params():
     p['incomeGrowthRate'] = [0.4, 0.35, 0.35, 0.3, 0.25]
     p['educationCosts'] = [0.0, 0.0, 0.0, 0.0]
     p['eduWageSensitivity'] = 0.5
-    p['eduRankSensitivity'] = 1.0
+    p['eduRankSensitivity'] = 2.0
     p['costantIncomeParam'] = 1.0
     p['costantEduParam'] = 1.0
     p['incEduExp'] = 0.25
@@ -128,13 +128,17 @@ def init_params():
     p['jobMobilityIntercept'] = 0.05
     p['ageBiasParam'] = [7.0, 3.0, 1.0, 0.5, 0.35, 0.15]
     p['deltaIncomeExp'] = 0.1
-    p['relocationCareLossExp'] = 0.01
+    
+    # Potential key parameter
+    p['relocationCareLossExp'] = 0.05 # 0.1
+    
     p['firingParam'] = 0.2
     p['wageVar'] = 0.04
     p['workDiscountingTime'] = 0.8
     p['sizeWeightParam'] = 0.7
     p['minClassWeightParam'] = 1.0
     p['incomeDiscountingExponent'] = 4.0
+    p['discountingMultiplier'] = 2.0
     #p['incomeDiscountingParam'] = 2.0
     
     # relocationPensioners function parameters
@@ -156,11 +160,11 @@ def init_params():
     p['yearsInTownSensitivityParam'] = 0.5
     
      ########   Key parameter 5  ##############
-    p['relocationCostParam'] = 2.0
+    p['relocationCostParam'] = 2.0 # [1 -4]
     
     ########   Key parameter 6  ##############
-    p['propensityRelocationParam'] = 5.0 #0.002 # [0.001 - 0.004]
-    p['denRelocationWeight'] = 0.1
+    p['propensityRelocationParam'] = 20.0 #0.002 # [10 - 40]
+    p['denRelocationWeight'] = 1.0
     
     
      ## Description of the map, towns, and houses
