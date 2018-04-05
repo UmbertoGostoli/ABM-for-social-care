@@ -124,6 +124,10 @@ class Person:
         self.socialWork = 0
         self.workToCare = 0
         self.residualNeed = 0
+        self.cumulativeUnmetNeed = 0
+        self.totalDiscountedShareUnmetNeed = 0
+        self.totalDiscountedTime = 0
+        self.averageShareUnmetNeed = 0
         self.informalSupplyByKinship = []
         self.formalSupplyByKinship = []
         self.networkSupply = 0
@@ -149,7 +153,9 @@ class Person:
         self.sec = sec
         self.education = edu
         self.wage = wage
+        self.hourlyWage = wage
         self.income = income
+        self.netIncome = income
         self.disposableIncome = income
         self.finalIncome = finalIncome
         self.jobOffers = []

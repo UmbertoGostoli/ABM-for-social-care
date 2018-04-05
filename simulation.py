@@ -16,6 +16,8 @@ import pylab
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 from matplotlib.backends.backend_pdf import PdfPages
+import pandas as pd
+import seaborn as sns
 from time import gmtime, strftime
 import os
 import Tkinter
@@ -289,6 +291,35 @@ class Sim:
         self.totalFormalSupplyNoK_1 = []
         self.totalFormalSupplyNoK_2 = []
         self.totalFormalSupplyNoK_3 = []
+        
+        self.unmetSocialCareNeedGiniCoefficient = []
+        self.unmetSocialCareNeedGiniCoefficient_1 = []
+        self.unmetSocialCareNeedGiniCoefficient_2 = []
+        self.unmetSocialCareNeedGiniCoefficient_3 = []
+        self.unmetSocialCareNeedGiniCoefficient_4 = []
+        self.unmetSocialCareNeedGiniCoefficient_5 = []
+        
+        self.shareUnmetSocialCareNeedGiniCoefficient = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_1 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_2 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_3 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_4 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_5 = []
+        
+        self.unmetSocialCareNeedDistribution = []
+        self.unmetSocialCareNeedDistribution_1 = []
+        self.unmetSocialCareNeedDistribution_2 = []
+        self.unmetSocialCareNeedDistribution_3 = []
+        self.unmetSocialCareNeedDistribution_4 = []
+        self.unmetSocialCareNeedDistribution_5 = []
+        
+        self.shareUnmetSocialCareNeedDistribution = []
+        self.shareUnmetSocialCareNeedDistribution_1 = []
+        self.shareUnmetSocialCareNeedDistribution_2 = []
+        self.shareUnmetSocialCareNeedDistribution_3 = []
+        self.shareUnmetSocialCareNeedDistribution_4 = []
+        self.shareUnmetSocialCareNeedDistribution_5 = []
+        
         ########################### Economic outputs ######################
         
         self.totalEmployment = []
@@ -299,6 +330,30 @@ class Sim:
         self.totalEmployment_5 = []
         
         self.totalJobChanges = []
+        
+        self.averageWage_M = []
+        self.averageWage_F = []
+        self.ratioWomenMaleWage = []
+        self.averageWage_1 = []
+        self.averageWage_1_Males = []
+        self.averageWage_1_Females = []
+        self.ratioWomenMaleWage_1 = []
+        self.averageWage_2 = []
+        self.averageWage_2_Males = []
+        self.averageWage_2_Females = []
+        self.ratioWomenMaleWage_2 = []
+        self.averageWage_3 = []
+        self.averageWage_3_Males = []
+        self.averageWage_3_Females = []
+        self.ratioWomenMaleWage_3 = []
+        self.averageWage_4 = []
+        self.averageWage_4_Males = []
+        self.averageWage_4_Females = []
+        self.ratioWomenMaleWage_4 = []
+        self.averageWage_5 = []
+        self.averageWage_5_Males = []
+        self.averageWage_5_Females = []
+        self.ratioWomenMaleWage_5 = []
         
         self.averageIncome_M = []
         self.averageIncome_F = []
@@ -353,7 +408,8 @@ class Sim:
         self.totalUnmetNeed = []
         self.totalFamilyCare = []
         self.totalTaxBurden = []
-        
+        self.healthCareCost = []
+        self.perCapitaHealthCareCost = []
         
         self.enterWork = []
         self.exitWork = []
@@ -395,6 +451,7 @@ class Sim:
         self.check = False
         self.exitWork = 0
         self.enterWork = 0
+        self.hospitalizationCost = 0
         self.year = self.p['startYear']
         self.pyramid = PopPyramid(self.p['num5YearAgeClasses'],
                                   self.p['numCareLevels'])
@@ -423,11 +480,12 @@ class Sim:
                 runParameters[i] = self.parameters[i][j]
                 combinations.append(runParameters)
                 
-        folder_S  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
+        folder_S  = 'N:\Social Care Model II\\Charts III\SensitivityCharts'
         if not os.path.isdir(os.path.dirname(folder_S)):
             os.makedirs(folder_S)
             
-        for r in range(len(combinations)):
+        
+        for r in range(1): # len(combinations)
             
             #self.emptyTimeSeries()
             
@@ -435,18 +493,18 @@ class Sim:
             print('Run: ' + str(r))
 
             
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\Run_' + str(r)
+            folder  = 'N:\Social Care Model II\Charts III\Run_' + str(r)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
             random.seed(self.p['favouriteSeed'])
             
-            self.p['unmetNeedExponent'] = combinations[r][0] # Default = 0.1
-            self.p['incomeCareParam'] = combinations[r][1] # Default = 0.001
-            self.p['excessNeedParam'] = combinations[r][2] # Default = 1.0
-            self.p['betaGeoExp'] = combinations[r][3] # Default = 2.0
-            self.p['relocationCostParam'] = combinations[r][4]
-            self.p['propensityRelocationParam'] = combinations[r][5]
+            self.p['unmetNeedExponent'] = 0.01 # combinations[r][0] # Default = 0.01
+            self.p['incomeCareParam'] = 0.0005 # combinations[r][1] # Default = 0.0005
+            self.p['excessNeedParam'] = 0.01 # combinations[r][2] # Default = 0.01
+            self.p['betaGeoExp'] = 2.0 # combinations[r][3] # Default = 2.0
+            self.p['relocationCostParam'] = 2.0 # combinations[r][4] Default = 2.0
+            self.p['propensityRelocationParam'] = 20.0 # combinations[r][5] Default = 20.0
     
             filename = folder + '/parameterValues.csv'
             if not os.path.isdir(os.path.dirname(filename)):
@@ -754,7 +812,15 @@ class Sim:
         #print('Allocate Care')
         self.allocateCare()
         
+        self.computeNetIncome()
+         
+        self.healthServiceCost()
+        
+        
         self.socialTransition()
+        
+        
+       
         
         #print('Job Market')
         self.jobMarket()
@@ -957,9 +1023,9 @@ class Sim:
         births = [0, 0, 0, 0, 0]
         womenOfReproductiveAge = [x for x in self.pop.livingPeople
                                   if x.sex == 'female'
-                                  and x.age > self.p['minPregnancyAge']
-                                  and x.age < self.p['maxPregnancyAge']
-                                  and x.partner != None] # and x.status != 'inactive']
+                                  and x.age >= self.p['minPregnancyAge']
+                                  and x.age <= self.p['maxPregnancyAge']
+                                  and x.partner != None and x.status != 'inactive']
                         
         for person in self.pop.livingPeople:
            
@@ -1094,7 +1160,10 @@ class Sim:
             if random.random() < careProb:
                 person.status = 'inactive'
                 baseTransition = self.baseRate(self.socialClassShares, self.p['careBias'], 1-self.p['careTransitionRate'])
-                unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.residualNeed)
+                if person.careNeedLevel > 0:
+                    unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.cumulativeUnmetNeed)
+                else:
+                    unmetNeedFactor = 1.0
                 transitionRate = (1.0 - baseTransition*math.pow(self.p['careBias'], person.classRank))*unmetNeedFactor
                 stepCare = 1
                 bound = transitionRate
@@ -1251,7 +1320,7 @@ class Sim:
                     kinshipSupply = 0
                     kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
                     for member in household:
-                        if member.father != None and member.father.father != None:
+                        if member.father != None and member.father.father != None and member.mother.father != None:
                             if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
                                 kinshipDemand += member.father.father.hoursDemand*kinshipWeight
                                 kinshipSupply += member.father.father.residualInformalSupply*kinshipWeight
@@ -1606,6 +1675,7 @@ class Sim:
         
         residualReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0 and x.totalSupply > 0]
         while len(residualReceivers) > 0:
+            totalResidualNeed_init = sum([x.residualNeed for x in residualReceivers])
             careList = []
             for x in residualReceivers:
                 if x.age < 16:
@@ -1620,7 +1690,18 @@ class Sim:
             for receiver in careReceivers:
                 receiver.totalSupply = self.totalSupply(receiver)
             residualReceivers = [x for x in careReceivers if x.totalSupply > 0]
-    
+            totalResidualNeed_end = sum([x.residualNeed for x in residualReceivers])
+            if totalResidualNeed_init == totalResidualNeed_end:
+                print('Error: final and initial need is equal')
+        for receiver in careReceivers:
+            receiver.cumulativeUnmetNeed *= self.p['unmetCareNeedDiscountParam']
+            receiver.cumulativeUnmetNeed += receiver.residualNeed
+            receiver.totalDiscountedShareUnmetNeed *= self.p['shareUnmetNeedDiscountParam']
+            receiver.totalDiscountedTime *= self.p['shareUnmetNeedDiscountParam']
+            receiver.totalDiscountedShareUnmetNeed += receiver.residualNeed/receiver.hoursDemand
+            receiver.totalDiscountedTime += 1
+            receiver.averageShareUnmetNeed = receiver.totalDiscountedShareUnmetNeed/receiver.totalDiscountedTime
+                
     def kinshipNetwork(self, pin):
         kn = []
         households = []
@@ -1871,6 +1952,8 @@ class Sim:
         receiver.formalCare += formalCare
         receiver.informalSupplyByKinship[indexSupply[index]] += informalCare
         receiver.formalSupplyByKinship[indexSupply[index]] += formalCare
+        if informalCare == 0 and formalCare == 0:
+            print('Error: no care is transferred')
         # receiver.totalSupply -= self.p['quantumCare']
         
     
@@ -1966,6 +2049,32 @@ class Sim:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " has now retired.")
     
     
+    def computeNetIncome(self):
+        employedPop = [x for x in self.pop.livingPeople if x.status == 'employed']
+        for person in employedPop:
+            careWorkingHours = person.socialWork - self.p['employedHours']
+            if careWorkingHours < 0:
+                careWorkingHours = 0
+            workingHours = float(max(self.p['weeklyHours'] - careWorkingHours, 0))
+            workTime = workingHours/float(self.p['weeklyHours'])
+            person.netIncome = workTime*person.income
+        self.updateNetIncomeStat()
+                
+    def healthServiceCost(self):
+        self.hospitalizationCost = 0
+        peopleWithUnmetNeed = [x for x in self.pop.livingPeople if x.cumulativeUnmetNeed != 0 and x.careNeedLevel > 0]
+        for person in peopleWithUnmetNeed:
+            needLevelFactor = math.pow(self.p['needLevelParam'], person.careNeedLevel)
+            unmetSocialCareFactor = math.pow(self.p['unmetSocialCareParam'], person.averageShareUnmetNeed)
+            averageHospitalization = self.p['hospitalizationParam']*needLevelFactor*unmetSocialCareFactor
+            self.hospitalizationCost += averageHospitalization*self.p['costHospitalizationPerDay']
+#            alfa = math.exp(self.p['unmetCareHealthParam']*person.cumulativeUnmetNeed)
+#            hospitalizationProb = (alfa - 1)/alfa
+#            if random.random() < hospitalizationProb:
+#                 # Hospitalization Lenght (depends on kinship network)
+#                 # Function for number of days in hospital
+#                 self.hospitalizationCost += self.p['costPerHospitalization']
+    
     def socialTransition(self):
         
         activePop = [x for x in self.pop.livingPeople if x.status != 'inactive']
@@ -2029,10 +2138,14 @@ class Sim:
             disposableIncome = 0
             for member in household:
                 if member.status == 'employed' or member.status == 'retired':
-                    disposableIncome += member.income
+                    disposableIncome += self.computeDisposableIncome(member) # member.income # 
                 elif member.status == 'unemployed':
-                    disposableIncome += self.expectedIncome(member, member.house.town)
+                    disposableIncome += self.computeDisposableIncome(member) # self.expectedIncome(member, member.house.town) # 
+            
             perCapitaDisposableIncome = disposableIncome/float(len(household))
+            
+            # print('Per Capita Disposable Income: ' + str(perCapitaDisposableIncome))
+            
             if perCapitaDisposableIncome > 0:
                 forgoneSalary = self.p['incomeInitialLevels'][stage]*self.p['weeklyHours']
                 educationCosts = self.p['educationCosts'][stage]
@@ -2041,13 +2154,16 @@ class Sim:
                 # Check variable
                 self.relativeEducationCost.append(relCost) # 0.2 - 5
                 
-                incomeEffect = self.p['costantIncomeParam']/math.exp(self.p['eduWageSensitivity']*relCost) # Min-Max: 0 - 10
+                incomeEffect = self.p['costantIncomeParam']/(math.exp(self.p['eduWageSensitivity']*relCost) + (self.p['costantIncomeParam']-1)) # Min-Max: 0 - 10
                 targetEL = max(person.father.classRank, person.mother.classRank)
                 dE = targetEL - stage
                 expEdu = math.exp(self.p['eduRankSensitivity']*dE)
                 educationEffect = expEdu/(expEdu+self.p['costantEduParam'])
-                pStudy = math.pow(incomeEffect, self.p['incEduExp'])*math.pow(educationEffect, 1-self.p['incEduExp'])
-                
+                careEffect = 1/math.exp(self.p['careEducationParam']*person.socialWork)
+                pStudy = incomeEffect*educationEffect*careEffect
+                # pStudy = math.pow(incomeEffect, self.p['incEduExp'])*math.pow(educationEffect, 1-self.p['incEduExp'])
+                if pStudy < 0:
+                    pStudy = 0
                 # Check
                 self.probKeepStudying.append(pStudy)
                 self.stageStudent.append(stage)
@@ -2120,7 +2236,8 @@ class Sim:
         ######     Otional: select a subset of eligible men based on age    ##########################################
         potentialGrooms = []
         for m in eligibleMen:
-            manMarriageProb = self.p['basicMaleMarriageProb']*self.p['maleMarriageModifierByDecade'][m.age/10]
+            incomeFactor = (math.exp(self.p['incomeMarriageParam']*m.income)-1)/math.exp(self.p['incomeMarriageParam']*m.income)
+            manMarriageProb = self.p['basicMaleMarriageProb']*self.p['maleMarriageModifierByDecade'][m.age/10]*incomeFactor # add income: *
             if random.random() < manMarriageProb:
                 potentialGrooms.append(m)
         ###########################################################################################################
@@ -2175,11 +2292,11 @@ class Sim:
                     child.justMarried = man.id
                 self.marriageTally += 1
     
-            if man.house == self.displayHouse or woman.house == self.displayHouse:
-                messageString = str(self.year) + ": #" + str(man.id) + " (age " + str(man.age) + ")"
-                messageString += " and #" + str(woman.id) + " (age " + str(woman.age)
-                messageString += ") marry."
-                self.textUpdateList.append(messageString)
+                if man.house == self.displayHouse or woman.house == self.displayHouse:
+                    messageString = str(self.year) + ": #" + str(man.id) + " (age " + str(man.age) + ")"
+                    messageString += " and #" + str(woman.id) + " (age " + str(woman.age)
+                    messageString += ") marry."
+                    self.textUpdateList.append(messageString)
          
         # poolMen = float(len(eligibleMen))
         # menMarried = 0.0
@@ -2476,7 +2593,9 @@ class Sim:
                             dK = np.random.normal(0, self.p['wageVar'])
                             person.newK = self.p['incomeFinalLevels'][person.classRank]*math.exp(dK)
                             person.newWage = self.computeWage(person, person.newK)
-                        peopleToHire = np.random.choice(unemployed, peopleToHire, replace = False)
+                        unemployedWeights = [1/math.exp(self.p['unemployedCareBurdernParam']*x.socialWork) for x in unemployed]
+                        unemployedProbs = [x/sum(unemployedWeights) for x in unemployedWeights]
+                        peopleToHire = np.random.choice(unemployed, peopleToHire, replace = False, p = unemployedProbs)
                         for person in peopleToHire:
                             self.changeJob(person)
   
@@ -2618,10 +2737,11 @@ class Sim:
         for town in self.map.towns:
             relativeAttraction = relocationCost[index]/perCapitaIncome
             
-            if relativeAttraction > 0.5:
-                print('Relative Attraction is:')
-                print(relativeAttraction)
+            #if relativeAttraction > 0.5:
+              #  print('Relative Attraction is:')
+              #  print(relativeAttraction)
             # Check variable
+            
             self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.07 - 0.05
             
             attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
@@ -2641,6 +2761,7 @@ class Sim:
             a.jobChange = True
         a.status = 'employed'
         a.wage = a.newWage
+        a.hourlyWage = a.wage
         a.income = a.wage*self.p['weeklyHours']
         a.disposableIncome = a.income
         a.finalIncome = a.newK
@@ -2656,6 +2777,7 @@ class Sim:
             self.exitWork += 1
             person.status = 'unemployed'
             person.wage = self.marketWage(person)
+            person.hourlyWage = 0
             person.income = 0
             person.disposableIncome = 0
             person.finalIncome = 0
@@ -2713,14 +2835,27 @@ class Sim:
         person.wage = k*math.exp(exp)
         if person.status == 'employed':
             person.income = person.wage*self.p['weeklyHours']
-            person.disposableIncome = workTime*person.income
-            person.disposableIncome -= person.workToCare*self.p['priceSocialCare']
-            if person.disposableIncome < 0:
-                person.disposableIncome = 0
+            person.hourlyWage = person.wage
         else:
             person.income = 0
+            person.hourlyWage = 0
             
-      
+     
+    def computeDisposableIncome(self, person):
+        careWorkingHours = person.socialWork - self.p['employedHours']
+        if careWorkingHours < 0:
+            careWorkingHours = 0
+        workingHours = float(max(self.p['weeklyHours'] - careWorkingHours, 0))
+        workTime = workingHours/float(self.p['weeklyHours'])
+        if person.status == 'employed' or person.status == 'retired':
+            disposableIncome = workTime*person.income
+            disposableIncome -= person.workToCare*self.p['priceSocialCare']
+        elif person.status == 'unemployed':
+            disposableIncome = self.expectedIncome(person, person.house.town)*workTime
+        if disposableIncome < 0:
+            disposableIncome = 0
+        return(disposableIncome)
+    
     def movingAround(self):
     
         #print('Job Relocation')
@@ -3353,7 +3488,185 @@ class Sim:
                 if len(person.house.occupants) > maxSize:
                     maxSize = len(person.house.occupants)
         print('The most numerous household has a size of ' + str(maxSize))
+    
+    def updateNetIncomeStat(self):
+        employed_1 = [x for x in self.pop.livingPeople if x.status == 'employed' and x.classRank == 0]
+        employed_1_Males = [x for x in employed_1 if x.sex == 'male']
+        employed_1_Females = [x for x in employed_1 if x.sex == 'female']
         
+        employed_2 = [x for x in self.pop.livingPeople if x.status == 'employed' and x.classRank == 1]
+        employed_2_Males = [x for x in employed_2 if x.sex == 'male']
+        employed_2_Females = [x for x in employed_2 if x.sex == 'female']
+        
+        employed_3 = [x for x in self.pop.livingPeople if x.status == 'employed' and x.classRank == 2]
+        employed_3_Males = [x for x in employed_3 if x.sex == 'male']
+        employed_3_Females = [x for x in employed_3 if x.sex == 'female']
+        
+        employed_4 = [x for x in self.pop.livingPeople if x.status == 'employed' and x.classRank == 3]
+        employed_4_Males = [x for x in employed_4 if x.sex == 'male']
+        employed_4_Females = [x for x in employed_4 if x.sex == 'female']
+        
+        employed_5 = [x for x in self.pop.livingPeople if x.status == 'employed' and x.classRank == 4]
+        employed_5_Males = [x for x in employed_5 if x.sex == 'male']
+        employed_5_Females = [x for x in employed_5 if x.sex == 'female']
+        
+        averageMalesIncome = 0
+        averageFemalesIncome = 0
+        employedMales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'male']
+        
+        if len(employedMales) > 0:
+            averageMalesIncome = sum([x.netIncome for x in employedMales])/float(len(employedMales))
+        else:
+            averageMalesIncome = 0
+        self.averageIncome_M.append(averageMalesIncome)
+        
+        employedFemales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'female']
+        if len(employedFemales) > 0:
+            averageFemalesIncome = sum([x.netIncome for x in employedFemales])/float(len(employedFemales))
+        else:
+            averageFemalesIncome = 0
+        self.averageIncome_F.append(averageFemalesIncome)
+        
+        if averageMalesIncome > 0:
+            self.ratioWomenMaleIncome.append(averageFemalesIncome/averageMalesIncome)
+        else:
+            self.ratioWomenMaleIncome.append(0)
+        
+        income_1 = sum([x.netIncome for x in employed_1])
+        income_1_Males = sum([x.netIncome for x in employed_1_Males])
+        income_1_Females = sum([x.netIncome for x in employed_1_Females])
+        if len(employed_1) > 0:
+            averageIncome = income_1/float(len(employed_1))
+        else:
+            averageIncome = 0
+        self.averageIncome_1.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
+        if len(employed_1_Males) > 0:
+            averageIncome_M = income_1_Males/float(len(employed_1_Males))
+        else:
+            averageIncome_M = 0
+        self.averageIncome_1_Males.append(averageIncome_M)
+        if len(employed_1_Females) > 0:
+            averageIncome_F = income_1_Females/float(len(employed_1_Females))
+        else:
+            averageIncome_F = 0
+        self.averageIncome_1_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_1.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_1.append(0)
+        
+        income_2 = sum([x.netIncome for x in employed_2])
+        income_2_Males = sum([x.netIncome for x in employed_2_Males])
+        income_2_Females = sum([x.netIncome for x in employed_2_Females])
+        if len(employed_2) > 0:
+            averageIncome = income_2/float(len(employed_2))
+        else:
+            averageIncome = 0
+        self.averageIncome_2.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
+        if len(employed_2_Males) > 0:
+            averageIncome_M = income_2_Males/float(len(employed_2_Males))
+        else:
+            averageIncome_M = 0
+        self.averageIncome_2_Males.append(averageIncome_M)
+        if len(employed_2_Females) > 0:
+            averageIncome_F = income_2_Females/float(len(employed_2_Females))
+        else:
+            averageIncome_F = 0
+        self.averageIncome_2_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_2.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_2.append(0)
+        
+        income_3 = sum([x.netIncome for x in employed_3])
+        income_3_Males = sum([x.netIncome for x in employed_3_Males])
+        income_3_Females = sum([x.netIncome for x in employed_3_Females])
+        if len(employed_3) > 0:
+            averageIncome = income_3/float(len(employed_3))
+        else:
+            averageIncome = 0
+        self.averageIncome_3.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
+        if len(employed_3_Males) > 0:
+            averageIncome_M = income_3_Males/float(len(employed_3_Males))
+        else:
+            averageIncome_M = 0
+        self.averageIncome_3_Males.append(averageIncome_M)
+        if len(employed_3_Females) > 0:
+            averageIncome_F = income_3_Females/float(len(employed_3_Females))
+        else:
+            averageIncome_F = 0
+        self.averageIncome_3_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_3.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_3.append(0)
+        
+        income_4 = sum([x.netIncome for x in employed_4])
+        income_4_Males = sum([x.netIncome for x in employed_4_Males])
+        income_4_Females = sum([x.netIncome for x in employed_4_Females])
+        if len(employed_4) > 0:
+            averageIncome = income_4/float(len(employed_4))
+        else:
+            averageIncome = 0
+        self.averageIncome_4.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
+        if len(employed_4_Males) > 0:
+            averageIncome_M = income_4_Males/float(len(employed_4_Males))
+        else:
+            averageIncome_M = 0
+        self.averageIncome_4_Males.append(averageIncome_M)
+        if len(employed_4_Females) > 0:
+            averageIncome_F = income_4_Females/float(len(employed_4_Females))
+        else:
+            averageIncome_F = 0
+        self.averageIncome_4_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_4.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_4.append(0)
+        
+        income_5 = sum([x.netIncome for x in employed_5])
+        income_5_Males = sum([x.netIncome for x in employed_5_Males])
+        income_5_Females = sum([x.netIncome for x in employed_5_Females])
+        if len(employed_5) > 0:
+            averageIncome = income_5/float(len(employed_5))
+        else:
+            averageIncome = 0
+        self.averageIncome_5.append(averageIncome)
+        
+        averageIncome_M = 0
+        averageIncome_F = 0
+        if len(employed_5_Males) > 0:
+            averageIncome_M = income_5_Males/float(len(employed_5_Males))
+        else:
+            averageIncome_M = 0
+        self.averageIncome_5_Males.append(averageIncome_M)
+        if len(employed_5_Females) > 0:
+            averageIncome_F = income_5_Females/float(len(employed_5_Females))
+        else:
+            averageIncome_F = 0
+        self.averageIncome_5_Females.append(averageIncome_F)
+        
+        if averageIncome_M > 0:
+            self.ratioWomenMaleIncome_5.append(averageIncome_F/averageIncome_M)
+        else:
+            self.ratioWomenMaleIncome_5.append(0)
+    
     def doStats(self):
         
         # Year
@@ -3362,19 +3675,19 @@ class Sim:
         currentPop = float(len(self.pop.livingPeople))
         self.pops.append(currentPop)
         unskilled = [x for x in self.pop.livingPeople if x.classRank == 0]
-        #print(float(len(unskilled))/currentPop)
+        print(float(len(unskilled))/currentPop)
         self.unskilledPop.append(len(unskilled))
         skilled = [x for x in self.pop.livingPeople if x.classRank == 1]
-        #print(float(len(skilled))/currentPop)
+        print(float(len(skilled))/currentPop)
         self.skilledPop.append(len(skilled))
         lowerclass = [x for x in self.pop.livingPeople if x.classRank == 2]
-        #print(float(len(lowerclass))/currentPop)
+        print(float(len(lowerclass))/currentPop)
         self.lowerclassPop.append(len(lowerclass))
         middelclass = [x for x in self.pop.livingPeople if x.classRank == 3]
-        #print(float(len(middelclass))/currentPop)
+        print(float(len(middelclass))/currentPop)
         self.middleclassPop.append(len(middelclass))
         upperclass = [x for x in self.pop.livingPeople if x.classRank == 4]
-        #print(float(len(upperclass))/currentPop)
+        print(float(len(upperclass))/currentPop)
         self.upperclassPop.append(len(upperclass))
         
         tally_1to1 = 0
@@ -3582,22 +3895,27 @@ class Sim:
         
         if len(h1) > 0:
             self.avgHouseholdSize_1.append(occupants_1/float(len(h1)))
+            #print(occupants_1/float(len(h1)))
         else:
             self.avgHouseholdSize_1.append(0)
         if len(h2) > 0:
             self.avgHouseholdSize_2.append(occupants_2/float(len(h2)))
+            #print(occupants_2/float(len(h2)))
         else:
             self.avgHouseholdSize_2.append(0)
         if len(h3) > 0:
             self.avgHouseholdSize_3.append(occupants_3/float(len(h3)))
+            #print(occupants_3/float(len(h3)))
         else:
             self.avgHouseholdSize_3.append(0)
         if len(h4) > 0:
             self.avgHouseholdSize_4.append(occupants_4/float(len(h4)))
+            #print(occupants_4/float(len(h4)))
         else:
             self.avgHouseholdSize_4.append(0)
         if len(h5) > 0:
             self.avgHouseholdSize_5.append(occupants_5/float(len(h5)))
+            #print(occupants_5/float(len(h5)))
         else:
             self.avgHouseholdSize_5.append(0)
        
@@ -4184,6 +4502,35 @@ class Sim:
         self.totalSupplyNoK_2.append(sumNoK_informalSupplies[2] + sumNoK_formalSupplies[2])
         self.totalSupplyNoK_3.append(sumNoK_informalSupplies[3] + sumNoK_formalSupplies[3])
         
+        self.healthCareCost.append(self.hospitalizationCost)
+        self.perCapitaHealthCareCost.append(self.hospitalizationCost/len(self.pop.livingPeople))
+        
+        self.unmetSocialCareNeedDistribution = [x.residualNeed for x in self.pop.livingPeople if x.careNeedLevel > 0]
+        self.unmetSocialCareNeedGiniCoefficient.append(self.computeGiniCoefficient(self.unmetSocialCareNeedDistribution))
+        self.unmetSocialCareNeedDistribution_1 = [x.residualNeed for x in self.pop.livingPeople if x.classRank == 0 and x.careNeedLevel > 0]
+        self.unmetSocialCareNeedGiniCoefficient_1.append(self.computeGiniCoefficient(self.unmetSocialCareNeedDistribution_1))
+        self.unmetSocialCareNeedDistribution_2 = [x.residualNeed for x in self.pop.livingPeople if x.classRank == 1 and x.careNeedLevel > 0]
+        self.unmetSocialCareNeedGiniCoefficient_2.append(self.computeGiniCoefficient(self.unmetSocialCareNeedDistribution_2))
+        self.unmetSocialCareNeedDistribution_3 = [x.residualNeed for x in self.pop.livingPeople if x.classRank == 2 and x.careNeedLevel > 0]
+        self.unmetSocialCareNeedGiniCoefficient_3.append(self.computeGiniCoefficient(self.unmetSocialCareNeedDistribution_3))
+        self.unmetSocialCareNeedDistribution_4 = [x.residualNeed for x in self.pop.livingPeople if x.classRank == 3 and x.careNeedLevel > 0]
+        self.unmetSocialCareNeedGiniCoefficient_4.append(self.computeGiniCoefficient(self.unmetSocialCareNeedDistribution_4))
+        self.unmetSocialCareNeedDistribution_5 = [x.residualNeed for x in self.pop.livingPeople if x.classRank == 4 and x.careNeedLevel > 0]
+        self.unmetSocialCareNeedGiniCoefficient_5.append(self.computeGiniCoefficient(self.unmetSocialCareNeedDistribution_5))
+        
+        self.shareUnmetSocialCareNeedDistribution = [x.residualNeed/x.hoursDemand for x in self.pop.livingPeople if x.careNeedLevel > 0]
+        self.shareUnmetSocialCareNeedGiniCoefficient.append(self.computeGiniCoefficient(self.shareUnmetSocialCareNeedDistribution))
+        self.shareUnmetSocialCareNeedDistribution_1 = [x.residualNeed/x.hoursDemand for x in self.pop.livingPeople if x.classRank == 0 and x.careNeedLevel > 0]
+        self.shareUnmetSocialCareNeedGiniCoefficient_1.append(self.computeGiniCoefficient(self.shareUnmetSocialCareNeedDistribution_1))
+        self.shareUnmetSocialCareNeedDistribution_2 = [x.residualNeed/x.hoursDemand for x in self.pop.livingPeople if x.classRank == 1 and x.careNeedLevel > 0]
+        self.shareUnmetSocialCareNeedGiniCoefficient_2.append(self.computeGiniCoefficient(self.shareUnmetSocialCareNeedDistribution_2))
+        self.shareUnmetSocialCareNeedDistribution_3 = [x.residualNeed/x.hoursDemand for x in self.pop.livingPeople if x.classRank == 2 and x.careNeedLevel > 0]
+        self.shareUnmetSocialCareNeedGiniCoefficient_3.append(self.computeGiniCoefficient(self.shareUnmetSocialCareNeedDistribution_3))
+        self.shareUnmetSocialCareNeedDistribution_4 = [x.residualNeed/x.hoursDemand for x in self.pop.livingPeople if x.classRank == 3 and x.careNeedLevel > 0]
+        self.shareUnmetSocialCareNeedGiniCoefficient_4.append(self.computeGiniCoefficient(self.shareUnmetSocialCareNeedDistribution_4))
+        self.shareUnmetSocialCareNeedDistribution_5 = [x.residualNeed/x.hoursDemand for x in self.pop.livingPeople if x.classRank == 4 and x.careNeedLevel > 0]
+        self.shareUnmetSocialCareNeedGiniCoefficient_5.append(self.computeGiniCoefficient(self.shareUnmetSocialCareNeedDistribution_5))
+        
         ####### Economic Outputs ################################################################
         
         activePop = [x for x in self.pop.livingPeople if x.status == 'employed' or x.status == 'unemployed']
@@ -4253,160 +4600,164 @@ class Sim:
         self.totalJobChanges.append(jobChangeRate)
         # print('Job Change Rate: ' + str(jobChangeRate))
         
+        averageMalesWage = 0
+        averageFemalesWage = 0
         employedMales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'male']
+        
         if len(employedMales) > 0:
-            averageMalesIncome = sum([x.income for x in employedMales])/float(len(employedMales))
+            averageMalesWage = sum([x.hourlyWage for x in employedMales])/float(len(employedMales))
         else:
-            averageMalesIncome = 0
-        self.averageIncome_M.append(averageMalesIncome)
+            averageMalesWage = 0
+        self.averageWage_M.append(averageMalesWage)
         
         employedFemales = [x for x in self.pop.livingPeople if x.status == 'employed' and x.sex == 'female']
         if len(employedFemales) > 0:
-            averageFemalesIncome = sum([x.income for x in employedFemales])/float(len(employedFemales))
+            averageFemalesWage = sum([x.hourlyWage for x in employedFemales])/float(len(employedFemales))
         else:
-            averageFemalesIncome = 0
-        self.averageIncome_F.append(averageFemalesIncome)
+            averageFemalesWage = 0
+        self.averageWage_F.append(averageFemalesWage)
         
-        if averageMalesIncome > 0:
-            self.ratioWomenMaleIncome.append(averageFemalesIncome/averageMalesIncome)
+        if averageMalesWage > 0:
+            self.ratioWomenMaleWage.append(averageFemalesWage/averageMalesWage)
         else:
-            self.ratioWomenMaleIncome.append(0)
+            self.ratioWomenMaleWage.append(0)
         
-        income_1 = sum([x.income for x in employed_1])
-        income_1_Males = sum([x.income for x in employed_1_Males])
-        income_1_Females = sum([x.income for x in employed_1_Females])
+        Wage_1 = sum([x.hourlyWage for x in employed_1])
+        Wage_1_Males = sum([x.hourlyWage for x in employed_1_Males])
+        Wage_1_Females = sum([x.hourlyWage for x in employed_1_Females])
         if len(employed_1) > 0:
-            averageIncome = income_1/float(len(employed_1))
+            averageWage = Wage_1/float(len(employed_1))
         else:
-            averageIncome = 0
-        self.averageIncome_1.append(averageIncome)
+            averageWage = 0
+        self.averageWage_1.append(averageWage)
         
-        averageIncome_M = 0
-        averageIncome_F = 0
+        averageWage_M = 0
+        averageWage_F = 0
         if len(employed_1_Males) > 0:
-            averageIncome_M = income_1_Males/float(len(employed_1_Males))
+            averageWage_M = Wage_1_Males/float(len(employed_1_Males))
         else:
-            averageIncome_M = 0
-        self.averageIncome_1_Males.append(averageIncome_M)
+            averageWage_M = 0
+        self.averageWage_1_Males.append(averageWage_M)
+        
         if len(employed_1_Females) > 0:
-            averageIncome_F = income_1_Females/float(len(employed_1_Females))
+            averageWage_F = Wage_1_Females/float(len(employed_1_Females))
         else:
-            averageIncome_F = 0
-        self.averageIncome_1_Females.append(averageIncome_F)
+            averageWage_F = 0
+        self.averageWage_1_Females.append(averageWage_F)
         
-        if averageIncome_M > 0:
-            self.ratioWomenMaleIncome_1.append(averageIncome_F/averageIncome_M)
+        if averageWage_M > 0:
+            self.ratioWomenMaleWage_1.append(averageWage_F/averageWage_M)
         else:
-            self.ratioWomenMaleIncome_1.append(0)
+            self.ratioWomenMaleWage_1.append(0)
         
-        income_2 = sum([x.income for x in employed_2])
-        income_2_Males = sum([x.income for x in employed_2_Males])
-        income_2_Females = sum([x.income for x in employed_2_Females])
+        Wage_2 = sum([x.hourlyWage for x in employed_2])
+        Wage_2_Males = sum([x.hourlyWage for x in employed_2_Males])
+        Wage_2_Females = sum([x.hourlyWage for x in employed_2_Females])
         if len(employed_2) > 0:
-            averageIncome = income_2/float(len(employed_2))
+            averageWage = Wage_2/float(len(employed_2))
         else:
-            averageIncome = 0
-        self.averageIncome_2.append(averageIncome)
+            averageWage = 0
+        self.averageWage_2.append(averageWage)
         
-        averageIncome_M = 0
-        averageIncome_F = 0
+        averageWage_M = 0
+        averageWage_F = 0
         if len(employed_2_Males) > 0:
-            averageIncome_M = income_2_Males/float(len(employed_2_Males))
+            averageWage_M = Wage_2_Males/float(len(employed_2_Males))
         else:
-            averageIncome_M = 0
-        self.averageIncome_2_Males.append(averageIncome_M)
+            averageWage_M = 0
+        self.averageWage_2_Males.append(averageWage_M)
         if len(employed_2_Females) > 0:
-            averageIncome_F = income_2_Females/float(len(employed_2_Females))
+            averageWage_F = Wage_2_Females/float(len(employed_2_Females))
         else:
-            averageIncome_F = 0
-        self.averageIncome_2_Females.append(averageIncome_F)
+            averageWage_F = 0
+        self.averageWage_2_Females.append(averageWage_F)
         
-        if averageIncome_M > 0:
-            self.ratioWomenMaleIncome_2.append(averageIncome_F/averageIncome_M)
+        if averageWage_M > 0:
+            self.ratioWomenMaleWage_2.append(averageWage_F/averageWage_M)
         else:
-            self.ratioWomenMaleIncome_2.append(0)
+            self.ratioWomenMaleWage_2.append(0)
         
-        income_3 = sum([x.income for x in employed_3])
-        income_3_Males = sum([x.income for x in employed_3_Males])
-        income_3_Females = sum([x.income for x in employed_3_Females])
+        Wage_3 = sum([x.hourlyWage for x in employed_3])
+        Wage_3_Males = sum([x.hourlyWage for x in employed_3_Males])
+        Wage_3_Females = sum([x.hourlyWage for x in employed_3_Females])
         if len(employed_3) > 0:
-            averageIncome = income_3/float(len(employed_3))
+            averageWage = Wage_3/float(len(employed_3))
         else:
-            averageIncome = 0
-        self.averageIncome_3.append(averageIncome)
+            averageWage = 0
+        self.averageWage_3.append(averageWage)
         
-        averageIncome_M = 0
-        averageIncome_F = 0
+        averageWage_M = 0
+        averageWage_F = 0
         if len(employed_3_Males) > 0:
-            averageIncome_M = income_3_Males/float(len(employed_3_Males))
+            averageWage_M = Wage_3_Males/float(len(employed_3_Males))
         else:
-            averageIncome_M = 0
-        self.averageIncome_3_Males.append(averageIncome_M)
+            averageWage_M = 0
+        self.averageWage_3_Males.append(averageWage_M)
         if len(employed_3_Females) > 0:
-            averageIncome_F = income_3_Females/float(len(employed_3_Females))
+            averageWage_F = Wage_3_Females/float(len(employed_3_Females))
         else:
-            averageIncome_F = 0
-        self.averageIncome_3_Females.append(averageIncome_F)
+            averageWage_F = 0
+        self.averageWage_3_Females.append(averageWage_F)
         
-        if averageIncome_M > 0:
-            self.ratioWomenMaleIncome_3.append(averageIncome_F/averageIncome_M)
+        if averageWage_M > 0:
+            self.ratioWomenMaleWage_3.append(averageWage_F/averageWage_M)
         else:
-            self.ratioWomenMaleIncome_3.append(0)
+            self.ratioWomenMaleWage_3.append(0)
         
-        income_4 = sum([x.income for x in employed_4])
-        income_4_Males = sum([x.income for x in employed_4_Males])
-        income_4_Females = sum([x.income for x in employed_4_Females])
+        Wage_4 = sum([x.hourlyWage for x in employed_4])
+        Wage_4_Males = sum([x.hourlyWage for x in employed_4_Males])
+        Wage_4_Females = sum([x.hourlyWage for x in employed_4_Females])
         if len(employed_4) > 0:
-            averageIncome = income_4/float(len(employed_4))
+            averageWage = Wage_4/float(len(employed_4))
         else:
-            averageIncome = 0
-        self.averageIncome_4.append(averageIncome)
+            averageWage = 0
+        self.averageWage_4.append(averageWage)
         
-        averageIncome_M = 0
-        averageIncome_F = 0
+        averageWage_M = 0
+        averageWage_F = 0
         if len(employed_4_Males) > 0:
-            averageIncome_M = income_4_Males/float(len(employed_4_Males))
+            averageWage_M = Wage_4_Males/float(len(employed_4_Males))
         else:
-            averageIncome_M = 0
-        self.averageIncome_4_Males.append(averageIncome_M)
+            averageWage_M = 0
+        self.averageWage_4_Males.append(averageWage_M)
         if len(employed_4_Females) > 0:
-            averageIncome_F = income_4_Females/float(len(employed_4_Females))
+            averageWage_F = Wage_4_Females/float(len(employed_4_Females))
         else:
-            averageIncome_F = 0
-        self.averageIncome_4_Females.append(averageIncome_F)
+            averageWage_F = 0
+        self.averageWage_4_Females.append(averageWage_F)
         
-        if averageIncome_M > 0:
-            self.ratioWomenMaleIncome_4.append(averageIncome_F/averageIncome_M)
+        if averageWage_M > 0:
+            self.ratioWomenMaleWage_4.append(averageWage_F/averageWage_M)
         else:
-            self.ratioWomenMaleIncome_4.append(0)
+            self.ratioWomenMaleWage_4.append(0)
         
-        income_5 = sum([x.income for x in employed_5])
-        income_5_Males = sum([x.income for x in employed_5_Males])
-        income_5_Females = sum([x.income for x in employed_5_Females])
+        Wage_5 = sum([x.hourlyWage for x in employed_5])
+        Wage_5_Males = sum([x.hourlyWage for x in employed_5_Males])
+        Wage_5_Females = sum([x.hourlyWage for x in employed_5_Females])
         if len(employed_5) > 0:
-            averageIncome = income_5/float(len(employed_5))
+            averageWage = Wage_5/float(len(employed_5))
         else:
-            averageIncome = 0
-        self.averageIncome_5.append(averageIncome)
+            averageWage = 0
+        self.averageWage_5.append(averageWage)
         
-        averageIncome_M = 0
-        averageIncome_F = 0
+        averageWage_M = 0
+        averageWage_F = 0
         if len(employed_5_Males) > 0:
-            averageIncome_M = income_5_Males/float(len(employed_5_Males))
+            averageWage_M = Wage_5_Males/float(len(employed_5_Males))
         else:
-            averageIncome_M = 0
-        self.averageIncome_5_Males.append(averageIncome_M)
+            averageWage_M = 0
+        self.averageWage_5_Males.append(averageWage_M)
         if len(employed_5_Females) > 0:
-            averageIncome_F = income_5_Females/float(len(employed_5_Females))
+            averageWage_F = Wage_5_Females/float(len(employed_5_Females))
         else:
-            averageIncome_F = 0
-        self.averageIncome_5_Females.append(averageIncome_F)
+            averageWage_F = 0
+        self.averageWage_5_Females.append(averageWage_F)
         
-        if averageIncome_M > 0:
-            self.ratioWomenMaleIncome_5.append(averageIncome_F/averageIncome_M)
+        if averageWage_M > 0:
+            self.ratioWomenMaleWage_5.append(averageWage_F/averageWage_M)
         else:
-            self.ratioWomenMaleIncome_5.append(0)
-        
+            self.ratioWomenMaleWage_5.append(0)
+            
         ####### Mobility Outputs ################################################################
         
         self.numberRelocations.append(self.totalRelocations)
@@ -4487,7 +4838,19 @@ class Sim:
             for i in range(len(tally)):
                 if tally[i] > 0:
                     print i, tally[i]
-        
+    
+    def computeGiniCoefficient(self, unmetCareNeeds):
+        sorted_list = sorted(unmetCareNeeds)
+        height, area = 0, 0
+        for value in sorted_list:
+            height += float(value)
+            area += height - float(value)/2.
+        fair_area = height*len(unmetCareNeeds)/float(2)
+        if fair_area > 0:
+            return (fair_area-area)/fair_area
+        else:
+            return 0
+    
     def relocationProb(self, newocc, oldocc, firstocc):
         alfa = self.p['baseRelocatingProb']/(1+self.p['baseRelocatingProb'])
         totOcc = float(newocc+oldocc)
@@ -4873,15 +5236,17 @@ class Sim:
         
         # Chart 1: total social and child care demand and potential supply (from 1960 to 2020)
         fig, ax = plt.subplots()
-        ax.plot(years, self.totalCareSupply, linewidth=3, label = 'Potential Supply')
+        ax.plot(years, self.totalCareSupply, linewidth=2, label = 'Potential Supply')
         ax.stackplot(years, self.totalSocialCareDemand, self.totalChildCareDemand, labels = ['Social Care Need','Child Care Needs'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
         ax.set_xlabel('Year')
         ax.set_title('Care Needs and Potential Supply')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/DemandSupplyStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -4905,6 +5270,8 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Share of Care Givers')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareCareGiversChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -4925,6 +5292,9 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Care Takers by Care Need Level')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.ylim(0, 1)
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareByNeedLevelsStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -4946,12 +5316,14 @@ class Sim:
         p5, = ax.plot(years, self.shareSocialCare_4, label = 'Class IV')
         p6, = ax.plot(years, self.shareSocialCare_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Share of Care Need')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
-        ax.set_title('Share of Social Care Needs')
+        ax.set_title('Share of Social Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareSocialCareNeedsChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -4962,8 +5334,8 @@ class Sim:
         
         # Chart 5: Per Capita total care demand and unmet care demand (1960-2020)
         fig, ax = plt.subplots()
-        p1, = ax.plot(years, self.perCapitaCareDemand, label = 'Total Care Needs')
-        p2, = ax.plot(years, self.perCapitaUnmetCareDemand, label = 'Unmet Care Needs')
+        p1, = ax.plot(years, self.perCapitaCareDemand, linewidth = 2, label = 'Total Care Need')
+        p2, = ax.plot(years, self.perCapitaUnmetCareDemand, linewidth = 2, label = 'Unmet Care Need')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
         ax.set_xlabel('Year')
@@ -4971,6 +5343,8 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Per Capita Care and Unmet Care')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/PerCapitaCareUnmetCareChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -4981,8 +5355,8 @@ class Sim:
         
         # Chart 6: Per Capita total social care demand and unmet social care demand (1960-2020)
         fig, ax = plt.subplots()
-        p1, = ax.plot(years, self.perCapitaSocialCareDemand, label = 'Total Care Needs')
-        p2, = ax.plot(years, self.perCapitaUnmetSocialCareDemand, label = 'Unmet Care Needs')
+        p1, = ax.plot(years, self.perCapitaSocialCareDemand, linewidth = 2, label = 'Total Care Needs')
+        p2, = ax.plot(years, self.perCapitaUnmetSocialCareDemand, linewidth = 2, label = 'Unmet Care Needs')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
         ax.set_xlabel('Year')
@@ -4990,6 +5364,8 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Per Capita Demand and Unmet Social Care')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/PerCapitaDemandUnmetSocialCareChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5000,8 +5376,8 @@ class Sim:
         
         # Chart 7: Per Capita total child care demand and unmet child care demand (1960-2020)
         fig, ax = plt.subplots()
-        p1, = ax.plot(years, self.perCapitaChildCareDemand, label = 'Total Care Needs')
-        p2, = ax.plot(years, self.perCapitaUnmetChildCareDemand, label = 'Unmet Care Needs')
+        p1, = ax.plot(years, self.perCapitaChildCareDemand, linewidth = 2, label = 'Total Care Needs')
+        p2, = ax.plot(years, self.perCapitaUnmetChildCareDemand, linewidth = 2, label = 'Unmet Care Needs')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
         ax.set_xlabel('Year')
@@ -5009,6 +5385,8 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Per Capita Demand and Unmet Child Care')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/PerCapitaDemandUnmetChildCareChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5028,6 +5406,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Care and Unmet Care Needs')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/CareReceivedStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5049,12 +5429,14 @@ class Sim:
         p5, = ax.plot(years, self.shareInformalSupply_4, label = 'Class IV')
         p6, = ax.plot(years, self.shareInformalSupply_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Share of care')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Share of Informal Care Received')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareInformalCareReceivedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5074,6 +5456,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Social Care and Unmet Care Needs')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/SocialCareReceivedStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5093,6 +5477,7 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Child Social Care and Unmet Care Needs')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         fig.tight_layout()
         filename = folder + '/ChildCareReceivedStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5114,12 +5499,14 @@ class Sim:
         p5, = ax.plot(years, self.shareUnmetCareDemand_4, label = 'Class IV')
         p6, = ax.plot(years, self.shareUnmetCareDemand_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Share of Care')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Share of Unmet Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareUnmetCareNeedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5143,8 +5530,10 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Per Capita Unmet Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaUnmetCareNeedChart.pdf'
+        filename = folder + '/PerCapitaUnmetNeedChartByClass.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
@@ -5170,6 +5559,8 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Average Unmet Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/AverageUnmetCareNeedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5295,12 +5686,14 @@ class Sim:
         p5, = ax.plot(years, self.shareFemaleInformalCareSupplied_4, label = 'Class IV')
         p6, = ax.plot(years, self.shareFemaleInformalCareSupplied_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Share of care')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Share of Care supplied by Women')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareCareWomedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5350,7 +5743,74 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 20: Ratio Women Income and Men Income, total and by social class (from 1960 to 2020)
+        
+         # Chart 20: Ratio Women Income and Men Income, total and by social class (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.ratioWomenMaleWage, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.ratioWomenMaleWage_1, label = 'Class I')
+        p3, = ax.plot(years, self.ratioWomenMaleWage_2, label = 'Class II')
+        p4, = ax.plot(years, self.ratioWomenMaleWage_3, label = 'Class III')
+        p5, = ax.plot(years, self.ratioWomenMaleWage_4, label = 'Class IV')
+        p6, = ax.plot(years, self.ratioWomenMaleWage_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Wage Ratio')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Women and Men Wage Ratio')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/WomenMenWageRatioChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 21: income by gender per social class (mean of last 20 years)
+        n_groups = self.p['numberClasses']
+        WageMales_1 = np.mean(self.averageWage_1_Males[-20:])
+        WageMales_2 = np.mean(self.averageWage_2_Males[-20:])
+        WageMales_3 = np.mean(self.averageWage_3_Males[-20:])
+        WageMales_4 = np.mean(self.averageWage_4_Males[-20:])
+        WageMales_5 = np.mean(self.averageWage_5_Males[-20:])
+        WageFemales_1 = np.mean(self.averageWage_1_Females[-20:])
+        WageFemales_2 = np.mean(self.averageWage_2_Females[-20:])
+        WageFemales_3 = np.mean(self.averageWage_3_Females[-20:])
+        WageFemales_4 = np.mean(self.averageWage_4_Females[-20:])
+        WageFemales_5 = np.mean(self.averageWage_5_Females[-20:])
+        means_males = (WageMales_1, WageMales_2, WageMales_3, WageMales_4, WageMales_5)
+        means_females = (WageFemales_1, WageFemales_2, WageFemales_3, WageFemales_4, WageFemales_5)
+        fig, ax = plt.subplots()
+        index = np.arange(n_groups)
+        bar_width = 0.35
+        opacity = 0.8
+        rects3 = ax.bar(index, means_females, bar_width,
+                         alpha=opacity,
+                         color='b',
+                         label='Female')
+        rects4 = ax.bar(index + bar_width, means_males, bar_width,
+                         alpha=opacity,
+                         color='g',
+                         label='Male')
+        ax.set_ylabel('Average Wage')
+        ax.set_xlabel('Socio-Economic Classes')
+        ax.set_title('Female and Male Average Wage')
+        ax.set_xticks(ind + bar_width/2)
+        plt.xticks(index + bar_width/2, ('I', 'II', 'III', 'IV', 'V'))
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(handles[::-1], labels[::-1])
+        plt.tight_layout()
+        filename = folder + '/WageByGenderAndClassGroupedBarChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 22: Ratio Women Income and Men Income, total and by social class (from 1960 to 2020)
         fig, ax = plt.subplots()
         p1, = ax.plot(years, self.ratioWomenMaleIncome, linewidth = 3, label = 'Population')
         p2, = ax.plot(years, self.ratioWomenMaleIncome_1, label = 'Class I')
@@ -5359,12 +5819,14 @@ class Sim:
         p5, = ax.plot(years, self.ratioWomenMaleIncome_4, label = 'Class IV')
         p6, = ax.plot(years, self.ratioWomenMaleIncome_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Income Ratio')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Women and Men Income Ratio')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/WomenMenIncomeRatioChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5373,7 +5835,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 21: income by gender per social class (mean of last 20 years)
+        # Chart 23: income by gender per social class (mean of last 20 years)
         n_groups = self.p['numberClasses']
         incomeMales_1 = np.mean(self.averageIncome_1_Males[-20:])
         incomeMales_2 = np.mean(self.averageIncome_2_Males[-20:])
@@ -5428,6 +5890,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Population and Number of Taxpayers')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/PopulationTaxPayersStackedChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5450,6 +5914,8 @@ class Sim:
         ax.legend(loc = 'upper left')
         ax.set_title('Average Family Size')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/AverageFamilySizeChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5470,12 +5936,14 @@ class Sim:
         
         # Chart 24: Average Tax Burden (1960-2020)
         fig, ax = plt.subplots()
-        ax.plot(years, self.totalTaxBurden, color = 'red')
+        ax.plot(years, self.totalTaxBurden, linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Care costs per taxpayer per year')
         ax.set_xlabel('Year')
         ax.set_title('Average Tax Burden in pounds')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/TaxBurdenChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -5486,14 +5954,144 @@ class Sim:
       
         # Chart 25: Proportion of married adult women (1960-2020)
         fig, ax = plt.subplots()
-        ax.plot(years, self.marriageProp, color = 'red')
+        ax.plot(years, self.marriageProp, linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Proportion of married adult women')
         ax.set_xlabel('Year')
         ax.set_title('Marriage Rate (females)')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/MarriageRateChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 26: Health Care Cost (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(years, self.healthCareCost, linewidth = 2, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Cost in Pounds')
+        ax.set_xlabel('Year')
+        ax.set_title('Total Health Care Cost')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/TotalHealthCareCostChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 27: Per Capita Health Care Cost (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(years, self.perCapitaHealthCareCost, linewidth = 2, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Cost in Pounds')
+        ax.set_xlabel('Year')
+        ax.set_title('Per Capita Health Care Cost')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/PerCapitaHealthCareCostChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 28: Gini Coefficient of Unmet Social Care (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.unmetSocialCareNeedGiniCoefficient, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.unmetSocialCareNeedGiniCoefficient_1, label = 'Class I')
+        p3, = ax.plot(years, self.unmetSocialCareNeedGiniCoefficient_2, label = 'Class II')
+        p4, = ax.plot(years, self.unmetSocialCareNeedGiniCoefficient_3, label = 'Class III')
+        p5, = ax.plot(years, self.unmetSocialCareNeedGiniCoefficient_4, label = 'Class IV')
+        p6, = ax.plot(years, self.unmetSocialCareNeedGiniCoefficient_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Gini Coefficient')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Unmet Social Care Gini Coeffcient')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/UnmetSocialCareGiniCoefficientChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 29: Gini Coefficient of Share of Unmet Social Care (from 1960 to 2020)
+        fig, ax = plt.subplots()
+        p1, = ax.plot(years, self.shareUnmetSocialCareNeedGiniCoefficient, linewidth = 3, label = 'Population')
+        p2, = ax.plot(years, self.shareUnmetSocialCareNeedGiniCoefficient_1, label = 'Class I')
+        p3, = ax.plot(years, self.shareUnmetSocialCareNeedGiniCoefficient_2, label = 'Class II')
+        p4, = ax.plot(years, self.shareUnmetSocialCareNeedGiniCoefficient_3, label = 'Class III')
+        p5, = ax.plot(years, self.shareUnmetSocialCareNeedGiniCoefficient_4, label = 'Class IV')
+        p6, = ax.plot(years, self.shareUnmetSocialCareNeedGiniCoefficient_5, label = 'Class V')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Gini Coefficient')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Share of Unmet Social Care Gini Coeffcient')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/ShareUnmetSocialCareGiniCoefficientChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 30: Unmet Social Care Density (2030)
+        data1 = self.unmetSocialCareNeedDistribution
+        data2 = self.unmetSocialCareNeedDistribution_1
+        data3 = self.unmetSocialCareNeedDistribution_2
+        data4 = self.unmetSocialCareNeedDistribution_3
+        data5 = self.unmetSocialCareNeedDistribution_4
+        data6 = self.unmetSocialCareNeedDistribution_5
+        data = [data1, data2, data3, data4, data5, data6]
+        fig, ax = plt.subplots()
+        ax.boxplot(data, labels = ('Pop', 'I', 'II', 'III', 'IV', 'V'))
+        ax.set_ylabel("Unmet Social Care")
+        ax.set_xlabel("Populations")
+        ax.set_title('Unmet Social Care Distribution')
+        fig.tight_layout()
+        filename = folder + '/UnmetSocialCareDistributionChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 31: Unmet Social Care Density by SES (2030)
+        data1 = self.shareUnmetSocialCareNeedDistribution
+        data2 = self.shareUnmetSocialCareNeedDistribution_1
+        data3 = self.shareUnmetSocialCareNeedDistribution_2
+        data4 = self.shareUnmetSocialCareNeedDistribution_3
+        data5 = self.shareUnmetSocialCareNeedDistribution_4
+        data6 = self.shareUnmetSocialCareNeedDistribution_5
+        data = [data1, data2, data3, data4, data5, data6]
+        fig, ax = plt.subplots()
+        ax.boxplot(data, labels = ('Pop', 'I', 'II', 'III', 'IV', 'V'))
+        ax.set_ylabel("Share of Unmet Social Care")
+        ax.set_xlabel("Populations")
+        ax.set_title('Share of Unmet Social Care Distribution')
+        fig.tight_layout()
+        filename = folder + '/UnmetSocialCareDistributionChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
@@ -5732,6 +6330,7 @@ class Sim:
         self.totalEmployment_4 = []
         self.totalEmployment_5 = []
         self.totalJobChanges = []
+        
         self.averageIncome_M = []
         self.averageIncome_F = []
         self.ratioWomenMaleIncome = []
@@ -5755,6 +6354,31 @@ class Sim:
         self.averageIncome_5_Males = []
         self.averageIncome_5_Females = []
         self.ratioWomenMaleIncome_5 = []
+        
+        self.averageWage_M = []
+        self.averageWage_F = []
+        self.ratioWomenMaleWage = []
+        self.averageWage_1 = []
+        self.averageWage_1_Males = []
+        self.averageWage_1_Females = []
+        self.ratioWomenMaleWage_1 = []
+        self.averageWage_2 = []
+        self.averageWage_2_Males = []
+        self.averageWage_2_Females = []
+        self.ratioWomenMaleWage_2 = []
+        self.averageWage_3 = []
+        self.averageWage_3_Males = []
+        self.averageWage_3_Females = []
+        self.ratioWomenMaleWage_3 = []
+        self.averageWage_4 = []
+        self.averageWage_4_Males = []
+        self.averageWage_4_Females = []
+        self.ratioWomenMaleWage_4 = []
+        self.averageWage_5 = []
+        self.averageWage_5_Males = []
+        self.averageWage_5_Females = []
+        self.ratioWomenMaleWage_5 = []
+        
         self.totalRelocations = 0
         self.numberRelocations = []
         self.jobRelocations_1 = 0
@@ -5799,6 +6423,37 @@ class Sim:
         self.relativeTownAttraction = []
         self.houseScore = []
         self.deltaHouseOccupants = []
+        
+        self.unmetSocialCareNeedGiniCoefficient = []
+        self.unmetSocialCareNeedGiniCoefficient_1 = []
+        self.unmetSocialCareNeedGiniCoefficient_2 = []
+        self.unmetSocialCareNeedGiniCoefficient_3 = []
+        self.unmetSocialCareNeedGiniCoefficient_4 = []
+        self.unmetSocialCareNeedGiniCoefficient_5 = []
+        
+        self.shareUnmetSocialCareNeedGiniCoefficient = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_1 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_2 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_3 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_4 = []
+        self.shareUnmetSocialCareNeedGiniCoefficient_5 = []
+        
+        self.unmetSocialCareNeedDistribution = []
+        self.unmetSocialCareNeedDistribution_1 = []
+        self.unmetSocialCareNeedDistribution_2 = []
+        self.unmetSocialCareNeedDistribution_3 = []
+        self.unmetSocialCareNeedDistribution_4 = []
+        self.unmetSocialCareNeedDistribution_5 = []
+        
+        self.shareUnmetSocialCareNeedDistribution = []
+        self.shareUnmetSocialCareNeedDistribution_1 = []
+        self.shareUnmetSocialCareNeedDistribution_2 = []
+        self.shareUnmetSocialCareNeedDistribution_3 = []
+        self.shareUnmetSocialCareNeedDistribution_4 = []
+        self.shareUnmetSocialCareNeedDistribution_5 = []
+        
+        self.healthCareCost = []
+        self.perCapitaHealthCareCost = []
         
     def sensitivityGraphs(self, folder):
         
