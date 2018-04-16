@@ -120,7 +120,7 @@ class Person:
         self.hoursFormalSupply = 0
         self.hoursSupply = 0
         self.extraworkCare = 0
-        self.hoursFormalSupply = 0
+        
         self.socialWork = 0
         self.workToCare = 0
         self.residualNeed = 0
@@ -132,7 +132,12 @@ class Person:
         self.formalSupplyByKinship = []
         self.networkSupply = 0
         self.residualInformalSupply = 0
-        self.residualFormalSupply = 0
+        
+        self.residualFormalSocialCareSupply = 0
+        self.hoursFormalSocialCareSupply = 0
+        
+        self.residualIncomeCare = 0
+        
         self.residualSupply = 0
         self.formalCare = 0
         self.informalCare = 0
