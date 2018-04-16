@@ -20,9 +20,9 @@ def init_params():
     # The basics: starting population and year, etc.
     p['initialPop'] = 500
     p['startYear'] = 1860
-    p['endYear'] = 1920
+    p['endYear'] = 2030
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1900
+    p['statsCollectFrom'] = 1960
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -32,8 +32,9 @@ def init_params():
     p['unemploymentAgeBandParam'] = 0.3
     
     # doDeath function parameters
-    p['mortalityBias'] = 0.9 # After 1950
-    p['careNeedBias'] = 0.8
+    p['mortalityBias'] = 0.85 # After 1950
+    p['careNeedBias'] = 0.9
+    p['unmetCareNeedBias'] = 0.5
     p['baseDieProb'] = 0.0001
     p['babyDieProb'] = 0.005
     p['maleAgeScaling'] = 14.0
@@ -50,7 +51,7 @@ def init_params():
     
     # careTransitions function parameters
     p['zeroYearCare'] = 80.0
-    p['childcareDecreaseRate'] = 0.18
+    p['childcareDecreaseRate'] = 0.25
     p['personCareProb'] = 0.0008
     p['maleAgeCareScaling'] = 18.0 # p['maleAgeCareProb'] = 0.0008
     p['femaleAgeCareScaling'] = 19.0 # p['femaleAgeCareProb'] = 0.0008
@@ -69,12 +70,24 @@ def init_params():
     # careSupplies getCare and probSuppliers function parameters
     ########   Key parameter 2  ##############
     p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
-    
+    p['wageGrowthRate'] = 1.01338
     p['weeklyHours'] = 40.0
-    p['pricePublicSocialCare'] = 20.0
-    p['priceSocialCare'] = 17.0
+    
+    p['pricePublicSocialCare'] = 2.55 # 20
+    p['priceSocialCare'] = 2.17 # 17 
+    p['priceChildCare'] = 0.76 # 6 
+    p['schoolAge'] = 5
+    p['maxFormalChildcareHours'] = 48
+    p['schoolHours'] = 30
+    p['freeChildcareHours'] = 15
+    p['workingParentsFreeChildcareHours'] = 30
+    p['minAgeStartChildCareSupport'] = 3
+    p['minAgeStartChildCareSupportByIncome'] = 2
+    p['maxHouseholdIncomeChildCareSupport'] = 40 # 320
+    
     p['retiredHours'] = 60.0
     p['studentHours'] = 12.0
+    p['teenAgersHours'] = 8.0
     p['unemployedHours'] = 24.0
     p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     p['networkDistanceParam'] = 1.0
@@ -97,18 +110,19 @@ def init_params():
     p['costHospitalizationPerDay'] = 400
     
     # ageTransitions, enterWorkForce and marketWage functions parameters
+    p['ageTeenagers'] = 12
     p['minWorkingAge'] = 16
     p['ageOfRetirement'] = 65
-    p['pensionWage'] = [5.0, 7.0, 10.0, 13.0, 18.0]
-    p['incomeInitialLevels'] = [5.0, 7.0, 9.0, 11.0, 14.0]
-    p['incomeFinalLevels'] = [10.0, 15.0, 22.0, 33.0, 50.0]
+    p['pensionWage'] = [0.64, 0.89, 1.27, 1.66, 2.29] # [5.0, 7.0, 10.0, 13.0, 18.0] # 
+    p['incomeInitialLevels'] = [0.64, 0.89, 1.15, 1.40, 1.78] # [5.0, 7.0, 9.0, 11.0, 14.0] # 
+    p['incomeFinalLevels'] = [1.27, 1.91, 2.80, 4.21, 6.37] # [10.0, 15.0, 22.0, 33.0, 50.0] # 
     p['incomeGrowthRate'] = [0.4, 0.35, 0.35, 0.3, 0.25]
     p['educationCosts'] = [0.0, 0.0, 0.0, 0.0]
-    p['eduWageSensitivity'] = 0.1 # 0.3
-    p['eduRankSensitivity'] = 2.0
-    p['costantIncomeParam'] = 10.0 # 10.0
-    p['costantEduParam'] = 0.5 # 0.5
-    p['careEducationParam'] = 0.01 # 0.02
+    p['eduWageSensitivity'] = 0.3 # 0.3
+    p['eduRankSensitivity'] = 4.0
+    p['costantIncomeParam'] = 20.0 # 10.0
+    p['costantEduParam'] = 3.0 # 
+    p['careEducationParam'] = 0.005  # 0.001
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
     p['workingAge'] = [16, 18, 20, 22, 24]
@@ -116,19 +130,20 @@ def init_params():
     # doDivorce function parameters
     p['basicDivorceRate'] = 0.06
     p['variableDivorce'] = 0.06
-    p['divorceModifierByDecade'] = [ 0.0, 1.0, 0.9, 0.5, 0.4, 0.2, 0.1, 0.03, 0.01, 0.001, 0.001, 0.001, 0.0, 0.0, 0.0, 0.0 ]
+    p['divorceModifierByDecade'] = [ 0.0, 1.0, 0.9, 0.5, 0.4, 0.2, 0.1, 0.03, 0.01, 0.001, 0.001, 0.001, 0.0, 0.0, 0.0, 0.0, 0.0 ]
     p['divorceBias'] = 1.0
     
     # doMarriages function parameters
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
     p['incomeMarriageParam'] = 0.025
+    
     ########   Key parameter 4  ##############
     p['betaGeoExp'] = 2.0 #[1.0 - 4.0]
     
     p['betaSocExp'] = 2.0
     p['rankGenderBias'] = 0.5
     p['basicMaleMarriageProb'] =  1.0
-    p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0 ]
+    p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0, 0.0 ]
     
     # jobMarket, updateWork and unemploymentRate functions parameters
     p['unemploymentClassBias'] = 0.75
