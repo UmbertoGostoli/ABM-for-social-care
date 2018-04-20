@@ -23,6 +23,7 @@ def init_params():
     p['endYear'] = 2030
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1960
+    p['implementPoliciesFromYear'] = 2010
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -58,8 +59,7 @@ def init_params():
     p['baseCareProb'] = 0.0002
     p['careBias'] = 0.9
     p['careTransitionRate'] = 0.7
-    
-    ########   Key parameter 1  ##############
+
     p['unmetNeedExponent'] = 0.01 #[0.005 - 0.02]
     
     p['numCareLevels'] = 5
@@ -68,13 +68,16 @@ def init_params():
     p['quantumCare'] = 4.0
     
     # careSupplies getCare and probSuppliers function parameters
-    ########   Key parameter 2  ##############
+    
+    ########   Key parameter 1  ##############
     p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
+    p['incomeCareParamPolicyCoeffcient'] = [1.0]
+    
     p['wageGrowthRate'] = 1.01338
     p['weeklyHours'] = 40.0
     
-    p['pricePublicSocialCare'] = 2.55 # 20
-    p['priceSocialCare'] = 2.17 # 17 
+    p['pricePublicSocialCare'] = [2.55] # 20
+    p['priceSocialCare'] = [2.29] # 18 
     p['priceChildCare'] = 0.76 # 6 
     p['schoolAge'] = 5
     p['maxFormalChildcareHours'] = 48
@@ -85,18 +88,22 @@ def init_params():
     p['minAgeStartChildCareSupportByIncome'] = 2
     p['maxHouseholdIncomeChildCareSupport'] = 40 # 320
     
+    ########   Key parameter 2  ##############
+    p['socialSupportLevel'] = 5 # 5: No public supply 
+    p['socialSupportLevelPolicyChange'] = [0]
+    
     p['retiredHours'] = 60.0
-    p['studentHours'] = 12.0
+    p['studentHours'] = 16.0
     p['teenAgersHours'] = 8.0
-    p['unemployedHours'] = 24.0
+    p['unemployedHours'] = 30.0
     p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     p['networkDistanceParam'] = 1.0
-    p['employedHours'] = 12.0
+    p['employedHours'] = 16.0
     p['socialCareWeightBias'] = 1.0
     p['unmetCareNeedDiscountParam'] = 0.5
     p['shareUnmetNeedDiscountParam'] = 0.5
     # p['pastShareUnmetNeedWeight'] = 0.5
-    ########   Key parameter 3  ##############
+    
     p['excessNeedParam'] = 0.01 #1.0 #[0.005 - 0.02]
     
     p['careSupplyBias'] = 0.5
@@ -112,17 +119,25 @@ def init_params():
     # ageTransitions, enterWorkForce and marketWage functions parameters
     p['ageTeenagers'] = 12
     p['minWorkingAge'] = 16
+    
+    ########   Key parameter 3  ##############
     p['ageOfRetirement'] = 65
+    p['ageOfRetirementPolicyChange'] = [0]
+    
     p['pensionWage'] = [0.64, 0.89, 1.27, 1.66, 2.29] # [5.0, 7.0, 10.0, 13.0, 18.0] # 
     p['incomeInitialLevels'] = [0.64, 0.89, 1.15, 1.40, 1.78] # [5.0, 7.0, 9.0, 11.0, 14.0] # 
     p['incomeFinalLevels'] = [1.27, 1.91, 2.80, 4.21, 6.37] # [10.0, 15.0, 22.0, 33.0, 50.0] # 
     p['incomeGrowthRate'] = [0.4, 0.35, 0.35, 0.3, 0.25]
-    p['educationCosts'] = [0.0, 0.0, 0.0, 0.0]
+    
+    ########   Key parameter 4  ##############
+    p['educationCosts'] = [0.0, 12.74, 19.12, 25.49]
+    p['educationCostsPolicyCoefficient'] = [1.0]
+    
     p['eduWageSensitivity'] = 0.3 # 0.3
-    p['eduRankSensitivity'] = 4.0
+    p['eduRankSensitivity'] = 4.0 # 4.0
     p['costantIncomeParam'] = 20.0 # 10.0
     p['costantEduParam'] = 3.0 # 
-    p['careEducationParam'] = 0.005  # 0.001
+    p['careEducationParam'] = 0.02  # 0.005
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
     p['workingAge'] = [16, 18, 20, 22, 24]
@@ -136,7 +151,7 @@ def init_params():
     # doMarriages function parameters
     p['deltageProb'] =  [0.0, 0.1, 0.25, 0.4, 0.2, 0.05]
     p['incomeMarriageParam'] = 0.025
-    
+    p['studentFactorParam'] = 0.5
     ########   Key parameter 4  ##############
     p['betaGeoExp'] = 2.0 #[1.0 - 4.0]
     
@@ -156,9 +171,10 @@ def init_params():
     p['unemployedCareBurdernParam'] = 0.025
     # Potential key parameter
     p['relocationCareLossExp'] = 0.05 # 0.1
+    p['incomeSocialCostRelativeWeight'] = 0.6
     
     p['firingParam'] = 0.2
-    p['wageVar'] = 0.04
+    p['wageVar'] = 0.06
     p['workDiscountingTime'] = 0.8
     p['sizeWeightParam'] = 0.7
     p['minClassWeightParam'] = 1.0

@@ -116,6 +116,14 @@ class Person:
         self.visitedCarer = False
         self.careNeedLevel = 0
         self.hoursDemand = 0
+        self.residualNeed = 0
+        
+        self.hoursSocialCareDemand = 0
+        self.residualSocialCareNeed = 0
+        self.hoursChildCareDemand = 0
+        self.residualChildCareNeed = 0
+        
+        
         self.hoursInformalSupply = 0
         self.hoursFormalSupply = 0
         self.hoursSupply = 0
@@ -123,7 +131,7 @@ class Person:
         
         self.socialWork = 0
         self.workToCare = 0
-        self.residualNeed = 0
+        
         self.cumulativeUnmetNeed = 0
         self.totalDiscountedShareUnmetNeed = 0
         self.totalDiscountedTime = 0
@@ -133,8 +141,8 @@ class Person:
         self.networkSupply = 0
         self.residualInformalSupply = 0
         
-        self.residualFormalSocialCareSupply = 0
-        self.hoursFormalSocialCareSupply = 0
+        self.residualFormalSupply = 0
+        self.hoursCareSupply = 0
         
         self.residualIncomeCare = 0
         
@@ -144,8 +152,10 @@ class Person:
         self.socialNetwork = []
         self.networkSupplies = []
         self.totalSupply = 0
+        self.totalInformalSupply = 0
         self.socialCareProvider = False
         self.babyCarer = False
+        self.yearOfSchoolLeft = 0
         self.dead = False
         self.partner = None
         if sex == 'random':
