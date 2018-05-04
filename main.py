@@ -22,8 +22,9 @@ def init_params():
     p['startYear'] = 1860
     p['endYear'] = 2030
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1960
-    p['implementPoliciesFromYear'] = 2010
+    p['statsCollectFrom'] = 1970
+    p['startRegressionCollectionFrom'] = 1950
+    p['implementPoliciesFromYear'] = 1910
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -73,11 +74,10 @@ def init_params():
     p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
     p['incomeCareParamPolicyCoeffcient'] = [1.0]
     
-    p['wageGrowthRate'] = 1.01338
+    
     p['weeklyHours'] = 40.0
     
-    p['pricePublicSocialCare'] = [2.55] # 20
-    p['priceSocialCare'] = [2.29] # 18 
+    
     p['priceChildCare'] = 0.76 # 6 
     p['schoolAge'] = 5
     p['maxFormalChildcareHours'] = 48
@@ -110,6 +110,8 @@ def init_params():
     p['careIncomeParam'] = 0.001
     
     # Hospitalization Costs
+    p['qalyDiscountRate'] = 0.035
+    p['qalyIndexes'] = [1.0, 0.8, 0.6, 0.4, 0.2]
     p['unmetCareHealthParam'] = 0.1
     p['hospitalizationParam'] = 0.5
     p['needLevelParam'] = 2.0
@@ -122,22 +124,38 @@ def init_params():
     
     ########   Key parameter 3  ##############
     p['ageOfRetirement'] = 65
+    p['hillHealthLevelThreshold'] = 3
+    p['seriouslyHillSupportRate'] = 0.5
     p['ageOfRetirementPolicyChange'] = [0]
     
-    p['pensionWage'] = [0.64, 0.89, 1.27, 1.66, 2.29] # [5.0, 7.0, 10.0, 13.0, 18.0] # 
-    p['incomeInitialLevels'] = [0.64, 0.89, 1.15, 1.40, 1.78] # [5.0, 7.0, 9.0, 11.0, 14.0] # 
-    p['incomeFinalLevels'] = [1.27, 1.91, 2.80, 4.21, 6.37] # [10.0, 15.0, 22.0, 33.0, 50.0] # 
+    ###   Prices   ####
+    p['pricePublicSocialCare'] = [20] # [2.55] # 20
+    p['priceSocialCare'] = [18] # [2.29] # 18 
+    p['taxBands'] = [221, 865] # [28.16, 110.23]
+    p['taxBandsNumber'] = 3
+    p['bandsTaxationRates'] = [0.0, 0.0, 0.0] # [0.0, 0.2, 0.4]
+    p['taxBreakRate'] = 1.0
+    p['pensionWage'] = [5.0, 7.0, 10.0, 13.0, 18.0] #[0.64, 0.89, 1.27, 1.66, 2.29] #  
+    p['incomeInitialLevels'] = [5.0, 7.0, 9.0, 11.0, 14.0] #[0.64, 0.89, 1.15, 1.40, 1.78] #  
+    p['incomeFinalLevels'] = [10.0, 15.0, 22.0, 33.0, 50.0] #[1.27, 1.91, 2.80, 4.21, 6.37] #  
+    p['educationCosts'] = [0.0, 100.0, 150.0, 200.0] #[0.0, 12.74, 19.12, 25.49] # 
+    
+    # Priced growth  #####
+    p['wageGrowthRate'] = 1.0 # 1.01338
+
     p['incomeGrowthRate'] = [0.4, 0.35, 0.35, 0.3, 0.25]
     
     ########   Key parameter 4  ##############
-    p['educationCosts'] = [0.0, 12.74, 19.12, 25.49]
+    
     p['educationCostsPolicyCoefficient'] = [1.0]
     
-    p['eduWageSensitivity'] = 0.3 # 0.3
-    p['eduRankSensitivity'] = 4.0 # 4.0
-    p['costantIncomeParam'] = 20.0 # 10.0
-    p['costantEduParam'] = 3.0 # 
-    p['careEducationParam'] = 0.02  # 0.005
+    # SES inter-generational mobility parameters
+    p['eduWageSensitivity'] = 0.1 # 0.3
+    p['eduRankSensitivity'] = 5.0 # 4.0
+    p['costantIncomeParam'] = 40.0 # 10.0
+    p['costantEduParam'] = 10.0 #  3.0
+    p['careEducationParam'] = 0.01  # 0.005
+    
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
     p['workingAge'] = [16, 18, 20, 22, 24]
