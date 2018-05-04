@@ -112,6 +112,7 @@ class Person:
         self.father = father
         self.children = []
         self.age = age
+        self.yearAfterPolicy = 0
         self.birthdate = birthYear
         self.visitedCarer = False
         self.careNeedLevel = 0
@@ -124,8 +125,8 @@ class Person:
         self.residualChildCareNeed = 0
         
         
-        self.hoursInformalSupply = 0
-        self.hoursFormalSupply = 0
+        # self.hoursInformalSupply = 0
+        # self.hoursFormalSupply = 0
         self.hoursSupply = 0
         self.extraworkCare = 0
         
@@ -143,9 +144,10 @@ class Person:
         
         self.residualFormalSupply = 0
         self.hoursCareSupply = 0
-        
+        self.mortalityRate = 0
+        self.fertilityRate = 0
         self.residualIncomeCare = 0
-        
+        self.qaly = 0
         self.residualSupply = 0
         self.formalCare = 0
         self.informalCare = 0
@@ -162,11 +164,17 @@ class Person:
             self.sex = random.choice(['male', 'female'])
         else:
             self.sex = sex
+        if self.sex == 'female':
+            self.sexIndex = 1
+        else:
+            self.sexIndex = 0
         self.house = house
         self.socialCareMap = []
         self.classRank = classRank
+        self.temporaryClassRank = 0
         self.sec = sec
         self.education = edu
+        self.ageStartWorking = -1
         self.wage = wage
         self.hourlyWage = wage
         self.income = income
