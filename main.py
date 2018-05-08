@@ -22,9 +22,9 @@ def init_params():
     p['startYear'] = 1860
     p['endYear'] = 2030
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1970
+    p['statsCollectFrom'] = 1900
     p['startRegressionCollectionFrom'] = 1950
-    p['implementPoliciesFromYear'] = 1910
+    p['implementPoliciesFromYear'] = 2010
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -154,7 +154,7 @@ def init_params():
     p['eduRankSensitivity'] = 5.0 # 4.0
     p['costantIncomeParam'] = 40.0 # 10.0
     p['costantEduParam'] = 10.0 #  3.0
-    p['careEducationParam'] = 0.01  # 0.005
+    p['careEducationParam'] = 0.005  # 0.005
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']

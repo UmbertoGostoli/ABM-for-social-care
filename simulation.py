@@ -1355,7 +1355,7 @@ class Sim:
             if self.year < 1951:
                 rawRate = self.p['growingPopBirthProb']
             else:
-                rawRate = (self.fert_data[(self.year - woman.birthdate)-16, self.year-1950])
+                rawRate = self.fert_data[(self.year - woman.birthdate)-16, self.year-1950]
                 
             birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, woman.classRank)
             
@@ -4688,15 +4688,17 @@ class Sim:
         
         totQALY = sum([x.qaly for x in self.pop.livingPeople])
         self.aggregateQALY.append(totQALY)
-        self.averageQALY.append(totQALY/currentPop)
+        meanQALY = totQALY/currentPop
+        self.averageQALY.append(meanQALY)
         if self.year < self.p['implementPoliciesFromYear']:
             self.discountedQALY.append(0)
         else:
-            self.discountedQALY.append(self.averageQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))
+            self.discountedQALY.append(totQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))
+            
         if self.year < self.p['implementPoliciesFromYear']:
             self.averageDiscountedQALY.append(0)
         else:
-            self.averageDiscountedQALY.append((self.averageQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))/currentPop)
+            self.averageDiscountedQALY.append((meanQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))/currentPop)
         
         self.pops.append(currentPop)
         unskilled = [x for x in adultPop if x.classRank == 0]
