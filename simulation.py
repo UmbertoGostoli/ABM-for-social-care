@@ -550,10 +550,10 @@ class Sim:
         self.perCapitaQualityAdjustedLifeYears_SD = []
         self.perCapitaHospitalizationCost_M = []
         self.perCapitaHospitalizationCost_SD = []
-#        self.sharesSocialCare_M = []
-#        self.sharesSocialCare_SD = []
-#        self.sharesInformalCare_M = []
-#        self.sharesInformalCare_SD = []
+        self.sharesSocialCare_M = []
+        self.sharesSocialCare_SD = []
+        self.sharesInformalCare_M = []
+        self.sharesInformalCare_SD = []
         
         # Check variables
         # self.deathProb = []
@@ -626,7 +626,7 @@ class Sim:
                 runParameters[i] = self.parameters[i][j]
                 combinations.append(runParameters)
                 
-        folder_S  = 'N:\Social Care Model II\\Charts III\SensitivityCharts'
+        folder_S  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\\Charts II\SensitivityCharts'
         if not os.path.isdir(os.path.dirname(folder_S)):
             os.makedirs(folder_S)
             
@@ -663,7 +663,7 @@ class Sim:
             print('Run: ' + str(r))
 
             
-            folder  = 'N:\Social Care Model II\Charts III\Run_' + str(r)
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\\Charts II\Run_' + str(r)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
@@ -1000,8 +1000,9 @@ class Sim:
         """Run one year of simulated time."""
         
         # print('Population: ' + str(len(self.pop.livingPeople)))
-        
+        start = time.time()
         self.computeClassShares()
+        end = time.time()
         
          #print('Update Job Map')
         self.updateJobMap()
@@ -7753,7 +7754,7 @@ class Sim:
         p3, = ax.plot(years, self.avgHouseholdSize_3, label = 'Class III')
         p4, = ax.plot(years, self.avgHouseholdSize_4, label = 'Class IV')
         p5, = ax.plot(years, self.avgHouseholdSize_5, label = 'Class V')
-        maxValue = max([self.avgHouseholdSize_1+self.avgHouseholdSize_2+self.avgHouseholdSize_3+self.avgHouseholdSize_4+self.avgHouseholdSize_5])
+        maxValue = max(self.avgHouseholdSize_1+self.avgHouseholdSize_2+self.avgHouseholdSize_3+self.avgHouseholdSize_4+self.avgHouseholdSize_5)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylim([0, maxValue*2.0])
         ax.set_ylabel('Hours of care')
@@ -8043,7 +8044,7 @@ class Sim:
         p4, = ax.plot(years, self.averageCareSupply_3, label = 'Class III')
         p5, = ax.plot(years, self.averageCareSupply_4, label = 'Class IV')
         p6, = ax.plot(years, self.averageCareSupply_5, label = 'Class V')
-        maxValue = max([self.averageCareSupply+self.averageCareSupply_1+self.averageCareSupply_2+self.averageCareSupply_3+self.averageCareSupply_4+self.averageCareSupply_5])
+        maxValue = max(self.averageCareSupply+self.averageCareSupply_1+self.averageCareSupply_2+self.averageCareSupply_3+self.averageCareSupply_4+self.averageCareSupply_5)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylim([0, maxValue*2.0])
         ax.set_ylabel('Hours of Supply')
