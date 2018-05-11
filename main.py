@@ -22,9 +22,9 @@ def init_params():
     p['startYear'] = 1860
     p['endYear'] = 2030
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1900
-    p['startRegressionCollectionFrom'] = 1950
-    p['implementPoliciesFromYear'] = 2010
+    p['statsCollectFrom'] = 1960
+    p['startRegressionCollectionFrom'] = 1950 
+    p['implementPoliciesFromYear'] = 2010   
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -150,11 +150,11 @@ def init_params():
     p['educationCostsPolicyCoefficient'] = [1.0]
     
     # SES inter-generational mobility parameters
-    p['eduWageSensitivity'] = 0.1 # 0.3
+    p['eduWageSensitivity'] = 0.2  # 0.3
     p['eduRankSensitivity'] = 5.0 # 4.0
     p['costantIncomeParam'] = 40.0 # 10.0
     p['costantEduParam'] = 10.0 #  3.0
-    p['careEducationParam'] = 0.005  # 0.005
+    p['careEducationParam'] = 0.02        # 0.005
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
