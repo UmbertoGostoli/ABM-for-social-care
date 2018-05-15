@@ -85,7 +85,7 @@ def init_params():
     p['freeChildcareHours'] = 15
     p['workingParentsFreeChildcareHours'] = 30
     p['minAgeStartChildCareSupport'] = 3
-    p['minAgeStartChildCareSupportByIncome'] = 2
+    p['minAgeStartChildCareSupportByIncome'] =  2
     p['maxHouseholdIncomeChildCareSupport'] = 40 # 320
     
     ########   Key parameter 2  ##############
@@ -150,7 +150,7 @@ def init_params():
     p['educationCostsPolicyCoefficient'] = [1.0]
     
     # SES inter-generational mobility parameters
-    p['eduWageSensitivity'] = 0.2  # 0.3
+    p['eduWageSensitivity'] = 0.25 # 0.3
     p['eduRankSensitivity'] = 5.0 # 4.0
     p['costantIncomeParam'] = 40.0 # 10.0
     p['costantEduParam'] = 10.0 #  3.0

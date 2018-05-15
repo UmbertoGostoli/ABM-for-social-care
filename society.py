@@ -124,7 +124,9 @@ class Person:
         self.hoursChildCareDemand = 0
         self.residualChildCareNeed = 0
         
-        
+        self.netHouseholdCare = 0
+        self.householdName = 0
+        self.netIndividualCare = 0
         # self.hoursInformalSupply = 0
         # self.hoursFormalSupply = 0
         self.hoursSupply = 0
