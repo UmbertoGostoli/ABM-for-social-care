@@ -19,7 +19,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 import pandas as pd
-import seaborn as sns
+#import seaborn as sns
 from time import gmtime, strftime
 import os
 import Tkinter
@@ -30,6 +30,8 @@ import pprint
 import pickle
 import numpy as np
 import operator
+
+from careMap import updateCareMaps
 # from PIL import ImageTk         
 # from PIL import Image
 
@@ -627,7 +629,7 @@ class Sim:
                 runParameters[i] = self.parameters[i][j]
                 combinations.append(runParameters)
                 
-        folder_S  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\\Charts II\SensitivityCharts'
+        folder_S  = 'user/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts II/SensitivityCharts'
         if not os.path.isdir(os.path.dirname(folder_S)):
             os.makedirs(folder_S)
             
@@ -664,7 +666,7 @@ class Sim:
             print('Run: ' + str(r))
 
             
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\\Charts II\Run_' + str(r)
+            folder  = 'user/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts II/Run_' + str(r)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
@@ -1049,31 +1051,31 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-         # 12
+         # 9
         start = time.time()
         self.netHouseholdCare()
         end = time.time()
         executionTimes.append(end-start)
         
-        # 9
+        # 10
         start = time.time()
         self.joiningSpouses()
         end = time.time()
         executionTimes.append(end-start)
         
-        # 13
+        # 11
         start = time.time()
         self.socialCareMap()
         end = time.time()
         executionTimes.append(end-start)
         
-         # 10
+         # 12
         start = time.time()
         self.careNeeds()
         end = time.time()
         executionTimes.append(end-start)
         
-        # 11
+        # 13
         start = time.time()
         self.careSupplies()
         end = time.time()
@@ -1807,10 +1809,12 @@ class Sim:
             else:
                 household = [person, person.partner]
                 childrenWithPerson = [x for x in person.children if x.dead == False and x.house == person.house]
-                household.extend(childrenWithPerson)
                 childrenWithPartner = [x for x in person.partner.children if x.dead == False and x.house == person.partner.house]
-                household.extend(childrenWithPartner)
-                
+                children = list(set(childrenWithPerson + childrenWithPartner))
+                household.extend(children)
+
+            
+            
             if len(household) > 0:
                 self.householdsList.append(household)
             
@@ -1845,360 +1849,88 @@ class Sim:
                     member.visitedCarer = True
                     member.householdName = household[0]
                     member.netHouseholdCare = deltaHouseholdCare
+                    member.household = household
                     
     def socialCareMap(self):
+        
+        kinshipWeight_1 = 1/math.exp(self.p['networkDistanceParam']*1.0)
+        kinshipWeight_2 = 1/math.exp(self.p['networkDistanceParam']*2.0)
+        kinshipWeight_3 = 1/math.exp(self.p['networkDistanceParam']*3.0)   
+        
         for household in self.householdsList:
-            for member in household:
-                member.socialCareMap = []
-                
-#            householdDemand = 0
-#            householdSupply = 0
-#
-#            for member in household:
-#                if member.age > 0:
-#                    householdDemand += self.p['careDemandInHours'][member.careNeedLevel]
-#                else:
-#                    householdDemand += self.p['zeroYearCare']
-#
-#            householdCarers = [x for x in household if x.hoursDemand == 0]
-#            notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
-#            for member in notWorking:
-#                if member.status == 'teenager':
-#                    individualSupply = self.p['teenAgersHours']
-#                elif member.status == 'student':
-#                    individualSupply = self.p['studentHours']
-#                elif member.status == 'retired':
-#                    individualSupply = self.p['retiredHours']
-#                elif member.status == 'unemployed':
-#                    individualSupply = self.p['unemployedHours']
-#                householdSupply += int((individualSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#    
-#            employed = [x for x in householdCarers if x.status == 'employed']
-#            employed.sort(key=operator.attrgetter("wage"))
-#            potentialIncome = 0
-#            for member in household:
-#                if member.income > 0:
-#                    potentialIncome += member.income
-#                elif member.status == 'unemployed':
-#                    potentialIncome += self.expectedIncome(member, member.house.town)
-#            
-#            householdPerCapitaIncome = potentialIncome/float(len(household))
-#            
-#            # Compute the total income devoted to informal care supply
-#            incomeCareParameter = self.p['incomeCareParam']*self.p['incomeCareParamPolicyCoeffcient']
-#            incomeCoefficient = 1/math.exp(incomeCareParameter*householdPerCapitaIncome) # Min-Max: 0 - 1500
-#            residualIncomeForCare = potentialIncome*(1 - incomeCoefficient)
-#            
-#            for worker in employed:
-#                householdSupply += self.p['employedHours']
-#                
-#            for worker in employed:
-#                if worker.wage < self.p['priceSocialCare']:
-#                    maxIndividualHours = residualIncomeForCare/worker.wage
-#                    if maxIndividualHours > self.p['weeklyHours']:
-#                        individualSupply = self.p['weeklyHours']
-#                    else:
-#                        individualSupply = int((maxIndividualHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                    householdSupply += individualSupply
-#                    residualIncomeForCare -= individualSupply*worker.wage
-#                    if residualIncomeForCare <= 0:
-#                        break
-#    
-#            totHours = residualIncomeForCare/self.p['priceSocialCare']
-#            householdSupply += int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#            
-#            potentialIncome /= float(len(household))
-            
-            deltaHouseholdCare = household[0].netHouseholdCare #householdSupply - householdDemand
-            
-            # deltaHouseholdCare = household[0].netHouseholdCare
-            kinshipWeight_1 = 1/math.exp(self.p['networkDistanceParam']*1.0)
-            kinshipWeight_2 = 1/math.exp(self.p['networkDistanceParam']*2.0)
-            kinshipWeight_3 = 1/math.exp(self.p['networkDistanceParam']*3.0)
-            visitedPeople = []
+            nok_1 = []
+            nok_2 = []
+            nok_3 = []
+            visited = []
+            deltaHouseholdCare = household[0].netHouseholdCare
+            for i in household:
+                i.socialCareMap = []
+                if i.father != None:
+                    nok = i.father
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_1.append(nok)
+                        visited.extend(nok.household)
+                    nok = i.mother
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_1.append(nok)
+                        visited.extend(nok.household)
+                    uncles = []
+                    if i.father.father != None:
+                        nok = i.father.father
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                        nok = i.father.mother
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                        uncles = list(set(i.father.father.children + i.father.mother.children))
+                        uncles.remove(i.father)
+                    if i.mother.father != None:
+                        nok = i.mother.father
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                        nok = i.mother.mother
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                        uncles.extend(list(set(i.mother.father.children + i.mother.mother.children)))
+                        uncles.remove(i.mother)
+                    for uncle in uncles:
+                        nok = uncle
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_3.append(nok)
+                            visited.extend(nok.household)
+                    brothers = list(set(i.father.children + i.mother.children))
+                    brothers.remove(i)
+                    for brother in brothers:
+                        nok = brother
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                        for child in brother.children:
+                            nok = child
+                            if nok.dead == False and nok not in household and nok not in visited:
+                                nok_3.append(nok)
+                                visited.extend(nok.household)
+                for child in i.children:
+                    nok = child
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_1.append(nok)
+                        visited.extend(nok.household)
+                    for grandchild in child.children:
+                        nok = grandchild
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+    
             for town in self.map.towns:
                 deltaNetworkCare = 0
-                for member in household:
-                    if member.father != None:
-                        nok = member.father
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_1
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                        nok = member.mother
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_1
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)    
-                    for nok in member.children:
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_1
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    if member.father != None and member.father.father != None:
-                        nok = member.father.father
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                        nok = member.father.mother
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    if member.mother != None and member.mother.father != None:
-                        nok = member.mother.father
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                        nok = member.mother.mother
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    for child in member.children:
-                            for nok in child.children:
-                                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    if member.father != None:
-                            brothers = list(set(member.father.children + member.mother.children))
-                            brothers.remove(member)
-                            for nok in brothers:
-                                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-                            paternalUncles = []
-                            maternalUncles = []
-                            if member.father.father != None:
-                                paternalUncles = list(set(member.father.father.children + member.father.mother.children))
-                                paternalUncles.remove(member.father)
-                            if member.mother.father != None:    
-                                maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
-                                maternalUncles.remove(member.mother)
-                            unclesList = list(set(maternalUncles + paternalUncles))
-                            for nok in unclesList:
-                                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_3
-                                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-                            for brother in brothers:
-                                for nok in brother.children:
-                                    if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town:
-                                        deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_3
-                                        visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    
-        
-#        for person in self.pop.livingPeople:
-#            person.visitedCarer = False
-#            
-#        for person in self.pop.livingPeople:
-#            
-#            if person.visitedCarer == True:
-#                continue
-#            
-#            household = []
-#            notInHousehold = []
-#            if person.justMarried == None:
-#                if person.independentStatus == False and (person.status == 'employed' or person.status == 'unemployed'):
-#                    household = [person]
-#                    household.extend([x for x in person.children if x.dead == False and x.house == person.house])
-#                else:
-#                    notInHousehold = [x for x in person.house.occupants if x.independentStatus == False and (x.status == 'employed' or x.status == 'unemployed')]
-#                    for agent in notInHousehold:
-#                        notInHousehold.extend([x for x in agent.children if x.dead == False and x.house == agent.house])
-#                    householdTemp = [x for x in person.house.occupants if x.justMarried == None]
-#                    household = [x for x in householdTemp if x not in notInHousehold]
-##            else:
-##                household = [x for x in person.house.occupants if x.justMarried == person.partner.id]
-##                household.extend([x for x in person.partner.house.occupants if x.justMarried == person.id])
-#            if len(household) > 0:
-#                for member in household:
-#                    member.visitedCarer = True
-#    
-#                householdDemand = 0
-#                householdSupply = 0
-#
-#                for member in household:
-#                    if member.age > 0:
-#                        householdDemand += self.p['careDemandInHours'][member.careNeedLevel]
-#                    else:
-#                        householdDemand += self.p['zeroYearCare']
-#
-#                householdCarers = [x for x in household if x.hoursDemand == 0]
-#                notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
-#                for member in notWorking:
-#                    if member.status == 'teenager':
-#                        individualSupply = self.p['teenAgersHours']
-#                    elif member.status == 'student':
-#                        individualSupply = self.p['studentHours']
-#                    elif member.status == 'retired':
-#                        individualSupply = self.p['retiredHours']
-#                    elif member.status == 'unemployed':
-#                        individualSupply = self.p['unemployedHours']
-#                    householdSupply += int((individualSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#        
-#                employed = [x for x in householdCarers if x.status == 'employed']
-#                employed.sort(key=operator.attrgetter("wage"))
-#                potentialIncome = 0
-#                for member in household:
-#                    if member.income > 0:
-#                        potentialIncome += member.income
-#                    elif member.status == 'unemployed':
-#                        potentialIncome += self.expectedIncome(member, member.house.town)
-#                
-#                householdPerCapitaIncome = potentialIncome/float(len(household))
-#                
-#                # Compute the total income devoted to informal care supply
-#                incomeCareParameter = self.p['incomeCareParam']*self.p['incomeCareParamPolicyCoeffcient']
-#                incomeCoefficient = 1/math.exp(incomeCareParameter*householdPerCapitaIncome) # Min-Max: 0 - 1500
-#                residualIncomeForCare = potentialIncome*(1 - incomeCoefficient)
-#                
-#                for worker in employed:
-#                    householdSupply += self.p['employedHours']
-#                    
-#                for worker in employed:
-#                    if worker.wage < self.p['priceSocialCare']:
-#                        maxIndividualHours = residualIncomeForCare/worker.wage
-#                        if maxIndividualHours > self.p['weeklyHours']:
-#                            individualSupply = self.p['weeklyHours']
-#                        else:
-#                            individualSupply = int((maxIndividualHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                        householdSupply += individualSupply
-#                        residualIncomeForCare -= individualSupply*worker.wage
-#                        if residualIncomeForCare <= 0:
-#                            break
-#        
-#                totHours = residualIncomeForCare/self.p['priceSocialCare']
-#                householdSupply += int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                
-#                potentialIncome /= float(len(household))
-#                deltaHouseholdCare = householdSupply - householdDemand
-#                visitedPeople = []
-#                for town in self.map.towns:
-#                    townNetworkDemand = 0
-#                    townNetworkSupply = 0
-#                    # Kinship distance == 1 (partents and children)
-#                    kinshipDemand = 0
-#                    kinshipSupply = 0
-#                    kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
-#                    for member in household:
-#                        if member.father != None:
-#                            if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
-#                                nok_Household = self.householdMembers(member.father)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 1)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                            if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
-#                                nok_Household = self.householdMembers(member.mother)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 1)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                        for child in member.children:
-#                            if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
-#                                nok_Household = self.householdMembers(child)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 1)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                    townNetworkDemand += kinshipDemand
-#                    townNetworkSupply += kinshipSupply
-#                    # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
-#                    kinshipDemand = 0
-#                    kinshipSupply = 0
-#                    kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
-#                    for member in household:
-#                        if member.father != None and member.father.father != None:
-#                            if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
-#                                nok_Household = self.householdMembers(member.father.father)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                            if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
-#                                nok_Household = self.householdMembers(member.father.mother)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                        if member.father != None and member.mother.father != None:
-#                            if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
-#                                nok_Household = self.householdMembers(member.mother.father)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                            if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
-#                                nok_Household = self.householdMembers(member.mother.mother)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                        for child in member.children:
-#                            for grandson in child.children:
-#                                if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
-#                                    nok_Household = self.householdMembers(grandson)
-#                                    if len(nok_Household) > 0:
-#                                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                        kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                                        for agent in nok_Household:
-#                                            visitedPeople.append(agent)
-#                        if member.father != None:
-#                            brothers = list(set(member.father.children + member.mother.children))
-#                            brothers.remove(member)
-#                            for brother in brothers:
-#                                if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
-#                                    nok_Household = self.householdMembers(brother)
-#                                    if len(nok_Household) > 0:
-#                                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                        kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                                        for agent in nok_Household:
-#                                            visitedPeople.append(agent)
-#                    townNetworkDemand += kinshipDemand
-#                    townNetworkSupply += kinshipSupply
-#                    # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
-#                    kinshipDemand = 0
-#                    kinshipSupply = 0
-#                    kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
-#                    for member in household:
-#                        paternalUncles = []
-#                        maternalUncles = []
-#                        if member.father != None and member.father.father != None:
-#                            paternalUncles = list(set(member.father.father.children + member.father.mother.children))
-#                            paternalUncles.remove(member.father)
-#                        if member.father != None and member.mother.father != None:    
-#                            maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
-#                            maternalUncles.remove(member.mother)
-#                        unclesList = list(set(maternalUncles + paternalUncles))
-#                        unclesList = [x for x in unclesList if x.dead == False]
-#                        for uncle in unclesList:
-#                            if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
-#                                nok_Household = self.householdMembers(uncle)
-#                                if len(nok_Household) > 0:
-#                                    kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                    kinshipSupply += self.householdCareSupply(nok_Household, 3)*kinshipWeight 
-#                                    for agent in nok_Household:
-#                                        visitedPeople.append(agent)
-#                        if member.father != None:
-#                            brothers = list(set(member.father.children + member.mother.children))
-#                            brothers = [x for x in brothers if x.dead == False]
-#                            brothers.remove(member)
-#                            for brother in brothers:
-#                                for child in brother.children:
-#                                    if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
-#                                        nok_Household = self.householdMembers(child)
-#                                        if len(nok_Household) > 0:
-#                                            kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                            kinshipSupply += self.householdCareSupply(nok_Household, 3)*kinshipWeight 
-#                                            for agent in nok_Household:
-#                                                visitedPeople.append(agent) 
-#                    townNetworkDemand += kinshipDemand
-#                    townNetworkSupply += kinshipSupply
-#                    deltaNetworkCare = townNetworkDemand - townNetworkSupply
-                    
-                    
+                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
+                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
+                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
+                
                 if deltaHouseholdCare < 0:
                     networkSocialCareParam = self.p['excessNeedParam']
                 else:
@@ -2212,6 +1944,7 @@ class Sim:
                 townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
                 for member in household:
                     member.socialCareMap.append(townSCI)
+
                 
     def householdMembers(self, person):
         household = []
@@ -2296,273 +2029,99 @@ class Sim:
         
         household = [person, person.partner]
         childrenWithPerson = [x for x in person.children if x.dead == False and x.house == person.house]
-        household.extend(childrenWithPerson)
         childrenWithPartner = [x for x in person.partner.children if x.dead == False and x.house == person.partner.house]
-        household.extend(childrenWithPartner)
+        children = list(set(childrenWithPerson + childrenWithPartner))
+        household.extend(children)
         
-#        for member in household:
-#            if member.age > 0:
-#                careNeed = self.p['careDemandInHours'][person.careNeedLevel]
-#                householdDemand += careNeed
-#            else:
-#                householdDemand += self.p['zeroYearCare']
-#
-#        householdCarers = [x for x in household if x.hoursDemand == 0]
-#        notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
-#        for member in notWorking:
-#            if member.status == 'teenager':
-#                individualSupply = self.p['teenAgersHours']
-#            elif member.status == 'student':
-#                individualSupply = self.p['studentHours']
-#            elif member.status == 'retired':
-#                individualSupply = self.p['retiredHours']
-#            elif member.status == 'unemployed':
-#                individualSupply = self.p['unemployedHours']
-#            householdSupply += int((individualSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#
-#        employed = [x for x in householdCarers if x.status == 'employed']
-#        employed.sort(key=operator.attrgetter("wage"))
-#        potentialIncome = 0
-#        for member in household:
-#            if member.income > 0:
-#                potentialIncome += member.income
-#            elif member.status == 'unemployed':
-#                potentialIncome += self.expectedIncome(member, member.house.town)
-#        
-#        householdPerCapitaIncome = potentialIncome/float(len(household))
-#        
-#        # Compute the total income devoted to informal care supply
-#        incomeCareParameter = self.p['incomeCareParam']*self.p['incomeCareParamPolicyCoeffcient']
-#        incomeCoefficient = 1/math.exp(incomeCareParameter*householdPerCapitaIncome) # Min-Max: 0 - 1500
-#        residualIncomeForCare = potentialIncome*(1 - incomeCoefficient)
-#        
-#        for worker in employed:
-#            householdSupply += self.p['employedHours']
-#            
-#        for worker in employed:
-#            if worker.wage < self.p['priceSocialCare']:
-#                maxIndividualHours = residualIncomeForCare/worker.wage
-#                if maxIndividualHours > self.p['weeklyHours']:
-#                    individualSupply = self.p['weeklyHours']
-#                else:
-#                    individualSupply = int((maxIndividualHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                householdSupply += individualSupply
-#                residualIncomeForCare -= individualSupply*worker.wage
-#                if residualIncomeForCare <= 0:
-#                    break
-#
-#        totHours = residualIncomeForCare/self.p['priceSocialCare']
-#        householdSupply += int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#        
-#        potentialIncome /= float(len(household))
+        town = person.house.town
         
         deltaHouseholdCare = household[0].netHouseholdCare #householdSupply - householdDemand
         
         kinshipWeight_1 = 1/math.exp(self.p['networkDistanceParam']*1.0)
         kinshipWeight_2 = 1/math.exp(self.p['networkDistanceParam']*2.0)
         kinshipWeight_3 = 1/math.exp(self.p['networkDistanceParam']*3.0)
-        visitedPeople = []
+        
+        nok_1 = []
+        nok_2 = []
+        nok_3 = []
+        visited = []
+        for i in household:
+            i.socialCareMap = []
+            if i.father != None:
+                nok = i.father
+                if nok.dead == False and nok not in household and nok not in visited:
+                    nok_1.append(nok)
+                    visited.extend(nok.household)
+                nok = i.mother
+                if nok.dead == False and nok not in household and nok not in visited:
+                    nok_1.append(nok)
+                    visited.extend(nok.household)
+                uncles = []
+                if i.father.father != None:
+                    nok = i.father.father
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+                    nok = i.father.mother
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+                    uncles = list(set(i.father.father.children + i.father.mother.children))
+                    uncles.remove(i.father)
+                if i.mother.father != None:
+                    nok = i.mother.father
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+                    nok = i.mother.mother
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+                    uncles.extend(list(set(i.mother.father.children + i.mother.mother.children)))
+                    uncles.remove(i.mother)
+                for uncle in uncles:
+                    nok = uncle
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_3.append(nok)
+                        visited.extend(nok.household)
+                brothers = list(set(i.father.children + i.mother.children))
+                brothers.remove(i)
+                for brother in brothers:
+                    nok = brother
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+                    for child in brother.children:
+                        nok = child
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_3.append(nok)
+                            visited.extend(nok.household)
+            for child in i.children:
+                nok = child
+                if nok.dead == False and nok not in household and nok not in visited:
+                    nok_1.append(nok)
+                    visited.extend(nok.household)
+                for grandchild in child.children:
+                    nok = grandchild
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+
         deltaNetworkCare = 0
-        town = person .house.town
-        for member in household:
-            if member.father != None:
-                nok = member.father
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_1
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-                nok = member.mother
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_1
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)    
-            for nok in member.children:
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_1
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-            if member.father != None and member.father.father != None:
-                nok = member.father.father
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-                nok = member.father.mother
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-            if member.mother != None and member.mother.father != None:
-                nok = member.mother.father
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-                nok = member.mother.mother
-                if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                    deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                    visitedPeople.extend(h for h in self.householdsList if nok in h)
-            for child in member.children:
-                    for nok in child.children:
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-            if member.father != None:
-                    brothers = list(set(member.father.children + member.mother.children))
-                    brothers.remove(member)
-                    for nok in brothers:
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_2
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    paternalUncles = []
-                    maternalUncles = []
-                    if member.father.father != None:
-                        paternalUncles = list(set(member.father.father.children + member.father.mother.children))
-                        paternalUncles.remove(member.father)
-                    if member.mother.father != None:    
-                        maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
-                        maternalUncles.remove(member.mother)
-                    unclesList = list(set(maternalUncles + paternalUncles))
-                    for nok in unclesList:
-                        if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                            deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_3
-                            visitedPeople.extend(h for h in self.householdsList if nok in h)
-                    for brother in brothers:
-                        for nok in brother.children:
-                            if nok.dead == False and nok not in visitedPeople and nok not in household and nok.house.town == town and nok != member.partner:
-                                deltaNetworkCare += -1*nok.netHouseholdCare*kinshipWeight_3
-                                visitedPeople.extend(h for h in self.householdsList if nok in h)
-        
-        
-#        visitedPeople = []
-#        town = person.house.town
-#        townNetworkDemand = 0
-#        townNetworkSupply = 0
-#        # Kinship distance == 1 (partents and children)
-#        kinshipDemand = 0
-#        kinshipSupply = 0
-#        kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*1.0)
-#        for member in household:
-#            if member.father != None:
-#                if member.father.dead == False and member.father not in visitedPeople and member.father not in household and member.father.house.town == town:
-#                    nok_Household = self.householdMembers(member.father)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 1)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#                if member.mother.dead == False and member.mother not in visitedPeople and member.mother not in household and member.mother.house.town == town:
-#                    nok_Household = self.householdMembers(member.mother)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 1)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#            for child in member.children:
-#                if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
-#                    nok_Household = self.householdMembers(child)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 1)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#        townNetworkDemand += kinshipDemand
-#        townNetworkSupply += kinshipSupply
-#        # Kinship distance == 2 (grandparents, grandchildren and brothers/sisters)   
-#        kinshipDemand = 0
-#        kinshipSupply = 0
-#        kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*2.0) 
-#        for member in household:
-#            if member.father != None and member.father.father != None:
-#                if member.father.father.dead == False and member.father.father not in visitedPeople and member.father.father not in household and member.father.father.house.town == town:
-#                    nok_Household = self.householdMembers(member.father.father)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#                if member.father.mother.dead == False and member.father.mother not in visitedPeople and member.father.mother not in household and member.father.mother.house.town == town:
-#                    nok_Household = self.householdMembers(member.father.mother)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#            if member.father != None and member.mother.father != None:
-#                if member.mother.father.dead == False and member.mother.father not in visitedPeople and member.mother.father not in household and member.mother.father.house.town == town:
-#                    nok_Household = self.householdMembers(member.mother.father)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#                if member.mother.mother.dead == False and member.mother.mother not in visitedPeople and member.mother.mother not in household and member.mother.mother.house.town == town:
-#                    nok_Household = self.householdMembers(member.mother.mother)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#            for child in member.children:
-#                for grandson in child.children:
-#                    if grandson.dead == False and grandson not in visitedPeople and grandson not in household and grandson.house.town == town:
-#                        nok_Household = self.householdMembers(grandson)
-#                        if len(nok_Household) > 0:
-#                            kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                            kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                            for agent in nok_Household:
-#                                visitedPeople.append(agent) 
-#            if member.father != None:
-#                brothers = list(set(member.father.children + member.mother.children))
-#                brothers.remove(member)
-#                for brother in brothers:
-#                    if brother.dead == False and brother not in visitedPeople and brother not in household and brother.house.town == town:
-#                        nok_Household = self.householdMembers(brother)
-#                        if len(nok_Household) > 0:
-#                            kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                            kinshipSupply += self.householdCareSupply(nok_Household, 2)*kinshipWeight 
-#                            for agent in nok_Household:
-#                                visitedPeople.append(agent)
-#        townNetworkDemand += kinshipDemand
-#        townNetworkSupply += kinshipSupply
-#        # Kinship distance == 3 (uncles/aunts and grandchildren and nephews/nieces)   
-#        kinshipDemand = 0
-#        kinshipSupply = 0
-#        kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*3.0) 
-#        for member in household:
-#            paternalUncles = []
-#            maternalUncles = []
-#            if member.father != None and member.father.father != None:
-#                paternalUncles = list(set(member.father.father.children + member.father.mother.children))
-#                paternalUncles.remove(member.father)
-#            if member.father != None and member.mother.father != None:    
-#                maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
-#                maternalUncles.remove(member.mother)
-#            unclesList = list(set(maternalUncles + paternalUncles))
-#            unclesList = [x for x in unclesList if x.dead == False]
-#            for uncle in unclesList:
-#                if uncle.dead == False and uncle not in visitedPeople and uncle not in household and uncle.house.town == town:
-#                    nok_Household = self.householdMembers(uncle)
-#                    if len(nok_Household) > 0:
-#                        kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                        kinshipSupply += self.householdCareSupply(nok_Household, 3)*kinshipWeight 
-#                        for agent in nok_Household:
-#                            visitedPeople.append(agent)
-#            if member.father != None:
-#                brothers = list(set(member.father.children + member.mother.children))
-#                brothers = [x for x in brothers if x.dead == False]
-#                brothers.remove(member)
-#                for brother in brothers:
-#                    for child in brother.children:
-#                        if child.dead == False and child not in visitedPeople and child not in household and child.house.town == town:
-#                            nok_Household = self.householdMembers(child)
-#                            if len(nok_Household) > 0:
-#                                kinshipDemand += self.householdCareDemand(nok_Household)*kinshipWeight 
-#                                kinshipSupply += self.householdCareSupply(nok_Household, 3)*kinshipWeight 
-#                                for agent in nok_Household:
-#                                    visitedPeople.append(agent) 
-#        townNetworkDemand += kinshipDemand
-#        townNetworkSupply += kinshipSupply
-#        deltaNetworkCare = townNetworkDemand - townNetworkSupply
+        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
+        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
+        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
         
         if deltaHouseholdCare < 0:
             networkSocialCareParam = self.p['excessNeedParam']
         else:
             networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+        
+        # Check variable
+        if deltaHouseholdCare*deltaNetworkCare != 0:
+            self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
+            
+        # Min-Max: -6000 - 3000
         townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare)
         return(townSCI)
 
@@ -3041,7 +2600,7 @@ class Sim:
                         earningMembers[0].workToCare += self.p['quantumCare']
                         formalCare = self.p['quantumCare']
                         supplier = 'employed: formal care (close relative, in town)'
-                else:
+                 else:
                     if carers[0].status == 'employed':
                         carers[0].extraworkCare -= self.p['quantumCare']
                     else:
