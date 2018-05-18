@@ -154,7 +154,7 @@ def init_params():
     p['eduRankSensitivity'] = 5.0 # 4.0
     p['costantIncomeParam'] = 40.0 # 10.0
     p['costantEduParam'] = 10.0 #  3.0
-    p['careEducationParam'] = 0.02        # 0.005
+    p['careEducationParam'] = 0.03        # 0.005
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']

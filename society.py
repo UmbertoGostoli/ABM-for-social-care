@@ -111,6 +111,7 @@ class Person:
         self.mother = mother
         self.father = father
         self.children = []
+        self.household = []
         self.age = age
         self.yearAfterPolicy = 0
         self.birthdate = birthYear

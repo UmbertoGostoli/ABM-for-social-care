@@ -26,9 +26,12 @@ class Map:
                 self.allHouses.append(h)
                 
 class Town:
+    counter = 1
     """Contains a collection of houses."""
     def __init__ (self, townGridDimension, tx, ty,
                   cdfHouseClasses, density, classBias, densityModifier ):
+        self.id = Town.counter
+        Town.counter += 1
         self.x = tx
         self.y = ty
         self.houses = []
