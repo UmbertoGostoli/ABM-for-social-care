@@ -1143,7 +1143,7 @@ class Sim:
         
         totTime = sum(executionTimes)
         shareExecutionTimes = [x/totTime for x in executionTimes]
-        print(shareExecutionTimes)
+        # print(shareExecutionTimes)
 
         # self.householdSize()
         
@@ -1347,9 +1347,9 @@ class Sim:
         
         self.pop.livingPeople[:] = [x for x in self.pop.livingPeople if x.dead == False]
         
-        maxAge = max([x.age for x in self.pop.livingPeople])
+        # maxAge = max([x.age for x in self.pop.livingPeople])
         
-        print('Maximum age:' + str(maxAge))
+        # print('Maximum age:' + str(maxAge))
         
         postDeath = len(self.pop.livingPeople)
         
@@ -1359,7 +1359,7 @@ class Sim:
         self.deaths_4.append(deaths[3])
         self.deaths_5.append(deaths[4])
         
-        print('the number of people who died is: ' + str(preDeath - postDeath))
+        # print('the number of people who died is: ' + str(preDeath - postDeath))
         
         # print(len(self.pop.livingPeople))
     def doRegressions(self):
@@ -2600,7 +2600,7 @@ class Sim:
                         earningMembers[0].workToCare += self.p['quantumCare']
                         formalCare = self.p['quantumCare']
                         supplier = 'employed: formal care (close relative, in town)'
-                 else:
+                else:
                     if carers[0].status == 'employed':
                         carers[0].extraworkCare -= self.p['quantumCare']
                     else:
