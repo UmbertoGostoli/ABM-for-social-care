@@ -1,10 +1,13 @@
-
-from simulation import Sim
+ 
+#from simulation import Sim
+from batchSim import Simulation
 import os
 import cProfile
 import pylab
 import math
 import matplotlib.pyplot as plt
+import pickle
+import random
 
 
 def init_params():
@@ -16,15 +19,19 @@ def init_params():
     p['verboseDebugging'] = False
     p['singleRunGraphs'] = True
     p['numRepeats'] = 1
+    p['numberPolicyParameters'] = 4
     
     # The basics: starting population and year, etc.
-    p['initialPop'] = 500
+    p['policyOnlySim'] = False
+    p['noPolicySim'] = True
+    
+    p['initialPop'] = 600
     p['startYear'] = 1860
-    p['endYear'] = 2030
+    p['endYear'] = 2040
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1960
-    p['startRegressionCollectionFrom'] = 1950 
-    p['implementPoliciesFromYear'] = 2010   
+    p['statsCollectFrom'] = 1990
+    p['startRegressionCollectionFrom'] = 1960 
+    p['implementPoliciesFromYear'] = 2015   
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -61,7 +68,7 @@ def init_params():
     p['careBias'] = 0.9
     p['careTransitionRate'] = 0.7
 
-    p['unmetNeedExponent'] = 0.01 #[0.005 - 0.02]
+    p['unmetNeedExponent'] = 1.0 # 0.005 #[0.005 - 0.02]
     
     p['numCareLevels'] = 5
     p['careLevelNames'] = ['none','low','moderate','substantial','critical']
@@ -72,7 +79,7 @@ def init_params():
     
     ########   Key parameter 1  ##############
     p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
-    p['incomeCareParamPolicyCoeffcient'] = [1.0]
+    p['incomeCareParamPolicyCoeffcient'] = 1.0
     
     
     p['weeklyHours'] = 40.0
@@ -90,7 +97,7 @@ def init_params():
     
     ########   Key parameter 2  ##############
     p['socialSupportLevel'] = 5 # 5: No public supply 
-    p['socialSupportLevelPolicyChange'] = [0]
+    p['socialSupportLevelPolicyChange'] = 0
     
     p['retiredHours'] = 60.0
     p['studentHours'] = 16.0
@@ -126,35 +133,35 @@ def init_params():
     p['ageOfRetirement'] = 65
     p['hillHealthLevelThreshold'] = 3
     p['seriouslyHillSupportRate'] = 0.5
-    p['ageOfRetirementPolicyChange'] = [0]
+    p['ageOfRetirementPolicyChange'] = 0
     
     ###   Prices   ####
-    p['pricePublicSocialCare'] = [20] # [2.55] # 20
-    p['priceSocialCare'] = [18] # [2.29] # 18 
-    p['taxBands'] = [221, 865] # [28.16, 110.23]
+    p['pricePublicSocialCare'] = 20 # [2.55] # 20
+    p['priceSocialCare'] = 17 # [2.29] # 18
+    p['taxBands'] = [221, 865] # [28.16, 110.23] # [221, 865]
     p['taxBandsNumber'] = 3
     p['bandsTaxationRates'] = [0.0, 0.0, 0.0] # [0.0, 0.2, 0.4]
     p['taxBreakRate'] = 1.0
-    p['pensionWage'] = [5.0, 7.0, 10.0, 13.0, 18.0] #[0.64, 0.89, 1.27, 1.66, 2.29] #  
+    p['pensionWage'] = [5.0, 7.0, 10.0, 13.0, 18.0] # [0.64, 0.89, 1.27, 1.66, 2.29] #  
     p['incomeInitialLevels'] = [5.0, 7.0, 9.0, 11.0, 14.0] #[0.64, 0.89, 1.15, 1.40, 1.78] #  
     p['incomeFinalLevels'] = [10.0, 15.0, 22.0, 33.0, 50.0] #[1.27, 1.91, 2.80, 4.21, 6.37] #  
     p['educationCosts'] = [0.0, 100.0, 150.0, 200.0] #[0.0, 12.74, 19.12, 25.49] # 
     
     # Priced growth  #####
-    p['wageGrowthRate'] = 1.0 # 1.01338
+    p['wageGrowthRate'] = 1.0 # 1.01338 # 
 
     p['incomeGrowthRate'] = [0.4, 0.35, 0.35, 0.3, 0.25]
     
     ########   Key parameter 4  ##############
     
-    p['educationCostsPolicyCoefficient'] = [1.0]
+    p['educationCostsPolicyCoefficient'] = 1.0
     
     # SES inter-generational mobility parameters
-    p['eduWageSensitivity'] = 0.25 # 0.3
+    p['eduWageSensitivity'] = 0.4 # 0.3
     p['eduRankSensitivity'] = 5.0 # 4.0
     p['costantIncomeParam'] = 40.0 # 10.0
     p['costantEduParam'] = 10.0 #  3.0
-    p['careEducationParam'] = 0.03        # 0.005
+    p['careEducationParam'] = 0.04        # 0.005
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
@@ -175,7 +182,7 @@ def init_params():
     
     p['betaSocExp'] = 2.0
     p['rankGenderBias'] = 0.5
-    p['basicMaleMarriageProb'] =  1.0
+    p['basicMaleMarriageProb'] =  0.8
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0, 0.0 ]
     
     # jobMarket, updateWork and unemploymentRate functions parameters
@@ -185,11 +192,11 @@ def init_params():
     p['jobMobilitySlope'] = 0.004
     p['jobMobilityIntercept'] = 0.05
     p['ageBiasParam'] = [7.0, 3.0, 1.0, 0.5, 0.35, 0.15]
-    p['deltaIncomeExp'] = 0.1
+    p['deltaIncomeExp'] = 0.05
     p['unemployedCareBurdernParam'] = 0.025
     # Potential key parameter
-    p['relocationCareLossExp'] = 0.05 # 0.1
-    p['incomeSocialCostRelativeWeight'] = 0.6
+    p['relocationCareLossExp'] = 40.0 # 0.05
+    p['incomeSocialCostRelativeWeight'] = 0.5
     
     p['firingParam'] = 0.2
     p['wageVar'] = 0.06
@@ -208,11 +215,11 @@ def init_params():
     p['geoDistanceSensitivityParam'] = 2.0
     p['socDistanceSensitivityParam'] = 2.0
     p['classAffinityWeight'] = 4.0
-    p['distanceSensitivityParam'] = 1.0
+    p['distanceSensitivityParam'] = 0.5
     
     # relocationProb function parameters
     p['baseRelocatingProb'] = 0.05
-    p['relocationParameter'] = 2.0 
+    p['relocationParameter'] = 1.0 
     #p['expReloc'] = 1.0
     
     # computeRelocationCost and relocation Propensity functions parameters
@@ -222,8 +229,8 @@ def init_params():
     p['relocationCostParam'] = 2.0 # [1 -4]
     
     ########   Key parameter 6  ##############
-    p['propensityRelocationParam'] = 20.0 #0.002 # [10 - 40]
-    p['denRelocationWeight'] = 1.0
+    p['propensityRelocationParam'] = 50.0 #0.002 # [10 - 40]
+    p['denRelocationWeight'] = 0.5
     
     
      ## Description of the map, towns, and houses
@@ -330,5 +337,20 @@ def init_params():
     return p
 
 p = init_params()
-s = Sim(p)
-tax = s.run()
+
+b = Simulation(p)
+b.run()
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -18,6 +18,7 @@ from matplotlib.ticker import MaxNLocator
 from matplotlib.backends.backend_pdf import PdfPages
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.exceptions import NotFittedError
 import pandas as pd
 #import seaborn as sns
 from time import gmtime, strftime
@@ -31,7 +32,7 @@ import pickle
 import numpy as np
 import operator
 
-from careMap import updateCareMaps
+# from careMap import updateCareMaps
 # from PIL import ImageTk         
 # from PIL import Image
 
@@ -39,18 +40,20 @@ from careMap import updateCareMaps
 
 class Sim:
     """Instantiates a single run of the simulation."""    
-    def __init__ (self, params):
-        self.p = params
+    def __init__ (self, params, randomseed):
+        
+        self.randomSeed = randomseed
+        
+        random.seed(self.randomSeed)
+        np.random.seed(self.randomSeed)
+        
+        self.p = dict(params)
         self.socialClassShares = []
         self.careNeedShares = []
         self.jobMarketMap = []
         
         ## Statistical tallies
         self.periodCount = 0
-
-        np.savetxt('dynamicParam.csv', (self.p['pensionWage']+self.p['incomeInitialLevels']+self.p['incomeFinalLevels']+self.p['educationCosts']+self.p['pricePublicSocialCare']+self.p['priceSocialCare']+self.p['incomeCareParamPolicyCoeffcient']+self.p['socialSupportLevelPolicyChange']+self.p['ageOfRetirementPolicyChange']+self.p['educationCostsPolicyCoefficient']), delimiter=',')
-        np.savetxt('lengthDynamicParamLists.csv', (len(self.p['pensionWage']), len(self.p['incomeInitialLevels']), len(self.p['incomeFinalLevels']), len(self.p['educationCosts']), len(self.p['pricePublicSocialCare']), len(self.p['priceSocialCare']), len(self.p['incomeCareParamPolicyCoeffcient']), len(self.p['socialSupportLevelPolicyChange']), len(self.p['ageOfRetirementPolicyChange']), len(self.p['educationCostsPolicyCoefficient'])), delimiter=',')
-        
         ###################### Demographic outputs ###################
         self.agent = None
         
@@ -578,6 +581,7 @@ class Sim:
         self.relativeTownAttraction = []
         self.houseScore = []
         self.deltaHouseOccupants = []
+        self.careTransitionRate = []
         
         # Counters and storage
         
@@ -613,114 +617,17 @@ class Sim:
                                          width=self.p['screenWidth'],
                                          height=self.p['screenHeight'],
                                          background=self.p['bgColour'])
-
-    def run(self):
-        # Read parameters 
-        self.parameters = np.genfromtxt('parameters.csv',
-                                       skip_header = 1, delimiter=',')
-        
-        self.parameters = map(list, zip(*self.parameters))
-         # Create a list of combinations
-        combinations = []
-        defaultValues = [self.p['incomeCareParamPolicyCoeffcient'][0], self.p['socialSupportLevelPolicyChange'][0], self.p['ageOfRetirementPolicyChange'][0], self.p['educationCostsPolicyCoefficient'][0]]
-        for i in range(len(self.parameters)):
-            for j in range(2):
-                runParameters = [x for x in defaultValues]
-                runParameters[i] = self.parameters[i][j]
-                combinations.append(runParameters)
-                
-        folder_S  = 'user/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts II/SensitivityCharts'
-        if not os.path.isdir(os.path.dirname(folder_S)):
-            os.makedirs(folder_S)
-            
-        
-        for r in range(len(combinations)): # 
-            
-            # Reset the parameters that have changed (add the policy parameters)
-            g = np.genfromtxt('dynamicParam.csv', skip_header = 0, delimiter=',')
-            n = np.genfromtxt('lengthDynamicParamLists.csv', skip_header = 0, delimiter=',')
     
-            k = []
-            i = 0
-            for j in range(len(n)):
-                h = i + int(n[j])
-                k.append(g[i:h])
-                i += int(n[j])
         
-            self.p['pensionWage'] = k[0]
-            self.p['incomeInitialLevels'] = k[1]
-            self.p['incomeFinalLevels'] = k[2]
-            self.p['educationCosts'] = k[3]
-            self.p['pricePublicSocialCare'] = k[4][0]
-            self.p['priceSocialCare'] = k[5][0]
-            
-            # Add these in the saved files
-            self.p['incomeCareParamPolicyCoeffcient'] = k[6][0] # Default = 0.01
-            self.p['socialSupportLevelPolicyChange'] = k[7][0] # Default = 0.0005
-            self.p['ageOfRetirementPolicyChange'] = k[8][0] # Default = 2.0
-            self.p['educationCostsPolicyCoefficient'] = k[9][0] # 
-            
-            #self.emptyTimeSeries()
-            
-            print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-            print('Run: ' + str(r))
-
-            
-            folder  = 'user/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts II/Run_' + str(r)
-            if not os.path.isdir(os.path.dirname(folder)):
-                os.makedirs(folder)
-            
-            random.seed(self.p['favouriteSeed'])
-            
-            
-            #self.p['propensityRelocationParam'] = 20.0 # combinations[r][5] Default = 20.0
+        
+    def interactiveGraphics(self):
+        if self.p['interactiveGraphics']:
+            print "Entering main loop to hold graphics up there."
+            self.window.mainloop()
     
-            filename = folder + '/parameterValues.csv'
-            if not os.path.isdir(os.path.dirname(filename)):
-                os.mkdir(os.path.dirname(filename))
-            # values = zip(np.array(combinations[r]))
-            #print(self.p['incomeCareParam']*combinations[r][0])
-            values = zip(np.array([self.p['incomeCareParam']*combinations[r][0], self.p['socialSupportLevel']+combinations[r][1], self.p['ageOfRetirement']+combinations[r][2],
-                         self.p['educationCosts'][0]*combinations[r][3], self.p['educationCosts'][1]*combinations[r][3], self.p['educationCosts'][2]*combinations[r][3], 
-                         self.p['educationCosts'][3]*combinations[r][3]]))
-            names = ('incomeCareParam, socialSupportLevel, ageOfRetirement, educationCosts_II, educationCosts_III, educationCosts_IV, educationCosts_V')
-            np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="") 
-            
-            self.initializePop()
-            
-            if self.p['interactiveGraphics']:
-                self.initializeCanvas()
-            
-            
-            for self.year in range(self.p['startYear'], self.p['endYear']+1):
-                
-                print(" ")
-                print(self.year)
-                
-                if self.year == self.p['implementPoliciesFromYear']:
-                    
-                    # 1 - dump all prices and agents on pickle
-                    
-                    # 2 - start parameter combinations' loop from here
-                    
-                        # 3 - load all prices and agents from pickle
-                    
-                        # 4 - load policies' parameters
-                    
-                    self.p['incomeCareParamPolicyCoeffcient'] = combinations[r][0] # Default = 0.01
-                    print(self.p['incomeCareParamPolicyCoeffcient'])
-                    self.p['socialSupportLevelPolicyChange'] = combinations[r][1] # Default = 0.0005
-                    self.p['ageOfRetirementPolicyChange'] = combinations[r][2] # Default = 2.0
-                    self.p['educationCostsPolicyCoefficient'] = combinations[r][3] # Default = 2.0
-                
-                self.doOneYear()
-                self.periodCount += 1
-                if self.year == self.p['thePresent']:
-                    random.seed()
-            
-    
-            ###### Create csv with all the outputs   ############
-            values = zip(self.pops,self.unskilledPop,self.skilledPop,self.lowerclassPop,self.middleclassPop,
+    def outputFile(self, folder):
+        
+        values = zip(self.pops,self.unskilledPop,self.skilledPop,self.lowerclassPop,self.middleclassPop,
                          self.upperclassPop,self.numberHouseholds,self.numberHouseholds_1,self.numberHouseholds_2,
                          self.numberHouseholds_3,self.numberHouseholds_4,self.numberHouseholds_5,self.avgHouseholdSize,
                          self.avgHouseholdSize_1,self.avgHouseholdSize_2,self.avgHouseholdSize_3,self.avgHouseholdSize_4,
@@ -778,7 +685,7 @@ class Sim:
                          self.numJobRelocations_3,self.numJobRelocations_4,self.numJobRelocations_5,self.numMarriageRelocations,
                          self.numSizeRelocations,self.numRetiredRelocations,self.numberTownChanges)
                          
-            names = ('pops,unskilledPop,skilledPop,lowerclassPop,middleclassPop, '
+        names = ('pops,unskilledPop,skilledPop,lowerclassPop,middleclassPop, '
                      'upperclassPop,numberHouseholds,numberHouseholds_1,numberHouseholds_2, '
                      'numberHouseholds_3,numberHouseholds_4,numberHouseholds_5,avgHouseholdSize, '
                      'avgHouseholdSize_1,avgHouseholdSize_2,avgHouseholdSize_3,avgHouseholdSize_4, '
@@ -835,49 +742,47 @@ class Sim:
                      'numJobRelocations_3,numJobRelocations_4,numJobRelocations_5,numMarriageRelocations, '
                      'numSizeRelocations,numRetiredRelocations,numberTownChanges')
             
-            filename = folder + '/Outputs.csv'
-            if not os.path.isdir(os.path.dirname(filename)):
-                os.mkdir(os.path.dirname(filename))
-            np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
+        filename = folder + '/Outputs.csv'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
             
-                
-            values = zip(self.perCapitaHouseholdIncome, self.socialCareMapValues, 
+        values = zip(self.perCapitaHouseholdIncome, self.socialCareMapValues, 
                          self.relativeEducationCost, self.probKeepStudying, self.stageStudent, self.changeJobRate, 
                          self.changeJobdIncome, self.relocationCareLoss, self.relocationCost, self.townRelocationAttraction, 
                          self.townRelativeAttraction, self.townsJobProb, self.townJobAttraction, 
                          self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction, self.houseScore, 
-                         self.deltaHouseOccupants)
+                         self.deltaHouseOccupants, self.careTransitionRate[0], self.careTransitionRate[1], 
+                         self.careTransitionRate[2], self.careTransitionRate[3], self.careTransitionRate[4])
             
-            names = ('perCapitaHouseholdIncome, socialCareMapValues, '
+        names = ('perCapitaHouseholdIncome, socialCareMapValues, '
                      'relativeEducationCost, probKeepStudying, stageStudent, changeJobRate, '
                      'changeJobdIncome, relocationCareLoss, relocationCost, townRelocationAttraction, '
                      'townRelativeAttraction, townsJobProb, townJobAttraction, '
                      'unemployedIncomeDiscountingFactor, relativeTownAttraction, houseScore, '
-                     'deltaHouseOccupants')
+                     'deltaHouseOccupants, careTransitionRate_I, careTransitionRate_II, careTransitionRate_III, '
+                     'careTransitionRate_IV, careTransitionRate_V')
             
-            filename = folder + '/Check_Value.csv'
-            if not os.path.isdir(os.path.dirname(filename)):
-                os.mkdir(os.path.dirname(filename))
-            np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
-            
-            
-            
-            # Graphic Output related code
+        filename = folder + '/Check_Value.csv'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
         
-            if self.p['singleRunGraphs']:
-                self.doGraphs(folder)
-                
-        self.sensitivityGraphs(folder_S)
-    
-        if self.p['interactiveGraphics']:
-            print "Entering main loop to hold graphics up there."
-            self.window.mainloop()
-
-        return self.totalTaxBurden[-1]
-    
+        
+    def getOutputs(self):
+        outputs = []
+        outputs.append(self.shareUnmetCareDemand)
+        outputs.append(self.averageUnmetCareDemand)
+        outputs.append(self.discountedQALY)
+        outputs.append(self.averageDiscountedQALY)
+        outputs.append(self.perCapitaHealthCareCost)
+        
+        return outputs
+        
     def initializePop(self):
         
-        
+        if self.p['interactiveGraphics']:
+                self.initializeCanvas()
         
         if self.p['loadFromFile'] == False:
             self.map = Map(self.p['mapGridXDimension'], 
@@ -886,7 +791,8 @@ class Sim:
                            self.p['cdfHouseClasses'],
                            self.p['ukMap'],
                            self.p['ukClassBias'],
-                           self.p['mapDensityModifier'])
+                           self.p['mapDensityModifier'],
+                           self.randomSeed)
         else:
             self.map = pickle.load(open("initMap.txt", "rb"))
             
@@ -909,7 +815,7 @@ class Sim:
                                       self.p['incomeFinalLevels'],
                                       self.p['incomeGrowthRate'],
                                       self.p['workDiscountingTime'],
-                                      self.p['wageVar'])
+                                      self.p['wageVar'], self.randomSeed)
                 
                 self.computeClassShares()
             
@@ -988,6 +894,9 @@ class Sim:
                 self.unemploymentRateClasses[i].append([])
                 self.meanUnemploymentRates[i].append([])
         
+        for i in range (self.p['numberClasses']):
+            self.careTransitionRate.append([])
+        
         visitedHouses = []
         maxSize = 0
         index = -1
@@ -998,11 +907,22 @@ class Sim:
                     maxSize = len(person.house.occupants)
                     index = person.house.id
         
+    
+    def updatePolicyParameters(self, policyParameters):
+        self.p['incomeCareParamPolicyCoeffcient'] = policyParameters[0]
+        self.p['socialSupportLevelPolicyChange'] = policyParameters[1] 
+        self.p['ageOfRetirementPolicyChange'] = policyParameters[2] 
+        self.p['educationCostsPolicyCoefficient'] = policyParameters[3] 
+                    
+    def doOneYear(self, year):
         
-    def doOneYear(self):
+        self.year = year
+        
         """Run one year of simulated time."""
         executionTimes = []
-        # print('Population: ' + str(len(self.pop.livingPeople)))
+        
+        print('Population: ' + str(len(self.pop.livingPeople)))
+        
         # 1
         start = time.time()
         self.computeClassShares()
@@ -1223,21 +1143,34 @@ class Sim:
                 classPop = [x for x in self.pop.livingPeople if x.careNeedLevel == person.careNeedLevel]
                 dieProb = self.deathProb(rawRate, person.classRank, person.careNeedLevel, person.averageShareUnmetNeed, classPop)
                 
-                if  self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
-                    age = person.age
-                    unmetNeed = person.averageShareUnmetNeed
-                    year = self.year-self.p['startRegressionCollectionFrom']
-                    regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
-                    self.inputsMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(regressors)
-                    dependentVariable = dieProb # [dieProb]
-                    self.outputMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(dependentVariable)
-                    
-                elif self.year >= self.p['implementPoliciesFromYear']:
-                    age = person.age
-                    unmetNeed = person.averageShareUnmetNeed
-                    year = self.year-self.p['startRegressionCollectionFrom']
-                    regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
-                    dieProb = self.regressionModels_M[person.sexIndex][person.classRank][person.careNeedLevel].predict([regressors])
+                if self.p['noPolicySim'] == False:
+                    if  self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                        age = person.age
+                        unmetNeed = person.averageShareUnmetNeed
+                        year = self.year-self.p['startRegressionCollectionFrom']
+                        regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
+                        self.inputsMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(regressors)
+                        dependentVariable = dieProb # [dieProb]
+                        self.outputMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(dependentVariable)
+                        
+                    elif self.year >= self.p['implementPoliciesFromYear']:
+                        age = person.age
+                        unmetNeed = person.averageShareUnmetNeed
+                        year = self.year-self.p['startRegressionCollectionFrom']
+                        regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
+                        s = person.sexIndex
+                        r = person.classRank
+                        n = person.careNeedLevel
+                        try:
+                            dieProb = self.regressionModels_M[s][r][n].predict([regressors])
+                        except NotFittedError as e:
+                            for i in reversed(xrange(r+1)):
+                                for j in reversed(xrange(n)):
+                                    try:
+                                        dieProb = self.regressionModels_M[s][i][j].predict([regressors])
+                                        break
+                                    except NotFittedError as e:
+                                        continue
             #############################################################################
             
                 if random.random() < dieProb:
@@ -1288,21 +1221,34 @@ class Sim:
                 classPop = [x for x in self.pop.livingPeople if x.careNeedLevel == person.careNeedLevel]
                 dieProb = self.deathProb(rawRate, person.classRank, person.careNeedLevel, person.averageShareUnmetNeed, classPop)
                 
-                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
-                    age = person.age
-                    unmetNeed = person.averageShareUnmetNeed
-                    year = self.year-self.p['startRegressionCollectionFrom']
-                    regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
-                    self.inputsMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(regressors)
-                    dependentVariable = dieProb # [dieProb]
-                    self.outputMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(dependentVariable)
-                    
-                elif self.year >= self.p['implementPoliciesFromYear']:
-                    age = person.age
-                    unmetNeed = person.averageShareUnmetNeed
-                    year = self.year-self.p['startRegressionCollectionFrom']
-                    regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
-                    dieProb = self.regressionModels_M[person.sexIndex][person.classRank][person.careNeedLevel].predict([regressors])
+                if self.p['noPolicySim'] == False:
+                    if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                        age = person.age
+                        unmetNeed = person.averageShareUnmetNeed
+                        year = self.year-self.p['startRegressionCollectionFrom']
+                        regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
+                        self.inputsMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(regressors)
+                        dependentVariable = dieProb # [dieProb]
+                        self.outputMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(dependentVariable)
+                        
+                    elif self.year >= self.p['implementPoliciesFromYear']:
+                        age = person.age
+                        unmetNeed = person.averageShareUnmetNeed
+                        year = self.year-self.p['startRegressionCollectionFrom']
+                        regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
+                        s = person.sexIndex
+                        r = person.classRank
+                        n = person.careNeedLevel
+                        try:
+                            dieProb = self.regressionModels_M[s][r][n].predict([regressors])
+                        except NotFittedError as e:
+                            for i in reversed(xrange(r+1)):
+                                for j in reversed(xrange(n)):
+                                    try:
+                                        dieProb = self.regressionModels_M[s][i][j].predict([regressors])
+                                        break
+                                    except NotFittedError as e:
+                                        continue
                 # Check variable
 #                if person.age == 40 and person.classRank == 0:
 #                    self.deathProb.append(dieProb) 
@@ -1359,11 +1305,11 @@ class Sim:
         self.deaths_4.append(deaths[3])
         self.deaths_5.append(deaths[4])
         
-        # print('the number of people who died is: ' + str(preDeath - postDeath))
+        print('the number of people who died is: ' + str(preDeath - postDeath))
         
         # print(len(self.pop.livingPeople))
     def doRegressions(self):
-        if self.year == self.p['implementPoliciesFromYear']:
+        if self.year == self.p['implementPoliciesFromYear'] and self.p['noPolicySim'] == False:
             for k in range(2):
                 for i in range(self.p['numberClasses']):
                     for j in range(self.p['numCareLevels']):
@@ -1371,6 +1317,8 @@ class Sim:
 #                        print(len(self.inputsMortality[k][i][j]))
 #                        print(len(self.outputMortality[k][i][j]))
                         # self.regressionModels_M[k][i][j] = LinearRegression()
+                        if len(self.inputsMortality[k][i][j]) == 0:
+                            print('Warning: RandomForestRegressor instance not fitted yet')
                         if len(self.inputsMortality[k][i][j]) > 0:
                             self.regressionModels_M[k][i][j].fit(self.inputsMortality[k][i][j], self.outputMortality[k][i][j])
                         
@@ -1435,30 +1383,41 @@ class Sim:
                 
             birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, woman.classRank)
             
-            if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
-                age = woman.age-16
-                year = self.year-self.p['startRegressionCollectionFrom']
-                regressors = [age, math.log(age), year, math.log(year+1)]
-                self.inputsFertility[woman.classRank].append(regressors)
-                dependentVariable = birthProb # [birthProb]
-                self.outputFertility[woman.classRank].append(dependentVariable)
-                
-            elif self.year >= self.p['implementPoliciesFromYear']:
-                age = woman.age-16
-                year = self.year-self.p['startRegressionCollectionFrom']
-                regressors = [age, math.log(age), year, math.log(year+1)]
-                birthProb = self.regressionModels_F[woman.classRank].predict([regressors])
+            if self.p['noPolicySim'] == False:
+                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                    age = woman.age-16
+                    year = self.year-self.p['startRegressionCollectionFrom']
+                    regressors = [age, math.log(age), year, math.log(year+1)]
+                    self.inputsFertility[woman.classRank].append(regressors)
+                    dependentVariable = birthProb # [birthProb]
+                    self.outputFertility[woman.classRank].append(dependentVariable)
+                    
+                elif self.year >= self.p['implementPoliciesFromYear']:
+                    age = woman.age-16
+                    year = self.year-self.p['startRegressionCollectionFrom']
+                    regressors = [age, math.log(age), year, math.log(year+1)]
+                    r = person.classRank
+                    try:
+                        birthProb = self.regressionModels_F[r].predict([regressors])
+                    except NotFittedError as e:
+                        for i in reversed(xrange(r)):
+                            try:
+                                birthProb = self.regressionModels_F[i].predict([regressors])
+                                break
+                            except NotFittedError as e:
+                                continue
+                    
             #baseRate = self.baseRate(self.socialClassShares, self.p['fertilityBias'], rawRate)
             #fertilityCorrector = (self.socialClassShares[woman.classRank] - self.p['initialClassShares'][woman.classRank])/self.p['initialClassShares'][woman.classRank]
             #baseRate *= 1/math.exp(self.p['fertilityCorrector']*fertilityCorrector)
             #birthProb = baseRate*math.pow(self.p['fertilityBias'], woman.classRank)
             
-            if random.random() < birthProb/marriedPercentage[woman.classRank]:
+            if random.random() < (birthProb/marriedPercentage[woman.classRank]):
                 # (self, mother, father, age, birthYear, sex, status, house,
                 # classRank, sec, edu, wage, income, finalIncome):
-                
-                baby = Person(woman, woman.partner, 0, self.year, 'random', 
-                              'child', woman.house, woman.classRank, woman.sec, None, 0, 0, 0, 0, 0, 0, 0)
+                sex = random.choice(['male', 'female'])
+                baby = Person(woman, woman.partner, 0, self.year, sex, 
+                              'child', woman.house, woman.classRank, woman.sec, None, 0, 0, 0, 0, 0, 0, 0, self.randomSeed)
                 births[woman.classRank] += 1
                 self.pop.allPeople.append(baby)
                 self.pop.livingPeople.append(baby)
@@ -1476,7 +1435,7 @@ class Sim:
         self.births_4.append(births[3])
         self.births_5.append(births[4])
         
-        # print('the number of births is: ' + str(postBirth - preBirth))
+        print('the number of births is: ' + str(postBirth - preBirth))
     
     def computeBirthProb(self, fertilityBias, rawRate, womanRank):
         a = 0
@@ -1598,16 +1557,22 @@ class Sim:
                                * self.p['personCareProb'] )
             careProb = (self.p['baseCareProb'] + ageCareProb)
             baseProb = self.baseRate(self.socialClassShares, self.p['careBias'], careProb)
-            careProb = baseProb*math.pow(self.p['careBias'], person.classRank)
+            
+            unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
+            
+            careProb = baseProb*math.pow(self.p['careBias'], person.classRank)/unmetNeedFactor 
+            
+            self.careTransitionRate[person.classRank].append(careProb)
             
             if random.random() < careProb:
                 person.status = 'inactive'
                 baseTransition = self.baseRate(self.socialClassShares, self.p['careBias'], 1-self.p['careTransitionRate'])
                 if person.careNeedLevel > 0:
-                    unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.cumulativeUnmetNeed)
+                    unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
                 else:
                     unmetNeedFactor = 1.0
                 transitionRate = (1.0 - baseTransition*math.pow(self.p['careBias'], person.classRank))*unmetNeedFactor
+
                 stepCare = 1
                 bound = transitionRate
                 while random.random() > bound and stepCare < self.p['numCareLevels'] - 1:
@@ -2315,16 +2280,16 @@ class Sim:
             receiver.totalDiscountedShareUnmetNeed += receiver.residualNeed/receiver.hoursDemand
             receiver.totalDiscountedTime += 1
             receiver.averageShareUnmetNeed = receiver.totalDiscountedShareUnmetNeed/receiver.totalDiscountedTime
-                
+    
     def kinshipNetwork(self, pin):
         kn = []
         households = []
         # Household members
         householdMembers = []
+        households.append(pin.house)
         for member in pin.house.occupants:
             if member.hoursDemand == 0 and member.house not in households:
                 householdMembers.append(member)
-                households.append(member.house)
         kn.append(householdMembers)
         # Parents
         parents = []
@@ -3209,27 +3174,36 @@ class Sim:
                     ageBandShares.append(0)
         
         
-        if self.year == self.p['implementPoliciesFromYear']:
+        if self.year == self.p['implementPoliciesFromYear'] and self.p['noPolicySim'] == False:
             for i in range(self.p['numberClasses']):
                 for j in range(6):
-                    self.meanUnemploymentRates[i][j] = np.mean(self.unemploymentRateClasses[i][j])
+                    if len(self.unemploymentRateClasses[i][j]) == 0:
+                        print('Warning: mean of empty array')
+                        self.meanUnemploymentRates[i][j] = np.mean(self.unemploymentRateClasses[i][j]) = -1
+                    else:
+                        self.meanUnemploymentRates[i][j] = np.mean(self.unemploymentRateClasses[i][j])
         
         for person in activePop:
             
-            if self.year < self.p['implementPoliciesFromYear']:
-                person.unemploymentRate = self.unemploymentRate(classShares, ageBandShares, self.p['unemploymentClassBias'], 
-                                                             self.p['unemploymentAgeBias'], unemployment, 
-                                                             self.ageBand(person.age), person.classRank)
+            person.unemploymentRate = self.unemploymentRate(classShares, ageBandShares, self.p['unemploymentClassBias'], 
+                                                         self.p['unemploymentAgeBias'], unemployment, 
+                                                         self.ageBand(person.age), person.classRank)
                 
-                if  self.year >= self.p['startRegressionCollectionFrom']:
+            if self.p['noPolicySim'] == False:
+                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
                     self.unemploymentRateClasses[person.classRank][self.ageBand(person.age)].append(person.unemploymentRate)
-                    
-            else:
-                person.unemploymentRate = self.meanUnemploymentRates[person.classRank][self.ageBand(person.age)]
-                
-            
-            
-            
+                elif self.year >= self.p['implementPoliciesFromYear']:
+                    if self.meanUnemploymentRates[person.classRank][self.ageBand(person.age)] != -1:
+                        person.unemploymentRate = self.meanUnemploymentRates[person.classRank][self.ageBand(person.age)]
+                    else:
+                        r = person.classRank
+                        b = self.ageBand(person.age)
+                        for i in reversed(xrange(r+1)):
+                            for j in reversed(xrange(b)):
+                                if self.meanUnemploymentRates[i][j] == -1:
+                                    continue
+                                person.unemploymentRate = self.meanUnemploymentRates[i][j]
+
             
     def updateJobMap(self):
         
@@ -3644,7 +3618,7 @@ class Sim:
               #  print(relativeAttraction)
             # Check variable
             
-            self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.07 - 0.05
+            self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.03 - 0.00
             
             attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
             rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
@@ -3705,7 +3679,7 @@ class Sim:
     
     def townsProb(self, classRank, relocPropensity):
         
-        # This function determines (and returns) the probabilities associated to the locatin of new job opportunities.
+        # This function determines (and returns) the probabilities associated to the location of new job opportunities.
         # They are proportional to the product of two factors:
         # - an objective factor represented by the town's job 'weight' for that particular class (see 'jobMarketMap' function);
         # - a subjective factor represented by the town's care attractiveness for that particular agent
@@ -4330,7 +4304,7 @@ class Sim:
                 # Softmax function
                 
             # Check variable
-            self.houseScore.append(count) # Min-Max: -10 - 1
+            self.houseScore.append(count) # Min-Max: -4 - 4
             
             socialDesirability.append(math.exp(self.p['distanceSensitivityParam']*count))
         denProb = sum(socialDesirability)
@@ -6274,7 +6248,7 @@ class Sim:
         deltaOccupants = (totOcc-firstocc)/float(firstocc)
         
         # Check variable
-        self.deltaHouseOccupants.append(deltaOccupants) # Min-Max: -0.5 - 2
+        self.deltaHouseOccupants.append(deltaOccupants) # Min-Max: -0.5 - 3
         
         prob = 1.0 - 1.0/math.exp(self.p['relocationParameter']*deltaOccupants)
         if prob < 0.0:
@@ -6722,10 +6696,6 @@ class Sim:
         pp.close()
         
         # Chart 4: Share of Social Care Needs (1960-2020)
-        
-        self.sharesSocialCare_M.append(np.mean(self.shareSocialCareDemand[-20:]))
-        self.sharesSocialCare_SD.append(np.std(self.shareSocialCareDemand[-20:]))
-        
         fig, ax = plt.subplots()
         p1, = ax.plot(years, self.shareSocialCareDemand, linewidth = 3, label = 'Population')
         p2, = ax.plot(years, self.shareSocialCare_1, label = 'Class I')
@@ -6949,13 +6919,6 @@ class Sim:
         pp.close()
         
         # Chart 14: Share of Unmet Care Need, total and by social class (from 1960 to 2020)
-        
-        
-        
-        
-        self.sharesUnmetCare_M.append(np.mean(self.shareUnmetCareDemand[-20:]))
-        self.sharesUnmetCare_SD.append(np.std(self.shareUnmetCareDemand[-20:]))
-        
         fig, ax = plt.subplots()
         p1, = ax.plot(years, self.shareUnmetCareDemand, linewidth = 3, label = 'Population')
         p2, = ax.plot(years, self.shareUnmetCareDemand_1, label = 'Class I')
@@ -7058,10 +7021,6 @@ class Sim:
         pp.close()
         
         # Chart 18: Average Unmet Care Need, total and by social class (from 1960 to 2020)
-        
-        self.averagesUnmetCare_M.append(np.mean(self.averageUnmetCareDemand[-20:]))
-        self.averagesUnmetCare_SD.append(np.std(self.averageUnmetCareDemand[-20:]))
-        
         fig, ax = plt.subplots()
         p1, = ax.plot(years, self.averageUnmetCareDemand, linewidth = 3, label = 'Population')
         p2, = ax.plot(years, self.totalUnmetNeedPerRecipient_1, label = 'Class I')
@@ -7739,12 +7698,6 @@ class Sim:
         pp.close()
         
         # Chart 38: Per Capita Health Care Cost (1960-2020)
-        
-
-        self.perCapitaHospitalizationCost_M.append(np.mean(self.perCapitaHealthCareCost[-20:]))
-        self.perCapitaHospitalizationCost_SD.append(np.std(self.perCapitaHealthCareCost[-20:]))
-        
-        
         fig, ax = plt.subplots()
         ax.plot(years, self.perCapitaHealthCareCost, linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
@@ -7855,21 +7808,21 @@ class Sim:
         pp.close()
         
         # Chart 43: income distribution
-        data = self.popHourlyWages
-        fig, ax = plt.subplots()
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-        ax.set_ylabel("Density")
-        ax.set_xlabel("Hourly Wage")
-        ax.set_title('Hourly Wage Distribution')
-        fig.tight_layout()
-        sns.kdeplot(data, shade=True)
-        fig.tight_layout()
-        filename = folder + '/HourlyWageDistributionChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
+#        data = self.popHourlyWages
+#        fig, ax = plt.subplots()
+#        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+#        ax.set_ylabel("Density")
+#        ax.set_xlabel("Hourly Wage")
+#        ax.set_title('Hourly Wage Distribution')
+#        fig.tight_layout()
+#        sns.kdeplot(data, shade=True)
+#        fig.tight_layout()
+#        filename = folder + '/HourlyWageDistributionChart.pdf'
+#        if not os.path.isdir(os.path.dirname(filename)):
+#            os.mkdir(os.path.dirname(filename))
+#        pp = PdfPages(filename)
+#        pp.savefig(fig)
+#        pp.close()
         
         # Chart 44: Public supply
         fig, ax = plt.subplots()
@@ -7990,6 +7943,7 @@ class Sim:
         pp.savefig(fig)
         pp.close()
         
+    def emptyLists(self):
         ####  Empty Time Series
         self.times = []
         self.pops = []
@@ -8476,209 +8430,6 @@ class Sim:
         
         self.unemploymentRateClasses = []
         self.meanUnemploymentRates = []
-
-        
-    def sensitivityGraphs(self, folder):
-        
-        # Sensitivity Chart 1: Shares of Unmet Care Needs
-        lowSharesUnmetCare_M = self.sharesUnmetCare_M[0::2]
-        lowSharesUnmetCare_SD = self.sharesUnmetCare_SD[0::2]
-        highSharesUnmetCare_M = self.sharesUnmetCare_M[1::2]
-        highSharesUnmetCare_SD = self.sharesUnmetCare_SD[1::2]
-        
-        N = len(lowSharesUnmetCare_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowSharesUnmetCare_M, bar_width, color='b', bottom = 0, yerr = lowSharesUnmetCare_SD, 
-                    label = 'Low')
-        p2 = ax.bar(index + bar_width, highSharesUnmetCare_M, bar_width,color='g', bottom = 0, yerr = highSharesUnmetCare_SD, 
-                    label = 'High')
-        ax.set_ylabel('Share of Unmet Care')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Shares of Unmet Care Need')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/SharesUnmetCareSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
-        
-        # Sensitivity Chart 2: Averages of Unmet Care Needs
-        lowAveragesUnmetCare_M = self.averagesUnmetCare_M[0::2]
-        lowAveragesUnmetCare_SD = self.averagesUnmetCare_SD[0::2]
-        highAveragesUnmetCare_M = self.averagesUnmetCare_M[1::2]
-        highAveragesUnmetCare_SD = self.averagesUnmetCare_SD[1::2]
-        
-        N = len(lowAveragesUnmetCare_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowAveragesUnmetCare_M, bar_width, color='b', bottom = 0, yerr = lowAveragesUnmetCare_SD, 
-                    label = 'Low')
-        p2 = ax.bar(index + bar_width, highAveragesUnmetCare_M, bar_width,color='g', bottom = 0, yerr = highAveragesUnmetCare_SD, 
-                    label = 'High')
-        ax.set_ylabel('Hours of Unmet Care')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Unmet Care per Receiver')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/AveragesUnmetCareSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
-        
-        # Sensitivity Chart 3: Quality-Adjusted-Life-Years
-       
-        lowQALY_M = self.qualityAdjustedLifeYears_M[0::2]
-        lowQALY_SD = self.qualityAdjustedLifeYears_SD[0::2]
-        highQALY_M = self.qualityAdjustedLifeYears_M[1::2]
-        highQALY_SD = self.qualityAdjustedLifeYears_SD[1::2]
-        
-        N = len(lowQALY_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowQALY_M, bar_width, color='b', bottom = 0, yerr = lowQALY_SD, label = 'Low')
-        p2 = ax.bar(index + bar_width, highQALY_M, bar_width,color='g', bottom = 0, yerr = highQALY_SD, label = 'High')
-        ax.set_ylabel('Quality-Adjusted Life Years')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Total Quality-Adjusted Life Years')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/TotalQualityAdjustedLifeYearsSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
-        
-        # Sensitivity Chart 4: Per Capita Quality-Adjusted-Life-Years
-        
-        lowAverageQALY_M = self.perCapitaQualityAdjustedLifeYears_M[0::2]
-        lowAverageQALY_SD = self.perCapitaQualityAdjustedLifeYears_SD[0::2]
-        highAverageQALY_M = self.perCapitaQualityAdjustedLifeYears_M[1::2]
-        highAverageQALY_SD = self.perCapitaQualityAdjustedLifeYears_SD[1::2]
-        
-        N = len(lowAverageQALY_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowAverageQALY_M, bar_width, color='b', bottom = 0, yerr = lowAverageQALY_SD, label = 'Low')
-        p2 = ax.bar(index + bar_width, highAverageQALY_M, bar_width,color='g', bottom = 0, yerr = highAverageQALY_SD, label = 'High')
-        ax.set_ylabel('Quality-Adjusted Life Years')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Per Capita Quality-Adjusted Life Years')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/perCapitaQualityAdjustedLifeYearsSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
-        
-        # Sensitivity Chart 5: Per Capita Hospitalization Costs
-
-        lowAverageHC_M = self.perCapitaHospitalizationCost_M[0::2]
-        lowAverageHC_SD = self.perCapitaHospitalizationCost_SD[0::2]
-        highAverageHC_M = self.perCapitaHospitalizationCost_M[1::2]
-        highAverageUC_SD = self.perCapitaHospitalizationCost_SD[1::2]
-        
-        N = len(lowAverageHC_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowAverageHC_M, bar_width, color='b', bottom = 0, yerr = lowAverageHC_SD, label = 'Low')
-        p2 = ax.bar(index + bar_width, highAverageHC_M, bar_width,color='g', bottom = 0, yerr = highAverageUC_SD, label = 'High')
-        ax.set_ylabel('Per Capita Costs')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Per Capita Hospitalization Costs')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/perCapitaHospitalizationCostsSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
-        
-        # Sensitivity Chart 6: Shares of Social Care
-        lowSharesSocialCare_M = self.sharesSocialCare_M[0::2]
-        lowSharesSocialCare_SD = self.sharesSocialCare_SD[0::2]
-        highSharesSocialCare_M = self.sharesSocialCare_M[1::2]
-        highSharesSocialCare_SD = self.sharesSocialCare_SD[1::2]
-        
-        N = len(lowSharesSocialCare_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowSharesSocialCare_M, bar_width, color='b', bottom = 0, yerr = lowSharesSocialCare_SD, 
-                    label = 'Low')
-        p2 = ax.bar(index + bar_width, highSharesSocialCare_M, bar_width,color='g', bottom = 0, yerr = highSharesSocialCare_SD, 
-                    label = 'High')
-        ax.set_ylabel('Share of Social Care')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Shares of Social Care Received')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/SharesSocialCareSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
-        
-        # Sensitivity Chart 7: Shares of Informal Care
-        lowSharesInformalCare_M = self.sharesInformalCare_M[0::2]
-        lowSharesInformalCare_SD = self.sharesInformalCare_SD[0::2]
-        highSharesInformalCare_M = self.sharesInformalCare_M[1::2]
-        highSharesInformalCare_SD = self.sharesInformalCare_SD[1::2]
-        
-        N = len(lowSharesSocialCare_M)
-        fig, ax = plt.subplots()
-        index = np.arange(N)    # the x locations for the groups
-        bar_width = 0.35         # the width of the bars
-        p1 = ax.bar(index, lowSharesInformalCare_M, bar_width, color='b', bottom = 0, yerr = lowSharesInformalCare_SD, 
-                    label = 'Low')
-        p2 = ax.bar(index + bar_width, highSharesInformalCare_M, bar_width,color='g', bottom = 0, yerr = highSharesInformalCare_SD, 
-                    label = 'High')
-        ax.set_ylabel('Share of Informal Care')
-        ax.set_xlabel('Parameters')
-        ax.set_title('Shares of Informal Care Received')
-        ax.set_xticks(index + bar_width/2)
-        plt.xticks(index + bar_width/2, ('P1', 'P2', 'P3', 'P4'))
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles[::-1], labels[::-1])
-        fig.tight_layout()
-        filename = folder + '/SharesInformalCareSensitivityGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
-        pp.savefig(fig)
-        pp.close()
 
 class PopPyramid:
     """Builds a data object for storing population pyramid data in."""
