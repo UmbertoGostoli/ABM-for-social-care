@@ -11,11 +11,19 @@ import math
 class Population:
     """The population class stores a collection of persons."""
     def __init__ (self, initialPop, startYear, minStartAge, maxStartAge,
-                  nc, soc, edu, ics, iu, up, wa, il, fl, gr, wdt, wv):
+                  nc, soc, edu, ics, iu, up, wa, il, fl, gr, wdt, wv, rs):
         self.allPeople = []
         self.livingPeople = []
-
+        
+        random.seed(rs)
+        np.random.seed(rs)
+        
+        ranks = []
+        for n in range(nc):
+            ranks.extend([n]*(int)(ics[n]*(initialPop/2)))
+        
         for i in range(initialPop/2):
+            
             ageMale = random.randint(minStartAge, maxStartAge)
             ageFemale = ageMale + random.randint(-2,5)
             if ( ageFemale < 24 ):
@@ -26,7 +34,7 @@ class Population:
             maleBirthYear = startYear - ageMale
             femaleBirthYear = startYear - ageFemale
             classeRanks = range(nc)
-            numClass = np.random.choice(classeRanks, p = ics)
+            numClass = ranks[i] #np.random.choice(classeRanks, p = ics)
             classRank = numClass
             um = self.unemploymentRate(mab, classRank, iu, up)
             uf = self.unemploymentRate(fab, classRank, iu, up)
@@ -58,7 +66,7 @@ class Population:
             tenure = 1.0
             newMan = Person(None, None, ageMale, maleBirthYear, 'male', manStatus, 
                             None, classRank, socialClass, eduLevel, maleWage, 
-                            maleIncome, finalIncome, workingTimeMale, yearsInTown, tenure, 0.02)
+                            maleIncome, finalIncome, workingTimeMale, yearsInTown, tenure, 0.02, rs)
             status = 'employed'
             finalIncome = fl[numClass]
             if random.random() < uf and manStatus == 'employed':
@@ -68,7 +76,7 @@ class Population:
             yearsInTown = random.randint(0, 10)
             newWoman = Person(None, None, ageFemale, femaleBirthYear, 'female', 
                               status, None, classRank, socialClass, eduLevel, 
-                              femaleWage, femaleIncome, finalIncome, workingTimeFemale, yearsInTown, tenure, 0.02)
+                              femaleWage, femaleIncome, finalIncome, workingTimeFemale, yearsInTown, tenure, 0.02, rs)
             
             newMan.independentStatus = True
             newWoman.independentStatus = True
@@ -107,7 +115,11 @@ class Person:
     counter = 1
 
     def __init__(self, mother, father, age, birthYear, sex, status, house,
-                 classRank, sec, edu, wage, income, finalIncome, workingTime, yit, tenure, ur):
+                 classRank, sec, edu, wage, income, finalIncome, workingTime, yit, tenure, ur, rs):
+        
+#        random.seed(rs)
+#        np.random.seed(rs)
+        
         self.mother = mother
         self.father = father
         self.children = []
