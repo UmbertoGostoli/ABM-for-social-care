@@ -3179,7 +3179,7 @@ class Sim:
                 for j in range(6):
                     if len(self.unemploymentRateClasses[i][j]) == 0:
                         print('Warning: mean of empty array')
-                        self.meanUnemploymentRates[i][j] = np.mean(self.unemploymentRateClasses[i][j]) = -1
+                        self.meanUnemploymentRates[i][j] = -1
                     else:
                         self.meanUnemploymentRates[i][j] = np.mean(self.unemploymentRateClasses[i][j])
         
