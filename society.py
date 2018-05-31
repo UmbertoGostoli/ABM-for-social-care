@@ -7,6 +7,7 @@ Created on Thu Nov 02 15:40:07 2017
 import random
 import numpy as np
 import math
+import networkx as nx
 
 class Population:
     """The population class stores a collection of persons."""
@@ -167,7 +168,13 @@ class Person:
         self.formalCare = 0
         self.informalCare = 0
         self.socialNetwork = []
+        
+        self.careNetwork = nx.Graph()
+        
+        self.networkList = []
+        self.suppliersDistances = []
         self.networkSupplies = []
+        self.householdSupply = 0
         self.totalSupply = 0
         self.totalInformalSupply = 0
         self.socialCareProvider = False
