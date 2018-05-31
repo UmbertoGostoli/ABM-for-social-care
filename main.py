@@ -23,7 +23,7 @@ def init_params():
     
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
-    p['noPolicySim'] = True
+    p['noPolicySim'] = False
     
     p['initialPop'] = 600
     p['startYear'] = 1860
@@ -210,6 +210,7 @@ def init_params():
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
     p['variableMoveBack'] = 0.1
+    p['retiredRelocationParam'] = 0.01
     
     # houseMap function parameters
     p['geoDistanceSensitivityParam'] = 2.0

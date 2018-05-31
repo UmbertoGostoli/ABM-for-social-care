@@ -16,7 +16,6 @@ import time
 import random
 import os
 import sys
-import sPickle
 from sklearn.externals import joblib
 import fnmatch
 
@@ -43,7 +42,7 @@ class Simulation:
             
             for r in range(self.p['numRepeats']):
                 
-                folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model//Charts/noPolicy_Sim/Repeat_' + str(r)
+                folder  = 'N:/Social Care Model II/Charts/noPolicy_Sim/Repeat_' + str(r)
                 if not os.path.isdir(os.path.dirname(folder)):
                     os.makedirs(folder)
                
@@ -146,7 +145,7 @@ class Simulation:
                 self.averageDiscountedQALY.append(outputVariables[3])
                 self.perCapitaHealthCareCost.append(outputVariables[4])
             
-            folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/MultipleRunsCharts'
+            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             self.multipleRunsGraphs(folder)
@@ -190,7 +189,7 @@ class Simulation:
                 for i in range(self.p['numberPolicyParameters']):
                     policyParameters.append(policies[n][i])
                 
-                folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/Policy_' + str(n) #
+                folder  = 'N:/Social Care Model II/Charts/Policy_' + str(n) #
                 if not os.path.isdir(os.path.dirname(folder)):
                     os.makedirs(folder)
                
@@ -207,6 +206,7 @@ class Simulation:
             
                 for self.year in range(self.p['startYear'], self.p['endYear']+1):
                     
+                    print(" ")
                     print('Policy ' + str(n) + ' - ' + str(self.year))
                     
                     if self.year == self.p['implementPoliciesFromYear']:
@@ -234,7 +234,7 @@ class Simulation:
                 self.averageDiscountedQALY.append(outputVariables[3])
                 self.perCapitaHealthCareCost.append(outputVariables[4])
             
-            folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/SensitivityCharts'
+            folder  = 'N:/Social Care Model II/Charts/SensitivityCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             self.policyGraphs(folder)
