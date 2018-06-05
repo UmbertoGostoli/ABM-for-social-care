@@ -29,6 +29,8 @@ class Simulation:
         # Output variables
         self.shareUnmetCareDemand = []
         self.averageUnmetCareDemand = []
+        self.totalQALY = []
+        self.averageQALY = []
         self.discountedQALY = []
         self.averageDiscountedQALY = []
         self.perCapitaHealthCareCost = []
@@ -42,7 +44,7 @@ class Simulation:
             
             for r in range(self.p['numRepeats']):
                 
-                folder  = 'N:/Social Care Model II/Charts/noPolicy_Sim/Repeat_' + str(r)
+                folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/noPolicy_Sim/Repeat_' + str(r)
                 if not os.path.isdir(os.path.dirname(folder)):
                     os.makedirs(folder)
                
@@ -141,17 +143,21 @@ class Simulation:
                 
                 self.shareUnmetCareDemand.append(outputVariables[0])
                 self.averageUnmetCareDemand.append(outputVariables[1])
-                self.discountedQALY.append(outputVariables[2])
-                self.averageDiscountedQALY.append(outputVariables[3])
-                self.perCapitaHealthCareCost.append(outputVariables[4])
+                self.totalQALY.append(outputVariables[2])
+                self.averageQALY.append(outputVariables[3])
+                self.discountedQALY.append(outputVariables[4])
+                self.averageDiscountedQALY.append(outputVariables[5])
+                self.perCapitaHealthCareCost.append(outputVariables[6])
             
-            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
+            folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/MultipleRunsCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             self.multipleRunsGraphs(folder)
             
             self.shareUnmetCareDemand = self.shareUnmetCareDemand[:1]
             self.averageUnmetCareDemand = self.averageUnmetCareDemand[:1]
+            self.totalQALY = self.totalQALY[:1]
+            self.averageQALY = self.averageQALY[:1]
             self.discountedQALY = self.discountedQALY[:1]
             self.averageDiscountedQALY = self.averageDiscountedQALY[:1]
             self.perCapitaHealthCareCost = self.perCapitaHealthCareCost[:1]
@@ -189,7 +195,7 @@ class Simulation:
                 for i in range(self.p['numberPolicyParameters']):
                     policyParameters.append(policies[n][i])
                 
-                folder  = 'N:/Social Care Model II/Charts/Policy_' + str(n) #
+                folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/Policy_' + str(n) #
                 if not os.path.isdir(os.path.dirname(folder)):
                     os.makedirs(folder)
                
@@ -230,11 +236,13 @@ class Simulation:
                 
                 self.shareUnmetCareDemand.append(outputVariables[0])
                 self.averageUnmetCareDemand.append(outputVariables[1])
-                self.discountedQALY.append(outputVariables[2])
-                self.averageDiscountedQALY.append(outputVariables[3])
-                self.perCapitaHealthCareCost.append(outputVariables[4])
+                self.totalQALY.append(outputVariables[2])
+                self.averageQALY.append(outputVariables[3])
+                self.discountedQALY.append(outputVariables[4])
+                self.averageDiscountedQALY.append(outputVariables[5])
+                self.perCapitaHealthCareCost.append(outputVariables[6])
             
-            folder  = 'N:/Social Care Model II/Charts/SensitivityCharts'
+            folder  = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model/Charts/SensitivityCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             self.policyGraphs(folder)
@@ -326,11 +334,13 @@ class Simulation:
         pp.savefig(fig)
         pp.close()
         
+        
+        ### Add charts with not discounted aggregate and average QALY
         # Chart 3: Aggregate Quality-adjusted Life Years
         fig, ax = plt.subplots()
         p = [None]*self.p['numRepeats']
         for i in range(self.p['numRepeats']):
-            p[i], = ax.plot(years, self.discountedQALY[i], label = 'Run ' + str(i))
+            p[i], = ax.plot(years, self.totalQALY[i], label = 'Run ' + str(i))
 #            p2, = ax.plot(years, self.shareUnmetCareDemand_1, label = 'Class I')
 #            p3, = ax.plot(years, self.shareUnmetCareDemand_2, label = 'Class II')
 #            p4, = ax.plot(years, self.shareUnmetCareDemand_3, label = 'Class III')
@@ -357,14 +367,14 @@ class Simulation:
         fig, ax = plt.subplots()
         p = [None]*self.p['numRepeats']
         for i in range(self.p['numRepeats']):
-            p[i], = ax.plot(years, self.averageDiscountedQALY[i], label = 'Run ' + str(i))
+            p[i], = ax.plot(years, self.averageQALY[i], label = 'Run ' + str(i))
 #            p2, = ax.plot(years, self.shareUnmetCareDemand_1, label = 'Class I')
 #            p3, = ax.plot(years, self.shareUnmetCareDemand_2, label = 'Class II')
 #            p4, = ax.plot(years, self.shareUnmetCareDemand_3, label = 'Class III')
 #            p5, = ax.plot(years, self.shareUnmetCareDemand_4, label = 'Class IV')
 #            p6, = ax.plot(years, self.shareUnmetCareDemand_5, label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Average QALY')
+        ax.set_ylabel('average QALY')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
@@ -380,7 +390,61 @@ class Simulation:
         pp.savefig(fig)
         pp.close()
         
-        # Chart 5: per-capita Hospitalization Costs
+        # Chart 5: Aggregate Discounted Quality-adjusted Life Years
+        fig, ax = plt.subplots()
+        p = [None]*self.p['numRepeats']
+        for i in range(self.p['numRepeats']):
+            p[i], = ax.plot(years, self.discountedQALY[i], label = 'Run ' + str(i))
+#            p2, = ax.plot(years, self.shareUnmetCareDemand_1, label = 'Class I')
+#            p3, = ax.plot(years, self.shareUnmetCareDemand_2, label = 'Class II')
+#            p4, = ax.plot(years, self.shareUnmetCareDemand_3, label = 'Class III')
+#            p5, = ax.plot(years, self.shareUnmetCareDemand_4, label = 'Class IV')
+#            p6, = ax.plot(years, self.shareUnmetCareDemand_5, label = 'Class V')
+        ax.set_xlim(left = self.p['implementPoliciesFromYear'])
+        ax.set_ylabel('Discounted QALY')
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Discounted Quality-adjusted Life Years')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['implementPoliciesFromYear'], self.p['endYear'])
+        plt.xticks(range(self.p['implementPoliciesFromYear'], self.p['endYear']+1, 5))
+        fig.tight_layout()
+        filename = folder + '/DiscountedAggregateQALYChart_MR.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 6: Average Discounted Quality-adjusted Life Years
+        fig, ax = plt.subplots()
+        p = [None]*self.p['numRepeats']
+        for i in range(self.p['numRepeats']):
+            p[i], = ax.plot(years, self.averageDiscountedQALY[i], label = 'Run ' + str(i))
+#            p2, = ax.plot(years, self.shareUnmetCareDemand_1, label = 'Class I')
+#            p3, = ax.plot(years, self.shareUnmetCareDemand_2, label = 'Class II')
+#            p4, = ax.plot(years, self.shareUnmetCareDemand_3, label = 'Class III')
+#            p5, = ax.plot(years, self.shareUnmetCareDemand_4, label = 'Class IV')
+#            p6, = ax.plot(years, self.shareUnmetCareDemand_5, label = 'Class V')
+        ax.set_xlim(left = self.p['implementPoliciesFromYear'])
+        ax.set_ylabel('Discounted Average QALY')
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'upper left')
+        ax.set_title('Discounted Average Quality-adjusted Life Years')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['implementPoliciesFromYear'], self.p['endYear'])
+        plt.xticks(range(self.p['implementPoliciesFromYear'], self.p['endYear']+1, 5))
+        fig.tight_layout()
+        filename = folder + '/DiscountedAverageQALYChart_MR.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 7: per-capita Hospitalization Costs
         fig, ax = plt.subplots()
         p = [None]*self.p['numRepeats']
         for i in range(self.p['numRepeats']):

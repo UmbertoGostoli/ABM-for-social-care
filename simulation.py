@@ -583,6 +583,7 @@ class Sim:
         self.deltaHouseOccupants = []
         self.careTransitionRate = []
         self.potentialHostSupply = []
+        self.spousesTownSocialAttraction = []
         
         # Counters and storage
         
@@ -754,7 +755,8 @@ class Sim:
                          self.townRelativeAttraction, self.townsJobProb, self.townJobAttraction, 
                          self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction, self.houseScore, 
                          self.deltaHouseOccupants, self.careTransitionRate[0], self.careTransitionRate[1], 
-                         self.careTransitionRate[2], self.careTransitionRate[3], self.careTransitionRate[4], self.potentialHostSupply)
+                         self.careTransitionRate[2], self.careTransitionRate[3], self.careTransitionRate[4], 
+                         self.potentialHostSupply, self.spousesTownSocialAttraction)
             
         names = ('perCapitaHouseholdIncome, socialCareMapValues, '
                      'relativeEducationCost, probKeepStudying, stageStudent, changeJobRate, '
@@ -762,7 +764,7 @@ class Sim:
                      'townRelativeAttraction, townsJobProb, townJobAttraction, '
                      'unemployedIncomeDiscountingFactor, relativeTownAttraction, houseScore, '
                      'deltaHouseOccupants, careTransitionRate_I, careTransitionRate_II, careTransitionRate_III, '
-                     'careTransitionRate_IV, careTransitionRate_V, potentialHostSupply')
+                     'careTransitionRate_IV, careTransitionRate_V, potentialHostSupply, spousesTownSocialAttraction')
             
         filename = folder + '/Check_Value.csv'
         if not os.path.isdir(os.path.dirname(filename)):
@@ -774,6 +776,10 @@ class Sim:
         outputs = []
         outputs.append(self.shareUnmetCareDemand)
         outputs.append(self.averageUnmetCareDemand)
+        
+        outputs.append(self.aggregateQALY)
+        outputs.append(self.averageQALY)
+        
         outputs.append(self.discountedQALY)
         outputs.append(self.averageDiscountedQALY)
         outputs.append(self.perCapitaHealthCareCost)
@@ -1512,6 +1518,11 @@ class Sim:
             person.householdSupply = 0
             person.informalSupplyByKinship = [0.0, 0.0, 0.0, 0.0]
             person.formalSupplyByKinship = [0.0, 0.0, 0.0, 0.0]
+            
+            person.careNetwork.clear()
+            person.careNetwork.add_node(person)
+            person.householdTotalSupply = 0
+            person.totalCareSupplied = 0
             
             careNeed = self.p['careDemandInHours'][person.careNeedLevel]
 
@@ -2275,7 +2286,7 @@ class Sim:
         # First, select all the agents with care need in the population.
         careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0]
         for receiver in careReceivers:
-            receiver.socialNetwork[:] = self.kinshipNetwork(receiver)
+            self.kinshipNetwork(receiver)
             # receiver.networkSupplies = []
             # The total supply of informal care for the agent's kinship network is computed.
             # It includes all the informal care supply except the time-off-work infromal care supply (which is parte of the income-funded social care supply).
@@ -2314,108 +2325,59 @@ class Sim:
             receiver.averageShareUnmetNeed = receiver.totalDiscountedShareUnmetNeed/receiver.totalDiscountedTime
     
     def kinshipNetwork(self, pin):
-        pin.careNetwork.clear()
-        kn = []
         households = []
-        # Household members
-        householdMembers = []
-        households.append(pin.house)
         for member in pin.house.occupants:
             if member.hoursDemand == 0 and member.house not in households:
-                householdMembers.append(member)
-                
                 pin.careNetwork.add_edge(pin, member, distance = 0)      
-          
-                
-        kn.append(householdMembers)
+                households.append(member.house)
+                break
         # Parents
-        parents = []
         if pin.father != None:
             if pin.father.dead == False and pin.father.house not in households:
-                
                 pin.careNetwork.add_edge(pin, pin.father, distance = 1) 
-                
-                parents.append(pin.father)
                 households.append(pin.father.house)
             if pin.mother.dead == False and pin.mother.house not in households:
-                
                 pin.careNetwork.add_edge(pin, pin.mother, distance = 1)
-                
-                parents.append(pin.mother)
                 households.append(pin.mother.house)
-        kn.append(parents)
         # Grandparents
-        grandparents = []
         if pin.father != None and pin.father.father != None:
             if pin.father.father.dead == False and pin.father.father.house not in households and pin.father.father.house.town == pin.house.town:
-                
                 pin.careNetwork.add_edge(pin, pin.father.father, distance = 2)
-                
-                grandparents.append(pin.father.father)
                 households.append(pin.father.father.house)
             if pin.father.mother.dead == False and pin.father.mother.house not in households and pin.father.mother.house.town == pin.house.town:
-                
                 pin.careNetwork.add_edge(pin, pin.father.mother, distance = 2)
-                
-                grandparents.append(pin.father.mother)
                 households.append(pin.father.mother.house)
         if pin.father != None and pin.mother.father != None:
             if pin.mother.father.dead == False and pin.mother.father.house not in households and pin.mother.father.house.town == pin.house.town:
-                
                 pin.careNetwork.add_edge(pin, pin.mother.father, distance = 2)
-                
-                grandparents.append(pin.mother.father)
                 households.append(pin.mother.father.house)
             if pin.mother.mother.dead == False and pin.mother.mother.house not in households and pin.mother.mother.house.town == pin.house.town:
-                
                 pin.careNetwork.add_edge(pin, pin.mother.mother, distance = 2)
-                
-                grandparents.append(pin.mother.mother)
                 households.append(pin.mother.mother.house)
-        kn.append(grandparents)
         # Indipendent children
-        independentChildren = []
         for child in pin.children:
             if child.dead == False and child.house not in households:
-                
                 pin.careNetwork.add_edge(pin, child, distance = 1)
-                
-                independentChildren.append(child)
                 households.append(child.house)
-        kn.append(independentChildren)
         # Independent grandchildren
-        independentGrandsons = []
         for child in pin.children:
             for grandson in child.children:
                 if grandson.dead == False and grandson.house not in households and grandson.house.town == pin.house.town:
-                    
                     pin.careNetwork.add_edge(pin, grandson, distance = 2)
-                    
-                    independentGrandsons.append(grandson)
                     households.append(grandson.house)
-        kn.append(independentGrandsons)  
          # Indipendent brothers and sisters
-        independentBrothers = []
-        nephews = []
         if pin.father != None:
             brothers = list(set(pin.father.children+pin.mother.children))
             brothers = [x for x in brothers if x.dead == False]
             brothers.remove(pin)
             for brother in brothers:
                 if brother.dead == False and brother.house not in households and brother.house.town == pin.house.town:
-                    
                     pin.careNetwork.add_edge(pin, brother, distance = 2)
-                    
-                    independentBrothers.append(brother)
                     households.append(brother.house)
                 for child in brother.children:
                     if child.dead == False and child.house not in households and child.house.town == pin.house.town:
-                        
                         pin.careNetwork.add_edge(pin, child, distance = 3)
-                        
-                        nephews.append(child)
                         households.append(child.house)
-        kn.append(independentBrothers)
         # Uncles and aunts
         uncles = []
         maternalUncles = []
@@ -2430,35 +2392,14 @@ class Sim:
         unclesList = [x for x in unclesList if x.dead == False]
         for uncle in unclesList:
             if uncle.dead == False and uncle.house not in households and uncle.house.town == pin.house.town:
-                
                 pin.careNetwork.add_edge(pin, uncle, distance = 3)
-                
-                uncles.append(uncle)
                 households.append(uncle.house)
-        kn.append(uncles)
-        # Nephews and Nieces
-        kn.append(nephews)
-        
-        pin.networkList = []
-        pin.networkSupplies = []
-        pin.suppliersDistances = []
-        for i in range(len(kn)):
-            for j in kn[i]:
-                pin.networkList.append(j)
-                pin.networkSupplies.append(0)
-                pin.suppliersDistances.append(self.p['socialNetworkDistances'][i])
-        
-        return (kn)
     
     def totalSupply(self, receiver):
         totalSupply = 0
         townReceiver = receiver.house.town 
-#        networkList = []
-#        for i in range(len(receiver.socialNetwork)):
-#            for j in receiver.socialNetwork[i]:
-#                networkList.append(j)
         supplies = []
-        for carer in receiver.networkList:
+        for carer in receiver.careNetwork.neighbors(receiver):
             townCarer = carer.house.town
             household = [x for x in carer.house.occupants]
             formalSupplyHours = household[0].residualFormalSupply
@@ -2482,73 +2423,22 @@ class Sim:
                     for member in employed:
                         totsupply += member.extraworkCare
             
-            supplies.append(totsupply)
-
-        totalSupply = sum(supplies)
+            carer.householdTotalSupply = totsupply
+          
+        for g in receiver.careNetwork.neighbors(receiver):
+            totalSupply += g.householdTotalSupply
         return(totalSupply)
-    
-#    def totalInformalSocialSupply(self, receiver):
-#        totalSupply = 0
-#        townReceiver = receiver.house.town 
-#        networkList = []
-#        supplies = []
-#        for i in range(len(receiver.socialNetwork)):
-#            for j in receiver.socialNetwork[i]:
-#                networkList.append(j)
-#        for carer in networkList:
-#            townCarer = carer.house.town
-#            household = [x for x in carer.house.occupants]
-#            householdCarers = [x for x in household if x.hoursDemand == 0]
-#            notWorking = [x for x in householdCarers if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
-#            employed = [x for x in householdCarers if x.status == 'employed']
-#            earners = [x for x in notWorking if x.status == 'retired']
-#            earners.extend(employed)
-#            incomeForCare = 0
-#            if len(earners) > 0:
-#                incomeForCare = earners[0].residualIncomeCare
-#            totsupply = 0
-#            if (receiver.father != None and receiver.father in carer.house.occupants) or (receiver.mother != None and receiver.mother in carer.house.occupants) or carer in receiver.children:
-#                if townCarer != townReceiver:
-#                    formalCare = incomeForCare/self.p['priceSocialCare']
-#                    totsupply += int((formalCare+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                else:
-#                    for member in notWorking:
-#                        totsupply += member.residualInformalSupply
-#                    for member in employed:
-#                        totsupply += member.extraworkCare
-#                        if member.wage > self.p['priceSocialCare'] or member.status == 'retired':
-#                            # For member is more convenient (or is possible) to pay for formal care
-#                            totsupply += member.residualFormalSupply
-#                        else:   
-#                            # For member is more convenient to take time off work.
-#                            totsupply += member.residualInformalSupply
-#            else:
-#                if townCarer == townReceiver:
-#                    for member in notWorking:
-#                        totsupply += member.residualInformalSupply
-#                    for member in employed:
-#                        totsupply += member.extraworkCare
-#            
-#            supplies.append(totsupply)
-#
-#        totalSupply = sum(supplies)
-#        return(totalSupply)
-    
-    
+
     def getCare(self, receiver):
         receiver.residualNeed -= self.p['quantumCare'] 
         townReceiver = receiver.house.town 
         informalCare = 0
         formalCare = 0
-#        networkList = []
-#        indexSupply = []
-#        for i in range(len(receiver.socialNetwork)):
-#            for j in receiver.socialNetwork[i]:
-#                networkList.append(j)
-#                indexSupply.append(int(self.p['socialNetworkDistances'][i]))
+
         probCarers = self.probSuppliers(receiver)
-        carer = np.random.choice(receiver.networkList, p = probCarers)
-        index = receiver.networkList.index(carer)
+        suppliers = [x for x in receiver.careNetwork.neighbors(receiver)]
+        carer = np.random.choice(suppliers, p = probCarers)
+
         townCarer = carer.house.town
         household = carer.house.occupants
         
@@ -2652,66 +2542,6 @@ class Sim:
                         carers[0].residualInformalSupply -= self.p['quantumCare']
                     carers[0].socialWork += self.p['quantumCare']
                     informalCare = self.p['quantumCare']
-                    
-                # Sequential supply    
-                
-#                if len(teenagers) > 0:
-#                    teenagers[0].residualInformalSupply -= self.p['quantumCare']
-#                    teenagers[0].socialWork += self.p['quantumCare']
-#                    informalCare = self.p['quantumCare']
-#                elif len(retired) > 0:
-#                    retired[0].residualInformalSupply -= self.p['quantumCare']
-#                    retired[0].socialWork += self.p['quantumCare']
-#                    informalCare = self.p['quantumCare']
-#                    supplier = 'retired (close relative, in town)'
-#                elif len(students) > 0:
-#                    students[0].residualInformalSupply -= self.p['quantumCare']
-#                    students[0].socialWork += self.p['quantumCare']
-#                    informalCare = self.p['quantumCare']
-#                    supplier = 'student (close relative, in town)'
-#                elif len(unemployed) > 0:
-#                    for member in unemployed:
-#                        if member.residualInformalSupply > 0:
-#                            member.residualInformalSupply -= self.p['quantumCare']
-#                            member.socialWork += self.p['quantumCare']
-#                            informalCare = self.p['quantumCare']
-#                            supplier = 'unemployed (close relative, in town)'
-#                            break
-#                elif len(employed) > 0:
-#                    for member in employed:
-#                        if member.extraworkCare > 0:
-#                            member.socialWork += self.p['quantumCare']
-#                            member.extraworkCare -= self.p['quantumCare']
-#                            informalCare = self.p['quantumCare']
-#                            supplier = 'employed: extraworkCare (close relative, in town)'
-#                            break
-#                        else:
-#                            if member.wage < self.p['priceSocialCare']: 
-#                                if member.residualInformalSupply > 0:
-#                                    # member.residualInformalSupply -= self.p['quantumCare']
-#                                    residualIncomeForCare -= self.p['quantumCare']*member.wage
-#                                    if residualIncomeForCare <= 0:
-#                                        residualIncomeForCare = 0
-#                                    for agent in household:
-#                                        agent.residualFormalSupply = residualIncomeForCare
-#                                    self.workerInformalCareSupply(employed, residualIncomeForCare)
-#                                    member.socialWork += self.p['quantumCare']
-#                                    informalCare = self.p['quantumCare']
-#                                    supplier = 'employed: informal care (close relative, in town)'
-#                                    break
-#                            else: 
-#                                if formalSupplyHours >= 0:
-#                                    # formalSupplyHours -= self.p['quantumCare']
-#                                    residualIncomeForCare -= self.p['quantumCare']*self.p['priceSocialCare']
-#                                    if residualIncomeForCare <= 0:
-#                                        residualIncomeForCare = 0
-#                                    for agent in household:
-#                                        agent.residualFormalSupply = residualIncomeForCare
-#                                    self.workerInformalCareSupply(employed, residualIncomeForCare)
-#                                    member.workToCare += self.p['quantumCare']
-#                                    formalCare = self.p['quantumCare']
-#                                    supplier = 'employed: formal care (close relative, in town)'
-#                                    break
             else:
                 if residualFormalSupplyHours > 0:
                     residualFormalSupplyHours -= self.p['quantumCare']
@@ -2734,47 +2564,13 @@ class Sim:
                 carers[0].socialWork += self.p['quantumCare']
                 informalCare = self.p['quantumCare']
                 
-                # Sequential supply
-                
-#                if len(teenagers) > 0:
-#                    teenagers[0].residualInformalSupply -= self.p['quantumCare']
-#                    teenagers[0].socialWork += self.p['quantumCare']
-#                    informalCare = self.p['quantumCare']
-#                elif len(retired) > 0:
-#                    retired[0].residualInformalSupply -= self.p['quantumCare']
-#                    retired[0].socialWork += self.p['quantumCare']
-#                    informalCare = self.p['quantumCare']
-#                    supplier = 'retired (not close relative, in town)'
-#                elif len(students) > 0:
-#                    students[0].residualInformalSupply -= self.p['quantumCare']
-#                    students[0].socialWork += self.p['quantumCare']
-#                    informalCare = self.p['quantumCare']
-#                    supplier = 'student (not close relative, in town)'
-#                elif len(unemployed) > 0:
-#                    for member in unemployed:
-#                        if member.residualInformalSupply > 0:
-#                            member.residualInformalSupply -= self.p['quantumCare']
-#                            member.socialWork += self.p['quantumCare']
-#                            informalCare = self.p['quantumCare']
-#                            supplier = 'unemployed (not close relative, in town)'
-#                            break
-#                elif len(employed) > 0:
-#                    for member in employed:
-#                        if member.extraworkCare > 0:
-#                            member.socialWork += self.p['quantumCare']
-#                            member.extraworkCare -= self.p['quantumCare']
-#                            informalCare = self.p['quantumCare']
-#                            supplier = 'employed (not close relative, in town)'
-#                            break
-                       # employed[0].residualInformalSupply -= self.p['quantumCare']
-                       # employed[0].residualSupply -= self.p['quantumCare']
-                       # employed[0].socialWork += self.p['quantumCare']
-                       # informalCare = self.p['quantumCare']
-        receiver.networkSupplies[index] += (formalCare+informalCare)
+                       
+        carer.totalCareSupplied += (formalCare+informalCare)
+        
         receiver.informalCare += informalCare
         receiver.formalCare += formalCare
-        receiver.informalSupplyByKinship[int(receiver.suppliersDistances[index])] += informalCare
-        receiver.formalSupplyByKinship[int(receiver.suppliersDistances[index])] += formalCare
+        receiver.informalSupplyByKinship[int(receiver.careNetwork[receiver][carer]['distance'])] += informalCare
+        receiver.formalSupplyByKinship[int(receiver.careNetwork[receiver][carer]['distance'])] += formalCare
         if informalCare == 0 and formalCare == 0:
             print('Error: no care is transferred')
         # receiver.totalSupply -= self.p['quantumCare']
@@ -2791,9 +2587,9 @@ class Sim:
 #                networkList.append(j)
 #                weights.append(self.p['socialNetworkDistances'][i])
                 
-        for carer in receiver.networkList:
-            index = receiver.networkList.index(carer)
-            kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*receiver.suppliersDistances[index])
+        for carer in receiver.careNetwork.neighbors(receiver): #receiver.networkList:
+            kinshipWeight = 1/math.exp(self.p['networkDistanceParam']*float(receiver.careNetwork[receiver][carer]['distance']))
+                                       #receiver.suppliersDistances[index])
             townCarer = carer.house.town
             household = carer.house.occupants
             formalSupplyHours = household[0].residualFormalSupply
@@ -2803,16 +2599,13 @@ class Sim:
             weightedHouseholdSupply = 0
             totsupply = 0
             if (receiver.father != None and receiver.father in carer.house.occupants) or (receiver.mother != None and receiver.mother in carer.house.occupants) or carer in receiver.children:
-                if townCarer != townReceiver:
-                    totsupply += formalSupplyHours
-                else:
+                totsupply += formalSupplyHours
+                if townCarer == townReceiver:
                     for member in notWorking:
                         totsupply += member.residualInformalSupply
                     for member in employed:
                         totsupply += member.extraworkCare
-                        if member.wage < self.p['priceSocialCare']:
-                            totsupply += member.residualInformalSupply
-                    totsupply += formalSupplyHours
+                        totsupply += member.residualInformalSupply
             else:
                 if townCarer == townReceiver:
                     for member in notWorking:
@@ -3147,6 +2940,8 @@ class Sim:
                     woman = np.random.choice(potentialBrides)
                 man.partner = woman
                 woman.partner = man
+                man.numberPartner += 1
+                woman.numberPartner += 1
                 man.justMarried = woman.id
                 woman.justMarried = man.id
                 childrenWithMan = [x for x in man.children if x.dead == False and x.house == man.house]
@@ -3533,7 +3328,7 @@ class Sim:
         townJobDensity = self.jobMarketMap[person.classRank][townIndex]
         
         # Check variable
-        self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.006 - 0.07
+        self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.006 - 0.05
         
         townFactor = math.exp(self.p['incomeDiscountingExponent']*townJobDensity) # + self.p['incomeDiscountingParam']))
         discountingFactor = person.unemploymentRate/townFactor
@@ -3542,7 +3337,7 @@ class Sim:
             print('Error: unemploymentRate is NAN!')
             
         # Check variable
-        self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.99 - 0.999
+        self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.009 - 0.07
         
         expIncome = income*math.exp(-1*discountingFactor*self.p['discountingMultiplier'])#discountingFactor
         if np.isnan(expIncome):
@@ -3596,7 +3391,7 @@ class Sim:
         household.extend([x for x in agent.partner.children if x.dead == False and x.house == agent.partner.house])
         numHousehold += len(household)
         for member in household:
-            if member.status == 'retired':
+            if member.status == 'retired' or member.status == 'inactive':
                 potentialIncome += member.income
                 count += 1
             if member.status == 'employed' or member.status == 'unemployed':
@@ -3625,9 +3420,17 @@ class Sim:
 #        print(agent.partner.income)
 #        print(self.expectedIncome(agent.partner, agent.house.town))
 #        print('')
-        
+        household = [agent, agent.partner]
+        if perCapitaIncome == 0:
+            print('Error: no income in the household')
+            for i in household:
+                print(i.status)
+                print(i.income)
         
         socialAttraction = (self.spousesCareLocation(agent) - rcA)/perCapitaIncome
+        
+        # Check variable
+        self.spousesTownSocialAttraction.append(socialAttraction) 
         
         attractionFactor = math.exp(self.p['propensityRelocationParam']*socialAttraction)
         relativeAttraction = attractionFactor/(attractionFactor + 1)
@@ -4303,36 +4106,49 @@ class Sim:
             if person in visited:
                 continue
             retiredHousehold = []
-            if person.status == 'retired' and len(person.house.occupants) == 1:
+            relocationStatus1 = False
+            if ( person.status == 'retired' or person.status == 'inactive') and len(person.house.occupants) == 1:
                 retiredHousehold = [person]
-            if len(person.house.occupants) == 2 and person.partner != None and person.partner.house == person.house and person.partner.status == 'retired':
+            if (len(person.house.occupants) == 2 and person.partner != None and person.partner.house == person.house 
+                and person.status == 'inactive' and person.partner.status == 'inactive'):
                 retiredHousehold = [person, person.partner]
             visited.extend(retiredHousehold)
             if len(retiredHousehold) > 0:
                 retiredHouseholds.append(retiredHousehold)
             
         for household in retiredHouseholds:
+            
+            for i in household[0].careNetwork.neighbors(household[0]):
+                i.totalCareSupplied += household[0].residualNeed
+            
             if len(household) == 1:
-                supplyingHouseholds = household[0].networkList
-            else:
-                supplyingHouseholds = list(set(household[0].networkList + household[0].partner.networkList))
-            if len(supplyingHouseholds) > 0:
-                for i in supplyingHouseholds:
-                    i.householdSupply = 0
-                for retired in household:
-                    retired.networkSupplies = list(np.asarray(retired.networkSupplies) + retired.residualNeed)
-                    for i in retired.networkList:
-                        i.householdSupply += retired.networkSupplies[int(retired.networkList.index(i))]
-                weights = [x.householdSupply for x in supplyingHouseholds]
-                probs = [x/sum(weights) for x in weights]
+                supplyingHouseholds = [x for x in household[0].careNetwork.neighbors(household[0])]
+            if len(household) > 1:
+                for i in household[0].partner.careNetwork.neighbors(household[0].partner):
+                    i.totalCareSupplied += household[0].partner.residualNeed
+                    if i not in household[0].careNetwork.neighbors(household[0]):
+                        household[0].careNetwork.add_edge(household[0], i)
+
+            supplyingHouseholds = [x for x in household[0].careNetwork.neighbors(household[0])]
+            
+            if len(supplyingHouseholds) > 0: #(supplyingHouseholds) > 0:
+                careSupplied = []
+                for i in household[0].careNetwork.neighbors(household[0]): #supplyingHouseholds:
+                    careSupplied.append(i.totalCareSupplied)
+
+                probs = [x/sum(careSupplied) for x in careSupplied]
+
                 potentialHost = np.random.choice(supplyingHouseholds, p = probs)
-                relocationFactor = math.exp(self.p['retiredRelocationParam']*potentialHost.householdSupply)
+                hostSupply = potentialHost.totalCareSupplied
+                relocationFactor = math.exp(self.p['retiredRelocationParam']*hostSupply)
                 
+                inactiveInHousehold = len([x for x in potentialHost.house.occupants if x.status == 'inactive'])
+                totalInactive = inactiveInHousehold + len(household)
                 # Check variable
                 self.potentialHostSupply.append(potentialHost.householdSupply) # 
                 
                 relocationThreshold = (relocationFactor - 1)/relocationFactor
-                if potentialHost.house != household[0].house and random.random() < relocationThreshold:
+                if potentialHost.house != household[0].house and totalInactive < 3 and random.random() < relocationThreshold:
                     if person.house == self.displayHouse:
                         messageString = str(self.year) + ": #" + str(person.id) + " is going to live with one of their next of kin."
                         self.textUpdateList.append(messageString)
@@ -4350,38 +4166,6 @@ class Sim:
                     self.retiredRelocations += 1
                     
                     self.movePeopleIntoChosenHouse(potentialHost.house, household[0].house, household)
-                
-#                for c in person.children:
-#                    if ( c.dead == False and c.independentStatus == True ):
-#                        distance = self.manhattanDistance(person.house.town, c.house.town)
-#                        distance += 1.0
-#                        if self.year < self.p['thePresent']:
-#                            mbRate = self.p['agingParentsMoveInWithKids'] / distance
-#                        else:
-#                            mbRate = self.p['variableMoveBack'] / distance
-#                        if random.random() < mbRate:
-#                            
-#                            if person.house == self.displayHouse:
-#                                messageString = str(self.year) + ": #" + str(person.id) + " is going to live with one of their children."
-#                                self.textUpdateList.append(messageString)
-#                                
-#                            for i in peopleToMove:
-#                                if i in c.house.occupants:
-#                                    print('Retired already in child house!')
-#                                    
-#                            for i in peopleToMove:        
-#                                repetitions = peopleToMove.count(i)
-#                                if repetitions > 1:
-#                                    print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in relocatingPensioners')
-#                            
-#                            self.totalRelocations += 1
-#                            self.retiredRelocations += 1
-#                            
-#                            self.movePeopleIntoChosenHouse(c.house, person.house, peopleToMove)
-#                            
-#                            
-#                                    
-#                            break
             
     def findNewHouse(self, personList, town):
         # Find a new house with a 'good' neighborhood, in the chosen town
@@ -6768,7 +6552,7 @@ class Sim:
         ax.set_xlabel('Year')
         ax.set_title('Care Needs and Potential Supply')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -6792,7 +6576,7 @@ class Sim:
         ax.set_ylabel('Share of Population')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Share of Care Givers')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -6840,7 +6624,7 @@ class Sim:
         ax.set_ylabel('Share of Care Need')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Share of Social Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])

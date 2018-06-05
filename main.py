@@ -23,11 +23,11 @@ def init_params():
     
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
-    p['noPolicySim'] = False
+    p['noPolicySim'] = True
     
     p['initialPop'] = 600
     p['startYear'] = 1860
-    p['endYear'] = 2040
+    p['endYear'] = 2030
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1990
     p['startRegressionCollectionFrom'] = 1960 
@@ -157,11 +157,11 @@ def init_params():
     p['educationCostsPolicyCoefficient'] = 1.0
     
     # SES inter-generational mobility parameters
-    p['eduWageSensitivity'] = 0.4 # 0.3
-    p['eduRankSensitivity'] = 5.0 # 4.0
-    p['costantIncomeParam'] = 40.0 # 10.0
-    p['costantEduParam'] = 10.0 #  3.0
-    p['careEducationParam'] = 0.04        # 0.005
+    p['eduWageSensitivity'] = 0.4 # 0.5
+    p['eduRankSensitivity'] = 5.0 # 5.0
+    p['costantIncomeParam'] = 50.0 # 40.0
+    p['costantEduParam'] = 10.0 #  10.0
+    p['careEducationParam'] = 0.04        # 0.04
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
@@ -182,7 +182,7 @@ def init_params():
     
     p['betaSocExp'] = 2.0
     p['rankGenderBias'] = 0.5
-    p['basicMaleMarriageProb'] =  0.8
+    p['basicMaleMarriageProb'] =  0.85
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0, 0.0 ]
     
     # jobMarket, updateWork and unemploymentRate functions parameters
@@ -230,7 +230,7 @@ def init_params():
     p['relocationCostParam'] = 2.0 # [1 -4]
     
     ########   Key parameter 6  ##############
-    p['propensityRelocationParam'] = 50.0 #0.002 # [10 - 40]
+    p['propensityRelocationParam'] = 5.0 #0.002 # [10 - 40]
     p['denRelocationWeight'] = 0.5
     
     
