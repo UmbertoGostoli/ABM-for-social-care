@@ -171,17 +171,20 @@ class Person:
         
         self.careNetwork = nx.Graph()
         
-        self.networkList = []
-        self.suppliersDistances = []
-        self.networkSupplies = []
         self.householdSupply = 0
+        
+        self.householdTotalSupply = 0
+        self.totalCareSupplied = 0
+        
         self.totalSupply = 0
+        
         self.totalInformalSupply = 0
         self.socialCareProvider = False
         self.babyCarer = False
         self.yearOfSchoolLeft = 0
         self.dead = False
         self.partner = None
+        self.numberPartner = 0
         if sex == 'random':
             self.sex = random.choice(['male', 'female'])
         else:
