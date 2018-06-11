@@ -29,7 +29,6 @@ class Population:
             ageFemale = ageMale + random.randint(-2,5)
             if ( ageFemale < 24 ):
                 ageFemale = 24
-            
             mab = self.ageBand(ageMale)
             fab = self.ageBand(ageFemale)
             maleBirthYear = startYear - ageMale
@@ -200,6 +199,8 @@ class Person:
         self.sec = sec
         self.education = edu
         self.ageStartWorking = -1
+        self.yearMarried = -1
+        self.yearsSeparated = 0
         self.wage = wage
         self.hourlyWage = wage
         self.income = income
