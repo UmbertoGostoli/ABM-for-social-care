@@ -32,7 +32,7 @@ def init_params():
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
     
-    p['noPolicySim'] = False
+    p['noPolicySim'] = True
     
     p['initialPop'] = 600
     p['startYear'] = 1860
@@ -167,10 +167,10 @@ def init_params():
     
     # SES inter-generational mobility parameters
     p['eduWageSensitivity'] = 0.5 # 0.5
-    p['eduRankSensitivity'] = 5.0 # 5.0
-    p['costantIncomeParam'] = 40.0 # 40.0
+    p['eduRankSensitivity'] = 2.0 # 5.0
+    p['costantIncomeParam'] = 20.0 # 20.0
     p['costantEduParam'] = 10.0 #  10.0
-    p['careEducationParam'] = 0.04        # 0.04
+    p['careEducationParam'] = 0.02        # 0.04
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
@@ -230,6 +230,7 @@ def init_params():
     # relocationProb function parameters
     p['baseRelocatingProb'] = 0.05
     p['relocationParameter'] = 1.0 
+    p['apprenticesRelocationProb'] = 0.5
     #p['expReloc'] = 1.0
     
     # computeRelocationCost and relocation Propensity functions parameters
