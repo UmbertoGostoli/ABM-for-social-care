@@ -32,7 +32,7 @@ def init_params():
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
     
-    p['noPolicySim'] = True
+    p['noPolicySim'] = False
     
     p['initialPop'] = 600
     p['startYear'] = 1860
@@ -59,6 +59,8 @@ def init_params():
     p['maleAgeDieProb'] = 0.00021
     p['femaleAgeScaling'] = 15.5
     p['femaleAgeDieProb'] = 0.00019
+    
+    p['orphansRelocationParam'] = 0.5
     
     # doBirths function parameters
     p['minPregnancyAge'] = 17
@@ -166,11 +168,11 @@ def init_params():
     p['educationCostsPolicyCoefficient'] = 1.0
     
     # SES inter-generational mobility parameters
-    p['eduWageSensitivity'] = 0.5 # 0.5
-    p['eduRankSensitivity'] = 2.0 # 5.0
-    p['costantIncomeParam'] = 20.0 # 20.0
+    p['eduWageSensitivity'] = 0.6 # 0.5
+    p['eduRankSensitivity'] = 4.0 # 5.0
+    p['costantIncomeParam'] = 30.0 # 20.0
     p['costantEduParam'] = 10.0 #  10.0
-    p['careEducationParam'] = 0.02        # 0.04
+    p['careEducationParam'] = 0.01        # 0.04
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
@@ -396,6 +398,8 @@ def multipleRunsGraphs(outputs, folder, repeats):
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'lower left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Share of Unmet Care Need')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['statsCollectFrom'], p['endYear'])
@@ -423,6 +427,8 @@ def multipleRunsGraphs(outputs, folder, repeats):
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'upper left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Average Unmet Care Need')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['statsCollectFrom'], p['endYear'])
@@ -451,7 +457,9 @@ def multipleRunsGraphs(outputs, folder, repeats):
     ax.set_ylabel('Aggregate QALY')
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(loc = 'upper left')
+    ax.legend(loc = 'lower left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Aggregate Quality-adjusted Life Years')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['statsCollectFrom'], p['endYear'])
@@ -479,6 +487,8 @@ def multipleRunsGraphs(outputs, folder, repeats):
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'upper left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Average Quality-adjusted Life Years')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['statsCollectFrom'], p['endYear'])
@@ -505,7 +515,9 @@ def multipleRunsGraphs(outputs, folder, repeats):
     ax.set_ylabel('Discounted QALY')
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(loc = 'upper left')
+    ax.legend(loc = 'lower left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Discounted Quality-adjusted Life Years')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['implementPoliciesFromYear'], p['endYear'])
@@ -532,7 +544,9 @@ def multipleRunsGraphs(outputs, folder, repeats):
     ax.set_ylabel('Discounted Average QALY')
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(loc = 'upper left')
+    ax.legend(loc = 'lower left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Discounted Average Quality-adjusted Life Years')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['implementPoliciesFromYear'], p['endYear'])
@@ -560,6 +574,8 @@ def multipleRunsGraphs(outputs, folder, repeats):
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'upper left')
+    if p['numRepeats'] < 2:
+        ax.legend().set_visible(False)
     ax.set_title('Per-Capita Hospitalization Costs')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.xlim(p['statsCollectFrom'], p['endYear'])
@@ -1307,6 +1323,8 @@ def policyGraphs(outputs, folder):
 
 if __name__ == "__main__":
     
+    # multiprocessing.set_start_method('forkserver')
+    
     p = init_params()
     
     random.seed(p['favouriteSeed'])
@@ -1316,7 +1334,7 @@ if __name__ == "__main__":
     
     if p['noPolicySim'] == True:  
         runNumber = range(p['numRepeats'])
-        result = pool.imap(simulation, runNumber)
+        result = pool.map(simulation, runNumber)
         
         pool.close()
         pool.join()
@@ -1342,7 +1360,7 @@ if __name__ == "__main__":
         for p in policies:
             p.append(policies.index(p))
         
-        result = pool.imap(simulation, policies)
+        result = pool.map(simulation, policies)
         
         pool.close()
         pool.join()

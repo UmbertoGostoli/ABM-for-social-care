@@ -26,7 +26,7 @@ class Population:
         for i in range(initialPop/2):
             
             ageMale = random.randint(minStartAge, maxStartAge)
-            ageFemale = ageMale + random.randint(-2,5)
+            ageFemale = ageMale - random.randint(-2,5)
             if ( ageFemale < 24 ):
                 ageFemale = 24
             mab = self.ageBand(ageMale)
@@ -109,7 +109,7 @@ class Population:
         ageFactor = math.pow(up, i)
         unemploymentRate = classFactor*ageFactor
         return (unemploymentRate)
-    
+
 class Person:
     """The person class stores information about a person in the sim."""
     counter = 1
@@ -211,6 +211,8 @@ class Person:
         self.workingTime = workingTime
         self.status = status
         self.independentStatus = False
+        self.elderlyWithFamily = False
+        self.yearIndependent = 0
         self.jobLocation = None
         self.searchJob = False
         self.jobChange = False

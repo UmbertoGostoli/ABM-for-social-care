@@ -31,6 +31,7 @@ import pprint
 import pickle
 import numpy as np
 import operator
+import networkx as nx
 
 # from careMap import updateCareMaps
 # from PIL import ImageTk         
@@ -117,9 +118,7 @@ class Sim:
         self.avgHouseholdSize_5 = []
         
         self.marriageProp = []
-        self.marriageTally = 0
-        self.numMarriages = []
-        self.divorceTally = 0
+
         self.numDivorces = []
         
         ############################# Social Care outputs ###################
@@ -505,7 +504,9 @@ class Sim:
         self.ratioWomenMaleIncome_5 = []
         
         ########################## Mobility outputs ######################
-        
+        self.marriageTally = 0
+        self.numMarriages = []
+        self.divorceTally = 0
         self.totalRelocations = 0
         self.numberRelocations = []
         self.jobRelocations_1 = 0
@@ -939,7 +940,7 @@ class Sim:
         executionTimes.append(end-start)
         
         
-        a = self.checkPartners(1)
+        # a = self.checkPartners(1)
         
         # 2
         start = time.time()
@@ -947,8 +948,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(2)
+#        if a == False:
+#            a = self.checkPartners(2)
         
         # 3
         start = time.time()
@@ -956,8 +957,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(3)
+#        if a == False:
+#            a = self.checkPartners(3)
         
         # 4
         start = time.time()
@@ -965,8 +966,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(4)
+#        if a == False:
+#            a = self.checkPartners(4)
         
         # 5
         start = time.time()
@@ -974,8 +975,16 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(5)
+#        if a == False:
+#            a = self.checkPartners(5)
+            
+        start = time.time()
+        self.relocateOrphans()
+        end = time.time()
+        executionTimes.append(end-start)
+        
+#        if a == False:
+#            a = self.checkPartners(6)
         
         # 6
         start = time.time()
@@ -983,8 +992,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(6)
+#        if a == False:
+#            a = self.checkPartners(7)
         
         # 7
         start = time.time()
@@ -992,8 +1001,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(7)
+#        if a == False:
+#            a = self.checkPartners(8)
         
         # 8
         start = time.time()
@@ -1001,20 +1010,21 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        # self.checkPartners(8)
+#        if a == False:
+#            a = self.checkPartners(4)
         
         # self.checkPartners(9)
         
-        # 9
+        # 10
         start = time.time()
         self.joiningSpouses()
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(10)
+#        if a == False:
+#            a = self.checkPartners(9)
             
-        # 10
+        # 9
         start = time.time()
         self.netHouseholdCare()
         end = time.time()
@@ -1026,8 +1036,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(11)
+#        if a == False:
+#            a = self.checkPartners(10)
         
          # 12
         start = time.time()
@@ -1035,8 +1045,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(12)
+#        if a == False:
+#            a = self.checkPartners(11)
         
         # 13
         start = time.time()
@@ -1044,8 +1054,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(13)
+#        if a == False:
+#            a = self.checkPartners(12)
         
         # 14
         start = time.time()
@@ -1053,8 +1063,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(14)
+#        if a == False:
+#            a = self.checkPartners(13)
         
         # 15
         start = time.time()
@@ -1062,8 +1072,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(15)
+#        if a == False:
+#            a = self.checkPartners(14)
         
         # 16
         start = time.time()
@@ -1071,8 +1081,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(16)
+#        if a == False:
+#            a = self.checkPartners(15)
         
         # 17
         start = time.time()
@@ -1080,8 +1090,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(17)
+#        if a == False:
+#            a = self.checkPartners(16)
         
         # 18
         start = time.time()
@@ -1089,8 +1099,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(18)
+#        if a == False:
+#            a = self.checkPartners(17)
         
         # 19
         start = time.time()
@@ -1098,8 +1108,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(19)
+#        if a == False:
+#            a = self.checkPartners(18)
         
         # 20
         start = time.time()
@@ -1116,8 +1126,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(21)
+#        if a == False:
+#            a = self.checkPartners(30)
         
         # 22
         start = time.time()
@@ -1125,8 +1135,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(22)
+#        if a == False:
+#            a = self.checkPartners(31)
         
         # 23
         start = time.time()
@@ -1134,8 +1144,8 @@ class Sim:
         end = time.time()
         executionTimes.append(end-start)
         
-        if a == False:
-            a = self.checkPartners(23)
+#        if a == False:
+#            a = self.checkPartners(32)
         
         totTime = sum(executionTimes)
         shareExecutionTimes = [x/totTime for x in executionTimes]
@@ -1179,7 +1189,40 @@ class Sim:
             
     def checkPartners(self, n):
         check = False
+        for house in self.map.occupiedHouses:
+            if len([x for x in house.occupants if x.independentStatus == True]) == 0:
+                if n != 1 and n != 5:
+                    print('Error: house with no independent people after step ' + str(n))
+                    sys.exit()
         for person in self.pop.livingPeople:
+            if person.partner != None and person.independentStatus + person.partner.independentStatus < 2 and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
+                if n != 1 and n != 5:
+                    print('Error: not independent person in married couple after step ' + str(n))
+                    print('Error: couple not joined after step ' + str(n))
+                    print(person.id)
+                    print(person.sex)
+                    print(person.status)
+                    print(person.classRank)
+                    print(person.independentStatus)
+                    print(person.age)
+                    print(person.ageStartWorking)
+                    print(person.justMarried)
+                    print(person.yearMarried)
+                    print(person.yearsSeparated)
+                    print(person.numberPartner)
+                    print('')
+                    print(person.partner.id)
+                    print(person.partner.sex)
+                    print(person.partner.status)
+                    print(person.partner.classRank)
+                    print(person.partner.independentStatus)
+                    print(person.partner.age)
+                    print(person.partner.ageStartWorking)
+                    print(person.partner.justMarried)
+                    print(person.partner.yearMarried)
+                    print(person.partner.yearsSeparated)
+                    print(person.partner.numberPartner)
+                    sys.exit()
             if person.partner != None and person.house != person.partner.house:
                 check = True
                 if n != 1:
@@ -1295,29 +1338,8 @@ class Sim:
                     if person.house == self.displayHouse:
                         messageString = str(self.year) + ": #" + str(person.id) + " died aged " + str(age) + "." 
                         self.textUpdateList.append(messageString)
-                    
-                    # Check if the person leaves orphans
-                    children = [x for x in person.children if x.status == 'child'and x.dead == False]
-                    if len(children) > 0 and (person.partner == None or person.partner.dead == True):
-                        # The children need to be adopted
-                        # Find a suitable familiy
-                        if children[0].house == self.displayHouse:
-                                self.textUpdateList.append(str(self.year) + ": #" + str(children[0].id) + " and brothers will now be adopted.")
-                        adoptiveMothers = [x for x in self.pop.livingPeople if x.status != 'child' and x.sex == 'female' and x.partner != None and x.dead == False]
-                        adoptiveMother = random.choice(adoptiveMothers)
-                        for child in children:
-                            child.mother = adoptiveMother
-                            adoptiveMother.children.append(child)
-                            child.father = adoptiveMother.partner
-                            adoptiveMother.partner.children.append(child)           
-                            if adoptiveMother.house == self.displayHouse:
-                                self.textUpdateList.append(str(self.year) + ": #" + str(children[0].id) +
-                                               " and brothers have been newly adopted by " + str(adoptiveMother.id) + "." )
-                                        
-                        self.movePeopleIntoChosenHouse(adoptiveMother.house, person.house, children, 'doDeaths')
-                        
-            else: 
                 
+            else: 
                 #######   Death process with made-up rates  ######################
                 babyDieProb = 0.0
                 if age < 1:
@@ -1359,11 +1381,6 @@ class Sim:
                                         break
                                     except NotFittedError as e:
                                         continue
-                # Check variable
-#                if person.age == 40 and person.classRank == 0:
-#                    self.deathProb.append(dieProb) 
-#                    self.careLevel.append(person.careNeedLevel)
-                ####################################################################
                 
                 if random.random() < dieProb:
                     person.dead = True
@@ -1378,34 +1395,9 @@ class Sim:
                     if person.house == self.displayHouse:
                         messageString = str(self.year) + ": #" + str(person.id) + " died aged " + str(age) + "." 
                         self.textUpdateList.append(messageString)
-                    
-                    # Check if the person leaves orphans
-                    children = [x for x in person.children if x.status == 'child'and x.dead == False]
-                    if len(children) > 0 and (person.partner == None or person.partner.dead == True):
-                        # The children need to be adopted
-                        # Find a suitable familiy
-                        if children[0].house == self.displayHouse:
-                                self.textUpdateList.append(str(self.year) + ": #" + str(children[0].id) + " and brothers will now be adopted.")
-                        adoptiveMothers = [x for x in self.pop.livingPeople if x.status != 'child' and x.sex == 'female' and x.partner != None and x.dead == False]
-                        adoptiveMother = random.choice(adoptiveMothers)
-                        for child in children:
-                            child.mother = adoptiveMother
-                            adoptiveMother.children.append(child)
-                            child.father = adoptiveMother.partner
-                            adoptiveMother.partner.children.append(child)           
-                            if adoptiveMother.house == self.displayHouse:
-                                self.textUpdateList.append(str(self.year) + ": #" + str(children[0].id) +
-                                               " and brothers have been newly adopted by " + str(adoptiveMother.id) + "." )
-                                        
-                        self.movePeopleIntoChosenHouse(adoptiveMother.house, person.house, children, 'doDeaths')
-        
-        
-        
+                        
+                  
         self.pop.livingPeople[:] = [x for x in self.pop.livingPeople if x.dead == False]
-        
-        # maxAge = max([x.age for x in self.pop.livingPeople])
-        
-        # print('Maximum age:' + str(maxAge))
         
         postDeath = len(self.pop.livingPeople)
         
@@ -1417,7 +1409,138 @@ class Sim:
         
         print('the number of people who died is: ' + str(preDeath - postDeath))
         
-        # print(len(self.pop.livingPeople))
+    def relocateOrphans(self):
+        
+        orphans = [x for x in self.pop.livingPeople if x.independentStatus == False and len([i for i in x.house.occupants if i.independentStatus == True]) == 0]
+        
+        visited = []
+        toRelocate = []
+        for person in orphans:
+            if person in visited:
+                continue
+            visited.append(person)
+            if person.partner == None:
+                brothers = [x for x in orphans if (x.mother == person.mother or x.father == person.father)]
+                for i in brothers:
+                    visited.append(i)
+                toRelocate.append(brothers)
+            else:
+                if person.partner in orphans:
+                    visited.append(person.partner)
+                    toRelocate.append([person, person.partner])
+                    
+        for household in toRelocate:
+            relocatingNetwork = self.orphansNetwork(household)
+            potentialHosts = list(relocatingNetwork.neighbors(household[0]))
+            if len(potentialHosts) > 0:
+                weights = []
+                hosts = []
+                for i in relocatingNetwork.neighbors(household[0]):
+                    distance = relocatingNetwork[household[0]][i]['distance']
+                    hosts.append(i)
+                    weights.append(self.weightedIncome(i, distance))
+                probs = [x/sum(weights) for x in weights]
+                host = np.random.choice(hosts, p = probs)
+                self.movePeopleIntoChosenHouse(host.house, household[0].house, household, 'relocateOrphans')
+            else:
+                # if household[0].partner == None:
+                adoptiveMothers = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner != None and x.independentStatus == True]
+                adoptiveMother = random.choice(adoptiveMothers)
+                for person in household:
+                    if person.status == 'child' or person.status == 'teenager':
+                        child.mother = adoptiveMother
+                        adoptiveMother.children.append(child)
+                        child.father = adoptiveMother.partner
+                        adoptiveMother.partner.children.append(child)           
+                    if adoptiveMother.house == self.displayHouse:
+                        self.textUpdateList.append(str(self.year) + ": #" + str(children[0].id) +
+                                       " and brothers have been newly adopted by " + str(adoptiveMother.id) + "." )
+                                
+                self.movePeopleIntoChosenHouse(adoptiveMother.house, household[0].house, household, 'relocateOrphans')
+
+    def orphansNetwork(self, household):
+        H = nx.Graph()
+        households = []
+        firstNode = household[0]
+        H.add_node(firstNode)
+        for member in household:
+            if member.father != None:
+                if member.father.dead == False and member.father.house not in households and member.father.independentStatus == True:
+                    H.add_edge(firstNode, member.father, distance = 1) 
+                    households.append(member.father.house)
+                if member.mother.dead == False and member.mother.house not in households and member.father.independentStatus == True:
+                    H.add_edge(firstNode, member.mother, distance = 1)
+                    households.append(member.mother.house)
+                    
+            # Grandparents
+            if member.father != None and member.father.father != None:
+                if member.father.father.dead == False and member.father.father.house not in households and member.father.father.independentStatus == True:
+                    H.add_edge(firstNode, member.father.father, distance = 2)
+                    households.append(member.father.father.house)
+                if member.father.mother.dead == False and member.father.mother.house not in households and member.father.mother.independentStatus == True:
+                    H.add_edge(firstNode, member.father.mother, distance = 2)
+                    households.append(member.father.mother.house)
+            if member.father != None and member.mother.father != None:
+                if member.mother.father.dead == False and member.mother.father.house not in households and member.mother.father.independentStatus == True:
+                    H.add_edge(firstNode, member.mother.father, distance = 2)
+                    households.append(member.mother.father.house)
+                if member.mother.mother.dead == False and member.mother.mother.house not in households and member.mother.mother.independentStatus == True:
+                    H.add_edge(firstNode, member.mother.mother, distance = 2)
+                    households.append(member.mother.mother.house)
+                    
+            # Indipendent children
+            for child in member.children:
+                if child.dead == False and child.house not in households and child.independentStatus == True:
+                    H.add_edge(firstNode, child, distance = 1)
+                    households.append(child.house)
+                    
+            # Independent grandchildren
+            for child in member.children:
+                for grandson in child.children:
+                    if grandson.dead == False and grandson.house not in households and grandson.independentStatus == True:
+                        H.add_edge(firstNode, grandson, distance = 2)
+                        households.append(grandson.house)
+                        
+             # Indipendent brothers and sisters
+            if member.father != None:
+                brothers = list(set(member.father.children+member.mother.children))
+                brothers = [x for x in brothers if x.dead == False]
+                brothers.remove(member)
+                for brother in brothers:
+                    if brother.dead == False and brother.house not in households and brother.independentStatus == True:
+                        H.add_edge(firstNode, brother, distance = 2)
+                        households.append(brother.house)
+                    for child in brother.children:
+                        if child.dead == False and child.house not in households and child.independentStatus == True:
+                            H.add_edge(firstNode, child, distance = 3)
+                            households.append(child.house)
+            # Uncles and aunts
+            uncles = []
+            maternalUncles = []
+            paternalUncles = []
+            if member.father != None and member.father.father != None:
+                paternalUncles = list(set(member.father.father.children + member.father.mother.children))
+                paternalUncles.remove(member.father)
+            if member.father != None and member.mother.father != None:   
+                maternalUncles = list(set(member.mother.father.children + member.mother.mother.children))
+                maternalUncles.remove(member.mother)
+            unclesList = list(set(maternalUncles+paternalUncles))
+            unclesList = [x for x in unclesList if x.dead == False]
+            for uncle in unclesList:
+                if uncle.dead == False and uncle.house not in households and uncle.independentStatus == True:
+                    H.add_edge(firstNode, uncle, distance = 3)
+                    households.append(uncle.house)
+        
+        return H
+    
+    def weightedIncome(self, person, distance):
+        sizeHousehold = float(len(person.house.occupants))
+        totalIncome = sum([x.income for x in person.house.occupants])
+        averageIncome = totalIncome/sizeHousehold
+        weightedIncome = averageIncome/math.exp(self.p['orphansRelocationParam']*(distance-1))
+        return weightedIncome
+            
+    
     def doRegressions(self):
         if self.year == self.p['implementPoliciesFromYear'] and self.p['noPolicySim'] == False:
             for k in range(2):
@@ -1544,7 +1667,7 @@ class Sim:
             #baseRate *= 1/math.exp(self.p['fertilityCorrector']*fertilityCorrector)
             #birthProb = baseRate*math.pow(self.p['fertilityBias'], woman.classRank)
             
-            if random.random() < (birthProb/marriedPercentage[woman.classRank])*0.9:
+            if random.random() < (birthProb/marriedPercentage[woman.classRank])*0.8:
                 # (self, mother, father, age, birthYear, sex, status, house,
                 # classRank, sec, edu, wage, income, finalIncome):
                 sex = random.choice(['male', 'female'])
@@ -1580,7 +1703,7 @@ class Sim:
         womanClassShares.append(len([x for x in womenOfReproductiveAge if x.classRank == 4])/float(len(womenOfReproductiveAge)))
         a = 0
         for i in range(self.p['numberClasses']):
-            a += womanClassShares[i]*math.pow(fertilityBias, i)
+            a += womanClassShares[i]*math.pow(self.p['fertilityBias'], i)
         baseRate = rawRate/a
         birthProb = baseRate*math.pow(self.p['fertilityBias'], womanRank)
         return(birthProb)
@@ -1702,7 +1825,7 @@ class Sim:
                                            self.p['femaleAgeCareScaling'] ) )
                                * self.p['personCareProb'] )
             careProb = (self.p['baseCareProb'] + ageCareProb)
-            baseProb = self.baseRate(self.socialClassShares, self.p['careBias'], careProb)
+            baseProb = self.baseRate(self.p['careBias'], careProb)
             
             unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
             
@@ -1712,7 +1835,7 @@ class Sim:
             
             if random.random() < careProb:
                 person.status = 'inactive'
-                baseTransition = self.baseRate(self.socialClassShares, self.p['careBias'], 1-self.p['careTransitionRate'])
+                baseTransition = self.baseRate(self.p['careBias'], 1-self.p['careTransitionRate'])
                 if person.careNeedLevel > 0:
                     unmetNeedFactor = 1/math.exp(self.p['unmetNeedExponent']*person.averageShareUnmetNeed)
                 else:
@@ -2798,14 +2921,14 @@ class Sim:
         return (marketWage)
     
     def doDivorces(self):
-
-        menInRelationships = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner != None ]
+      
+        menInRelationships = [x for x in self.pop.livingPeople if x.sex == 'male' and x.partner != None and x.elderlyWithFamily == False]
         for man in menInRelationships:
             if self.year < self.p['thePresent']:
                 rawSplit = self.p['basicDivorceRate'] * self.p['divorceModifierByDecade'][man.age/10]
             else:
                 rawSplit = self.p['variableDivorce'] * self.p['divorceModifierByDecade'][man.age/10]      
-            baseRate = self.baseRate(self.socialClassShares, self.p['divorceBias'], rawSplit)
+            baseRate = self.baseRate(self.p['divorceBias'], rawSplit)
             splitProb = baseRate*math.pow(self.p['divorceBias'], man.classRank)
             
             if random.random() < splitProb:
@@ -2822,7 +2945,7 @@ class Sim:
                     self.textUpdateList.append(messageString)
                     
                 self.findNewHouse([man], man.house.town, 'doDivorces')
-    
+                
     def doMarriages(self):
  
         eligibleMen = []
@@ -2845,7 +2968,7 @@ class Sim:
         
         for man in potentialGrooms: # for man in eligibleMen: # 
             # maxEncounters = self.datingActivity(man)
-            eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.age > 16 and x.partner == None]
+            eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.age >= self.p['minPregnancyAge'] and x.partner == None]
             
             potentialBrides = []
             for woman in eligibleWomen:
@@ -3567,10 +3690,10 @@ class Sim:
         wage = k*math.exp(exp)
         return (wage)
         
-    def baseRate(self, socialClassShares, bias, cp):
+    def baseRate(self, bias, cp):
         a = 0
         for i in range(self.p['numberClasses']):
-            a += socialClassShares[i]*math.pow(bias, i)
+            a += self.socialClassShares[i]*math.pow(bias, i)
         baseRate = cp/a
         return (baseRate)
     
@@ -3646,7 +3769,7 @@ class Sim:
         #print('Job Relocation')
         self.jobRelocation()
         
-        a = self.checkPartners(24)
+        a = self.checkPartners(20)
         
        # print('Join Spouses')
         # self.joiningSpouses()
@@ -3655,13 +3778,13 @@ class Sim:
         self.sizeRelocation()
         
         if a == False:
-            a = self.checkPartners(25)
+            a = self.checkPartners(21)
         
         #print('Retired Relocation')
         self.relocatingPensioners()
         
         if a == False:
-            a = self.checkPartners(26)
+            a = self.checkPartners(22)
         
         for i in self.pop.livingPeople:
             i.movedThisYear = False
@@ -3675,6 +3798,10 @@ class Sim:
                 continue
             if person.house.town != person.jobLocation:
                 if person.independentStatus == False:
+                    if person.partner != None:
+                        print('Error: dependent person with partner in jobRelocation')
+                        sys.exit()
+                    person.yearIndependent = self.year
                     person.movedThisYear = True
                     person.independentStatus = True
                     peopleToMove = [person]
@@ -3682,6 +3809,9 @@ class Sim:
                     peopleToMove = list(person.house.occupants)
                     for i in peopleToMove:
                         i.movedThisYear = True
+                        if i.partner != None and i.house != i.partner.house:
+                            print('Error: couple not joined in jobRelocation')
+                            sys.exit()
                 
 #                peopleToMove.append(person)
 #                if person.partner != None:
@@ -3717,9 +3847,13 @@ class Sim:
 #                            print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in jobRelocation (3)')
             else:
                 if person.independentStatus == False:
+                    if person.partner != None:
+                        print('Error: dependent person with partner in jobRelocation')
+                        sys.exit()
                     # Compute probability that people in first job will go to live by themselves
                     # It may depend on price of renting
                     if random.random < self.p['apprenticesRelocationProb']:
+                        person.yearIndependent = self.year
                         person.movedThisYear = True
                         person.independentStatus = True
                         peopleToMove = [person]
@@ -3762,34 +3896,34 @@ class Sim:
         for person in self.pop.livingPeople:
             
             # ageClass = person.age / 10       
-            if person.partner != None and (person.house != person.partner.house or (person.house == person.partner.house and person.independentStatus + person.partner.independentStatus == 0)):
+            if person.partner != None and (person.house != person.partner.house or (person.house == person.partner.house and person.independentStatus + person.partner.independentStatus == 0 and person.elderlyWithFamily == False)):
                 person.yearsSeparated += 1
                 person.partner.yearsSeparated += 1
-                if person.income + person.partner.income == 0:
-                    print('Error: new family with zero income')
-                    print(person.id)
-                    print(person.sex)
-                    print(person.status)
-                    print(person.classRank)
-                    print(person.independentStatus)
-                    print(person.age)
-                    print(person.ageStartWorking)
-                    print(person.justMarried)
-                    print(person.yearMarried)
-                    print(person.yearsSeparated)
-                    print(person.numberPartner)
-                    print('')
-                    print(person.partner.id)
-                    print(person.partner.sex)
-                    print(person.partner.status)
-                    print(person.partner.classRank)
-                    print(person.partner.independentStatus)
-                    print(person.partner.age)
-                    print(person.partner.ageStartWorking)
-                    print(person.partner.justMarried)
-                    print(person.partner.yearMarried)
-                    print(person.partner.yearsSeparated)
-                    print(person.partner.numberPartner)
+#                if person.income + person.partner.income == 0:
+#                    print('Error: new family with zero income')
+#                    print(person.id)
+#                    print(person.sex)
+#                    print(person.status)
+#                    print(person.classRank)
+#                    print(person.independentStatus)
+#                    print(person.age)
+#                    print(person.ageStartWorking)
+#                    print(person.justMarried)
+#                    print(person.yearMarried)
+#                    print(person.yearsSeparated)
+#                    print(person.numberPartner)
+#                    print('')
+#                    print(person.partner.id)
+#                    print(person.partner.sex)
+#                    print(person.partner.status)
+#                    print(person.partner.classRank)
+#                    print(person.partner.independentStatus)
+#                    print(person.partner.age)
+#                    print(person.partner.ageStartWorking)
+#                    print(person.partner.justMarried)
+#                    print(person.partner.yearMarried)
+#                    print(person.partner.yearsSeparated)
+#                    print(person.partner.numberPartner)
                 #person.movedThisYear = True
                 #person.partner.movedThisYear = True
 #                if person.house.town != person.partner.house.town:
@@ -3804,8 +3938,6 @@ class Sim:
                 check = 0
                 if person.independentStatus + person.partner.independentStatus == 0:
                     check = 1
-                    person.independentStatus = True
-                    person.partner.independentStatus = True
                     
                     if person.house.town != person.partner.house.town:
                         personTownAttraction = self.computeTownSocialAttraction(person, 'both not dependent')
@@ -3839,7 +3971,9 @@ class Sim:
                     self.totalRelocations += 1
                     self.marriageRelocations += 1
                     person.independentStatus = True
+                    person.yearIndependent = self.year
                     person.partner.independentStatus = True
+                    person.partner.yearIndependent = self.year
                     self.findNewHouse(peopleToMove, destination, 'joiningSpouses (1)')
                     continue
                 
@@ -3869,11 +4003,14 @@ class Sim:
                         b = person
                         #bTownCare = personTownAttraction
                         
-                    childrenWithPartner = self.kidsWithPartner(a)
-                    childrenWithPerson = self.kidsWithPerson(a)
+                    #childrenWithPartner = self.kidsWithPartner(a)
+                    #childrenWithPerson = self.kidsWithPerson(a)
                     
                     if a.house.town == b.house.town:
-                        newOcc = 1 + len(childrenWithPartner)
+                        peopleToMove = [b]
+                        peopleToMove += [x for x in b.children if x.dead == False and x.house == b.house and
+                                         x.justMarried == None and x.independentStatus == False]
+                        newOcc = len(peopleToMove)
                         oldOcc = len(a.house.occupants)
                         pReloc = self.relocationProb(newOcc, oldOcc, a.house.initialOccupants)
                         r = random.random()
@@ -3903,6 +4040,7 @@ class Sim:
                             self.totalRelocations += 1
                             self.marriageRelocations += 1
                             b.independentStatus = True
+                            b.yearIndependent = self.year
                             self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove, 'joiningSpouses (2)')
                             continue
                         
@@ -3928,6 +4066,7 @@ class Sim:
                             self.totalRelocations += 1
                             self.marriageRelocations += 1
                             b.independentStatus = True
+                            b.yearIndependent = self.year
                             self.findNewHouse(peopleToMove, destination, 'joiningSpouses (3)')
                             continue
                     else:
@@ -3940,7 +4079,10 @@ class Sim:
                             aTownCare = self.computeTownSocialAttraction(person.partner, 'only partner independent')
                         
                         if a.income*aTownCare > b.income*bTownCare:
-                            newOcc = 1 + len(childrenWithPartner)
+                            peopleToMove = [b]
+                            peopleToMove += [x for x in b.children if x.dead == False and x.house == b.house and
+                                             x.justMarried == None and x.independentStatus == False]
+                            newOcc = len(peopleToMove)
                             oldOcc = len(a.house.occupants)
                             pReloc = self.relocationProb(newOcc, oldOcc, a.house.initialOccupants)
                             r = random.random()
@@ -3973,6 +4115,7 @@ class Sim:
                                 self.totalRelocations += 1
                                 self.marriageRelocations += 1   
                                 b.independentStatus = True
+                                b.yearIndependent = self.year
                                 self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove, 'joiningSpouses (4)')
                                 continue   
                             else:
@@ -4004,6 +4147,7 @@ class Sim:
                                 self.totalRelocations += 1
                                 self.marriageRelocations += 1
                                 b.independentStatus = True
+                                b.yearIndependent = self.year
                                 self.findNewHouse(peopleToMove, destination, 'joiningSpouses (5)')
                                 continue
                         else:
@@ -4039,6 +4183,7 @@ class Sim:
                             self.totalRelocations += 1
                             self.marriageRelocations += 1
                             b.independentStatus = True
+                            b.yearIndependent = self.year
                             self.findNewHouse(peopleToMove, destination, 'joiningSpouses (6)')
                             continue
                         
@@ -4049,14 +4194,14 @@ class Sim:
                         print('Error: couple already joined')
                     else:
                         check = 1
-                    childrenWithPartner = self.kidsWithPartner(person)
-                    childrenWithPerson = self.kidsWithPerson(person)
+                    #childrenWithPartner = self.kidsWithPartner(person)
+                    #childrenWithPerson = self.kidsWithPerson(person)
                     
-                    newOcc1 = 1 + len(childrenWithPartner)
+                    newOcc1 = len(person.partner.house.occupants)
                     oldOcc1 = len(person.house.occupants)
                     totOcc1 = float(newOcc1 + oldOcc1)
                     ratio1 = totOcc1/float(person.house.initialOccupants)
-                    newOcc2 = 1 + len(childrenWithPerson)
+                    newOcc2 = len(person.house.occupants)
                     oldOcc2 = len(person.partner.house.occupants)
                     totOcc2 = float(newOcc2 + oldOcc2)
                     ratio2 = totOcc2/float(person.partner.house.initialOccupants)
@@ -4226,10 +4371,14 @@ class Sim:
                 
         for person in self.pop.livingPeople:
             person.justMarried = None
+            if person.partner != None and person.independentStatus + person.partner.independentStatus < 2 and person.elderlyWithFamily == False:
+                print('Error: not independent person in married couple!')
+                sys.exit()
             if person.partner != None and person.house != person.partner.house:
                 print('Error: couple not joined!')
                 print(person.independentStatus)
                 print(person.partner.independentStatus)
+                sys.exit()
             
     def sizeRelocation(self):
         for person in self.pop.livingPeople:
@@ -4299,34 +4448,34 @@ class Sim:
                 self.totalRelocations += 1
                 self.sizeRelocations += 1
                 
-                for i in peopleToMove:
-                    if i.partner != None and i.house != i.partner.house:
-                        print('Error: couple not joined after step sizeRelocation')
-                        print(i.id)
-                        print(i.sex)
-                        print(i.status)
-                        print(i.classRank)
-                        print(i.independentStatus)
-                        print(i.age)
-                        print(i.ageStartWorking)
-                        print(i.justMarried)
-                        print(i.yearMarried)
-                        print(i.yearsSeparated)
-                        print(i.numberPartner)
-                        print('')
-                        print(i.partner.id)
-                        print(i.partner.sex)
-                        print(i.partner.status)
-                        print(i.partner.classRank)
-                        print(i.partner.independentStatus)
-                        print(i.partner.age)
-                        print(i.partner.ageStartWorking)
-                        print(i.partner.justMarried)
-                        print(i.partner.yearMarried)
-                        print(i.partner.yearsSeparated)
-                        print(i.partner.numberPartner)
-                        
-                        sys.exit()
+#                for i in peopleToMove:
+#                    if i.partner != None and i.house != i.partner.house:
+#                        print('Error: couple not joined after step sizeRelocation')
+#                        print(i.id)
+#                        print(i.sex)
+#                        print(i.status)
+#                        print(i.classRank)
+#                        print(i.independentStatus)
+#                        print(i.age)
+#                        print(i.ageStartWorking)
+#                        print(i.justMarried)
+#                        print(i.yearMarried)
+#                        print(i.yearsSeparated)
+#                        print(i.numberPartner)
+#                        print('')
+#                        print(i.partner.id)
+#                        print(i.partner.sex)
+#                        print(i.partner.status)
+#                        print(i.partner.classRank)
+#                        print(i.partner.independentStatus)
+#                        print(i.partner.age)
+#                        print(i.partner.ageStartWorking)
+#                        print(i.partner.justMarried)
+#                        print(i.partner.yearMarried)
+#                        print(i.partner.yearsSeparated)
+#                        print(i.partner.numberPartner)
+#                        
+#                        sys.exit()
                         
                 self.findNewHouse(peopleToMove, person.house.town, 'sizeRelocation')
                 
@@ -4398,6 +4547,7 @@ class Sim:
                     
                     peopleToMove = list(household)
                     for i in peopleToMove:
+                        i.elderlyWithFamily = True
                         i.independentStatus = False
                         
                     self.movePeopleIntoChosenHouse(potentialHost.house, household[0].house, 
@@ -4556,35 +4706,37 @@ class Sim:
         if departureHouse == self.displayHouse:
             self.nextDisplayHouse = newHouse
         
-        for i in personList:
-            if i.partner != None and i.house != i.partner.house:
-                print('Error: couple not joined after step MovPeoChosenHouse')
-                print(calledBy)
-                print(i.id)
-                print(i.sex)
-                print(i.status)
-                print(i.classRank)
-                print(i.independentStatus)
-                print(i.age)
-                print(i.ageStartWorking)
-                print(i.justMarried)
-                print(i.yearMarried)
-                print(i.yearsSeparated)
-                print(i.numberPartner)
-                print('')
-                print(i.partner.id)
-                print(i.partner.sex)
-                print(i.partner.status)
-                print(i.partner.classRank)
-                print(i.partner.independentStatus)
-                print(i.partner.age)
-                print(i.partner.ageStartWorking)
-                print(i.partner.justMarried)
-                print(i.partner.yearMarried)
-                print(i.partner.yearsSeparated)
-                print(i.partner.numberPartner)
-                
-                sys.exit()
+#        for i in personList:
+#            if i.partner != None and i.house != i.partner.house:
+#                print('Error: couple not joined after step MovPeoChosenHouse')
+#                print(calledBy)
+#                print(i.id)
+#                print(i.sex)
+#                print(i.status)
+#                print(i.classRank)
+#                print(i.independentStatus)
+#                print(i.yearIndependent)
+#                print(i.age)
+#                print(i.ageStartWorking)
+#                print(i.justMarried)
+#                print(i.yearMarried)
+#                print(i.yearsSeparated)
+#                print(i.numberPartner)
+#                print('')
+#                print(i.partner.id)
+#                print(i.partner.sex)
+#                print(i.partner.status)
+#                print(i.partner.classRank)
+#                print(i.partner.independentStatus)
+#                print(i.partner.yearIndependent)
+#                print(i.partner.age)
+#                print(i.partner.ageStartWorking)
+#                print(i.partner.justMarried)
+#                print(i.partner.yearMarried)
+#                print(i.partner.yearsSeparated)
+#                print(i.partner.numberPartner)
+#                
+#                sys.exit()
     
     def householdSize(self):
         visitedHouses = []
@@ -4781,7 +4933,7 @@ class Sim:
         # Year
         self.times.append(self.year)
         # Population stats
-        adultPop = [x for x in self.pop.livingPeople if x.age > self.p['minWorkingAge'] and x.status != 'student']
+        adultPop = [x for x in self.pop.livingPeople if x.age >= self.p['minWorkingAge'] and x.status != 'student']
         currentPop = float(len(self.pop.livingPeople))
         
         totQALY = sum([x.qaly for x in self.pop.livingPeople])
@@ -4980,23 +5132,24 @@ class Sim:
         
         self.numberHouseholds.append(post_checkLength)
         
-        h1 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants]) == 0]
+        #  
+        h1 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants if x.independentStatus == True]) == 0]
         occupants_1 = 0.0
         for h in h1:
             occupants_1 += len(h.occupants)
-        h2 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants]) == 1] 
+        h2 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants if x.independentStatus == True]) == 1] 
         occupants_2 = 0.0
         for h in h2:
             occupants_2 += len(h.occupants)
-        h3 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants]) == 2]
+        h3 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants if x.independentStatus == True]) == 2]
         occupants_3 = 0.0
         for h in h3:
             occupants_3 += len(h.occupants)
-        h4 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants]) == 3]
+        h4 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants if x.independentStatus == True]) == 3]
         occupants_4 = 0.0
         for h in h4:
             occupants_4 += len(h.occupants)
-        h5 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants]) == 4]
+        h5 = [h for h in self.map.occupiedHouses if max([x.classRank for x in h.occupants if x.independentStatus == True]) == 4]
         occupants_5 = 0.0
         for h in h5:
             occupants_5 += len(h.occupants)
@@ -6418,11 +6571,11 @@ class Sim:
         totalMarriedAdultWomen = 0
 
         for person in self.pop.livingPeople:
-            if person.sex == 'female' and person.age >= 18:
+            if person.sex == 'female' and person.age >= self.p['minPregnancyAge']:
                 totalAdultWomen += 1
                 if person.partner != None:
                     totalMarriedAdultWomen += 1
-        marriagePropNow = float(totalMarriedAdultWomen) / float(totalAdultWomen)
+        marriagePropNow = float(totalMarriedAdultWomen)/float(totalAdultWomen)
         self.marriageProp.append(marriagePropNow)
 
         ## Some extra debugging stuff just to check that all
@@ -7840,7 +7993,7 @@ class Sim:
         maxValue = max(self.avgHouseholdSize_1+self.avgHouseholdSize_2+self.avgHouseholdSize_3+self.avgHouseholdSize_4+self.avgHouseholdSize_5)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylim([0, maxValue*2.0])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Household Members')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
