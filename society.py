@@ -173,7 +173,9 @@ class Person:
         self.householdSupply = 0
         
         self.householdTotalSupply = 0
-        self.totalCareSupplied = 0
+        
+        self.careReceivers = []
+        self.totalCareSupplied = []
         
         self.totalSupply = 0
         
