@@ -25,7 +25,7 @@ class Simulation:
         self.p = dict(params)
         
         # self.year = self.p['startYear']
-        self.times = []
+        # self.times = []
         
         # Output variables
         self.shareUnmetCareDemand = []
@@ -45,7 +45,7 @@ class Simulation:
         
         if self.p['noPolicySim'] == True:
                 
-            folder  = 'N:/Social Care Model II/Charts/noPolicy_Sim/Repeat_' + str(params)
+            folder  = 'N:/Social Care Model II/Charts/NoPolicy_Sim/Repeat_' + str(params)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
            
@@ -59,7 +59,7 @@ class Simulation:
             np.random.seed(self.p['favouriteSeed'])
             self.randomSeed = self.p['favouriteSeed']
             
-            if self.p['numRepeats'] > 2:
+            if self.p['numRepeats'] > 1:
                 rdTime = (int)(time.time())
                 self.randomSeed = rdTime
                 random.seed(rdTime)
@@ -70,7 +70,7 @@ class Simulation:
             names = ('randomSeed, incomeCareParam, socialSupportLevel, ageOfRetirement, educationCosts_II, educationCosts_III, educationCosts_IV, educationCosts_V')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
             
-            s = Sim(self.p, self.randomSeed)
+            s = Sim(self.p, self.randomSeed, folder)
             s.initializePop()
             
             
@@ -81,25 +81,27 @@ class Simulation:
                 
                 s.doOneYear(self.year) 
                         
-                self.times.append(self.year)
+                # self.times.append(self.year)
                 
-            s.outputFile(folder)
+            # s.outputFile(folder)
             
             if self.p['singleRunGraphs']:
-                s.doGraphs(folder)
+                s.doGraphs_fromFile(folder)
+                
+                # s.doGraphs(folder)
                 
             s.interactiveGraphics()
             
-            outputVariables = s.getOutputs()
+            # outputVariables = s.getOutputs()
             
-            s.emptyLists()
+            # s.emptyLists()
             
-            for i in outputVariables:
-                self.returnList.append(i)
-            self.returnList.append(self.times)
-        
-            # Add return statement
-            return self.returnList
+#            for i in outputVariables:
+#                self.returnList.append(i)
+#            self.returnList.append(self.times)
+#        
+#            # Add return statement
+#            return self.returnList
                 
         else:   
              
@@ -109,7 +111,11 @@ class Simulation:
                 
             print('Policy Combination: ' + str(params[-1]))
             
-            f = Sim(self.p, self.randomSeed)
+            folder  = 'N:/Social Care Model II/Charts/SocPolicy_Sim/Policy_' + str(params[-1]) #
+            if not os.path.isdir(os.path.dirname(folder)):
+                os.makedirs(folder)
+            
+            f = Sim(self.p, self.randomSeed, folder)
             f.initializePop()
                      
             policyParameters = [] 
@@ -117,9 +123,7 @@ class Simulation:
             for i in range(self.p['numberPolicyParameters']):
                 policyParameters.append(params[i])
             
-            folder  = 'N:/Social Care Model II/Charts/Policy_' + str(params[-1]) #
-            if not os.path.isdir(os.path.dirname(folder)):
-                os.makedirs(folder)
+            
            
             filename = folder + '/parameterValues.csv'
             if not os.path.isdir(os.path.dirname(filename)):
@@ -143,25 +147,27 @@ class Simulation:
                 
                 f.doOneYear(self.year) 
                 
-                self.times.append(self.year)
+                # self.times.append(self.year)
                 
-            f.outputFile(folder)
+            # f.outputFile(folder)
             
             if self.p['singleRunGraphs']:
-                f.doGraphs(folder)
+                s.doGraphs_fromFile(folder)
+                
+                # s.doGraphs(folder)
                 
             f.interactiveGraphics()
             
-            outputVariables = f.getOutputs()
+            # outputVariables = f.getOutputs()
             
-            f.emptyLists()
-
-            for i in outputVariables:
-                self.returnList.append(i)
-            self.returnList.append(self.times)
-        
-            # Add return statement
-            return self.returnList
+#            f.emptyLists()
+#
+#            for i in outputVariables:
+#                self.returnList.append(i)
+#            self.returnList.append(self.times)
+#        
+#            # Add return statement
+#            return self.returnList
             
      
     def saveLists(self, listOfLists, names):
