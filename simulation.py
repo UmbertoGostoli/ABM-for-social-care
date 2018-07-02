@@ -1480,7 +1480,7 @@ class Sim:
         
     def relocateOrphans(self):
         
-        toRelocate = [list(h.occupants) for h in self.map.occupiedHouses if len(h.occupants) > 0 and len([i for i in h.occupants if i.independentStatus == True]) == 0]
+        toRelocate = [list(h.occupants) for h in self.map.occupiedHouses if len([i for i in h.occupants if i.independentStatus == True]) == 0]
     
 #        orphans = [x for x in self.pop.livingPeople if x.independentStatus == False and len([i for i in x.house.occupants if i.independentStatus == True]) == 0]
 #        
@@ -1515,7 +1515,7 @@ class Sim:
                 self.movePeopleIntoChosenHouse(host.house, household[0].house, household, 'relocateOrphans')
             else:
                 # if household[0].partner == None:
-                adoptiveMothers = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner != None and x.independentStatus == True]
+                adoptiveMothers = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner != None and x.independentStatus == True and self.householdIncome(x.house.occupants) > 0]
                 adoptiveMother = random.choice(adoptiveMothers)
                 for person in household:
                     if person.status == 'child' or person.status == 'teenager':
@@ -1533,42 +1533,51 @@ class Sim:
         H = nx.Graph()
         households = []
         firstNode = household[0]
+        households.append(household[0].house)
         H.add_node(firstNode)
         for member in household:
             if member.father != None:
-                if member.father.dead == False and member.father.house not in households and member.father.independentStatus == True:
+                income = self.householdIncome(member.father.house.occupants)
+                if member.father.dead == False and member.father.house not in households and member.father.independentStatus == True and income > 0:
                     H.add_edge(firstNode, member.father, distance = 1) 
                     households.append(member.father.house)
-                if member.mother.dead == False and member.mother.house not in households and member.father.independentStatus == True:
+                income = self.householdIncome(member.mother.house.occupants)
+                if member.mother.dead == False and member.mother.house not in households and member.father.independentStatus == True and income > 0:
                     H.add_edge(firstNode, member.mother, distance = 1)
                     households.append(member.mother.house)
                     
             # Grandparents
             if member.father != None and member.father.father != None:
-                if member.father.father.dead == False and member.father.father.house not in households and member.father.father.independentStatus == True:
+                income = self.householdIncome(member.father.father.house.occupants)
+                if member.father.father.dead == False and member.father.father.house not in households and member.father.father.independentStatus == True and income > 0:
                     H.add_edge(firstNode, member.father.father, distance = 2)
                     households.append(member.father.father.house)
-                if member.father.mother.dead == False and member.father.mother.house not in households and member.father.mother.independentStatus == True:
+                income = self.householdIncome(member.father.mother.house.occupants)
+                if member.father.mother.dead == False and member.father.mother.house not in households and member.father.mother.independentStatus == True and income > 0:
                     H.add_edge(firstNode, member.father.mother, distance = 2)
                     households.append(member.father.mother.house)
             if member.father != None and member.mother.father != None:
-                if member.mother.father.dead == False and member.mother.father.house not in households and member.mother.father.independentStatus == True:
+                income = self.householdIncome(member.mother.father.house.occupants)
+                if member.mother.father.dead == False and member.mother.father.house not in households and member.mother.father.independentStatus == True and income > 0:
                     H.add_edge(firstNode, member.mother.father, distance = 2)
                     households.append(member.mother.father.house)
-                if member.mother.mother.dead == False and member.mother.mother.house not in households and member.mother.mother.independentStatus == True:
+                income = self.householdIncome(member.mother.mother.house.occupants)
+                if member.mother.mother.dead == False and member.mother.mother.house not in households and member.mother.mother.independentStatus == True and income > 0:
                     H.add_edge(firstNode, member.mother.mother, distance = 2)
                     households.append(member.mother.mother.house)
                     
             # Indipendent children
             for child in member.children:
-                if child.dead == False and child.house not in households and child.independentStatus == True:
+                income = self.householdIncome(child.house.occupants)
+                if child.dead == False and child.house not in households and child.independentStatus == True and income > 0:
                     H.add_edge(firstNode, child, distance = 1)
                     households.append(child.house)
                     
             # Independent grandchildren
             for child in member.children:
                 for grandson in child.children:
-                    if grandson.dead == False and grandson.house not in households and grandson.independentStatus == True:
+                    income = self.householdIncome(grandson.house.occupants)
+                    if grandson.dead == False and grandson.house not in households and grandson.independentStatus == True and income > 0:
                         H.add_edge(firstNode, grandson, distance = 2)
                         households.append(grandson.house)
                         
@@ -1578,11 +1587,13 @@ class Sim:
                 brothers = [x for x in brothers if x.dead == False]
                 brothers.remove(member)
                 for brother in brothers:
-                    if brother.dead == False and brother.house not in households and brother.independentStatus == True:
+                    income = self.householdIncome(brother.house.occupants)
+                    if brother.dead == False and brother.house not in households and brother.independentStatus == True and income > 0:
                         H.add_edge(firstNode, brother, distance = 2)
                         households.append(brother.house)
                     for child in brother.children:
-                        if child.dead == False and child.house not in households and child.independentStatus == True:
+                        income = self.householdIncome(child.house.occupants)
+                        if child.dead == False and child.house not in households and child.independentStatus == True and income > 0:
                             H.add_edge(firstNode, child, distance = 3)
                             households.append(child.house)
             # Uncles and aunts
@@ -1598,7 +1609,8 @@ class Sim:
             unclesList = list(set(maternalUncles+paternalUncles))
             unclesList = [x for x in unclesList if x.dead == False]
             for uncle in unclesList:
-                if uncle.dead == False and uncle.house not in households and uncle.independentStatus == True:
+                income = self.householdIncome(uncle.house.occupants)
+                if uncle.dead == False and uncle.house not in households and uncle.independentStatus == True and income > 0:
                     H.add_edge(firstNode, uncle, distance = 3)
                     households.append(uncle.house)
         
@@ -2626,7 +2638,7 @@ class Sim:
         groupsAvailability.append(totStudentsSupply)
         
         unemployed = [x for x in notWorking if x.status == 'unemployed']
-        unemployed.sort(key=operator.attrgetter("wage"))
+        unemployed.sort(key=operator.attrgetter("residualInformalSupply"))
         householdsGroups.append(unemployed)
         totUnemployedSupply = sum([x.residualInformalSupply for x in unemployed])
         groupsAvailability.append(totUnemployedSupply)
@@ -2924,7 +2936,8 @@ class Sim:
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
          
-            if person.status == 'student' and person.mother.dead and person.father.dead:
+            if person.status == 'student' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
+                person.independentStatus = True
                 self.enterWorkForce(person)
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
@@ -3976,7 +3989,7 @@ class Sim:
         for person in self.pop.livingPeople:
             
             # ageClass = person.age / 10       
-            if person.partner != None and (person.house != person.partner.house or (person.house == person.partner.house and person.independentStatus + person.partner.independentStatus == 0 and person.elderlyWithFamily == False)):
+            if person.partner != None and (person.house != person.partner.house or (person.house == person.partner.house and person.independentStatus + person.partner.independentStatus == 0 and person.elderlyWithFamily + person.partner.elderlyWithFamily == 0)):
                 person.yearsSeparated += 1
                 person.partner.yearsSeparated += 1
 #                if person.income + person.partner.income == 0:
@@ -4051,8 +4064,10 @@ class Sim:
                     self.totalRelocations += 1
                     self.marriageRelocations += 1
                     person.independentStatus = True
+                    person.elderlyWithFamily = False
                     person.yearIndependent = self.year
                     person.partner.independentStatus = True
+                    person.partner.elderlyWithFamily = False
                     person.partner.yearIndependent = self.year
                     self.findNewHouse(peopleToMove, destination, 'joiningSpouses (1)')
                     continue
@@ -4120,6 +4135,7 @@ class Sim:
                             self.totalRelocations += 1
                             self.marriageRelocations += 1
                             b.independentStatus = True
+                            b.elderlyWithFamily = False
                             b.yearIndependent = self.year
                             self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove, 'joiningSpouses (2)')
                             continue
@@ -4146,6 +4162,7 @@ class Sim:
                             self.totalRelocations += 1
                             self.marriageRelocations += 1
                             b.independentStatus = True
+                            b.elderlyWithFamily = False
                             b.yearIndependent = self.year
                             self.findNewHouse(peopleToMove, destination, 'joiningSpouses (3)')
                             continue
@@ -4195,6 +4212,7 @@ class Sim:
                                 self.totalRelocations += 1
                                 self.marriageRelocations += 1   
                                 b.independentStatus = True
+                                b.elderlyWithFamily = False
                                 b.yearIndependent = self.year
                                 self.movePeopleIntoChosenHouse(targetHouse, b.house, peopleToMove, 'joiningSpouses (4)')
                                 continue   
@@ -4227,6 +4245,7 @@ class Sim:
                                 self.totalRelocations += 1
                                 self.marriageRelocations += 1
                                 b.independentStatus = True
+                                b.elderlyWithFamily = False
                                 b.yearIndependent = self.year
                                 self.findNewHouse(peopleToMove, destination, 'joiningSpouses (5)')
                                 continue
@@ -4263,6 +4282,7 @@ class Sim:
                             self.totalRelocations += 1
                             self.marriageRelocations += 1
                             b.independentStatus = True
+                            b.elderlyWithFamily = False
                             b.yearIndependent = self.year
                             self.findNewHouse(peopleToMove, destination, 'joiningSpouses (6)')
                             continue
@@ -4451,7 +4471,7 @@ class Sim:
                 
         for person in self.pop.livingPeople:
             person.justMarried = None
-            if person.partner != None and person.independentStatus + person.partner.independentStatus < 2 and person.elderlyWithFamily == False:
+            if person.partner != None and person.independentStatus + person.partner.independentStatus < 2 and person.elderlyWithFamily + person.partner.elderlyWithFamily == 0:
                 print('Error: not independent person in married couple!')
                 sys.exit()
             if person.partner != None and person.house != person.partner.house:
@@ -4560,88 +4580,95 @@ class Sim:
                 self.findNewHouse(peopleToMove, person.house.town, 'sizeRelocation')
                 
     def relocatingPensioners(self):
-        visited = []
-        retiredHouseholds = []
-        for person in self.pop.livingPeople:
-            if person in visited:
-                continue
-            retiredHousehold = []
-            relocationStatus1 = False
-            if ( person.status == 'retired' or person.status == 'inactive') and len(person.house.occupants) == 1:
-                retiredHousehold = [person]
-            if (len(person.house.occupants) == 2 and person.partner != None and person.partner.house == person.house 
-                and person.status == 'inactive' and person.partner.status == 'inactive'):
-                retiredHousehold = [person, person.partner]
-            visited.extend(retiredHousehold)
-            if len(retiredHousehold) > 0:
-                retiredHouseholds.append(retiredHousehold)
-            
-        for household in retiredHouseholds:
-            
-            if len(household) == 1:
-                supplyingHouseholds = [x for x in household[0].careNetwork.neighbors(household[0])]
-            if len(household) > 1:
-                for i in household[0].partner.careNetwork.neighbors(household[0].partner):
-                    if i not in list(household[0].careNetwork.neighbors(household[0])):
-                        household[0].careNetwork.add_edge(household[0], i)
-
-            supplyingHouseholds = [x for x in household[0].careNetwork.neighbors(household[0]) if len([i for i in x.house.occupants if i.independentStatus == True]) > 0]
-            
-            for i in supplyingHouseholds:
-                if household[0] not in i.careReceivers:
-                    i.careReceivers.append(household[0])
-                    i.totalCareSupplied.append(household[0].residualNeed)
-                else:
-                    i.totalCareSupplied[i.careReceivers.index(household[0])] += household[0].residualNeed
-                if len(household) > 1 and household[0].partner != None and household[0].partner in i.careReceivers:
-                    i.totalCareSupplied[i.careReceivers.index(household[0])] += i.totalCareSupplied[i.careReceivers.index(household[0].partner)]
-                    i.totalCareSupplied[i.careReceivers.index(household[0])] += household[0].partner.residualNeed
-                    
-            supplyingHouseholds = [x for x in household[0].careNetwork.neighbors(household[0]) if len([i for i in x.house.occupants if i.independentStatus == True]) > 0 and
-                                   x.totalCareSupplied[x.careReceivers.index(household[0])] > 0]
-            
-            if len(supplyingHouseholds) > 0: #(supplyingHouseholds) > 0:
+        inactiveHouses = [h for h in self.map.occupiedHouses if len([i for i in h.occupants if i.status != 'inactive']) == 0]
+        inactiveHouseholds = [list(h.occupants) for h in inactiveHouses]
+        
+#        visited = []
+#        retiredHouseholds = []
+#        for person in self.pop.livingPeople:
+#            if person in visited:
+#                continue
+#            retiredHousehold = []
+#            relocationStatus1 = False
+#            if ( person.status == 'retired' or person.status == 'inactive') and len(person.house.occupants) == 1:
+#                retiredHousehold = [person]
+#            if (len(person.house.occupants) == 2 and person.partner != None and person.partner.house == person.house 
+#                and person.status == 'inactive' and person.partner.status == 'inactive'):
+#                retiredHousehold = [person, person.partner]
+#            if len(retiredHousehold) > 0 and len(retiredHousehold) != len(person.house.occupants):
+#                print('Error: not all persons in house are relocated')
+#                sys.exit()
+#            visited.extend(retiredHousehold)
+#            if len(retiredHousehold) > 0:
+#                retiredHouseholds.append(retiredHousehold)
+#            
+        
+        for household in inactiveHouseholds:
+            supplyingHouseholds = []
+            supplyingHouses = []
+            for member in household:
+                newSuppliers = [x for x in member.careNetwork.neighbors(member) if x.house not in inactiveHouses and x.house not in supplyingHouses]
+                supplyingHouses.extend([x.house for x in newSuppliers])
+                supplyingHouseholds.extend(newSuppliers)
+          
+            if len(supplyingHouseholds) > 0:
                 careSupplied = []
-                for i in supplyingHouseholds: #supplyingHouseholds:
+                for i in supplyingHouseholds:
+                    if household[0] not in i.careReceivers:
+                        i.careReceivers.append(household[0])
+                        i.totalCareSupplied.append(household[0].residualNeed)
+                    else:
+                        i.totalCareSupplied[i.careReceivers.index(household[0])] += household[0].residualNeed
+                    for member in household:
+                        if member == household[0]:
+                            continue
+                        if member in i.careReceivers:
+                            i.totalCareSupplied[i.careReceivers.index(household[0])] += i.totalCareSupplied[i.careReceivers.index(member)]
+                            i.totalCareSupplied[i.careReceivers.index(household[0])] += member.residualNeed
+                            
                     careSupplied.append(i.totalCareSupplied[i.careReceivers.index(household[0])])
                 
-                
-                probs = [x/sum(careSupplied) for x in careSupplied]
-
-                potentialHost = np.random.choice(supplyingHouseholds, p = probs)
-                hostSupply = potentialHost.totalCareSupplied[potentialHost.careReceivers.index(household[0])]
-                relocationFactor = math.exp(self.p['retiredRelocationParam']*hostSupply)
-                
-                inactiveInHousehold = len([x for x in potentialHost.house.occupants if x.status == 'inactive'])
-                totalInactive = inactiveInHousehold + len([x for x in household if x.status == 'inactive'])
-                # Check variable
-                self.potentialHostSupply.append(potentialHost.householdSupply) # 
-                
-                relocationThreshold = (relocationFactor - 1)/relocationFactor
-                if potentialHost.house != household[0].house and totalInactive < 3 and random.random() < relocationThreshold:
-                    if person.house == self.displayHouse:
-                        messageString = str(self.year) + ": #" + str(person.id) + " is going to live with one of their next of kin."
-                        self.textUpdateList.append(messageString)
-                                
-                    for i in household:
-                        if i in potentialHost.house.occupants:
-                            print('Retired already in next-of-kin house!')
-                            
-                    for i in household:        
-                        repetitions = household.count(i)
-                        if repetitions > 1:
-                            print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in relocatingPensioners')
+                if sum(careSupplied) > 0:
+                    probs = [x/sum(careSupplied) for x in careSupplied]
+    
+                    potentialHost = np.random.choice(supplyingHouseholds, p = probs)
+                    hostSupply = potentialHost.totalCareSupplied[potentialHost.careReceivers.index(household[0])]
+                    relocationFactor = math.exp(self.p['retiredRelocationParam']*hostSupply)
                     
-                    self.totalRelocations += 1
-                    self.retiredRelocations += 1
+                    inactiveInHousehold = len([x for x in potentialHost.house.occupants if x.status == 'inactive'])
+                    totalInactive = inactiveInHousehold + len(household)
+                    # Check variable
+                    self.potentialHostSupply.append(potentialHost.householdSupply) # 
                     
-                    peopleToMove = list(household)
-                    for i in peopleToMove:
-                        i.elderlyWithFamily = True
-                        i.independentStatus = False
+                    if len([x for x in potentialHost.house.occupants if x.independentStatus == True]) == 0:
+                        print('Error: potential host house with no independent people!')
+                        sys.exit()
                         
-                    self.movePeopleIntoChosenHouse(potentialHost.house, household[0].house, 
-                                                   peopleToMove, 'relocatingPensioners')
+                    relocationThreshold = (relocationFactor - 1)/relocationFactor
+                    
+                    if potentialHost.house != household[0].house and totalInactive < 3 and random.random() < relocationThreshold:
+                        if household[0].house == self.displayHouse:
+                            messageString = str(self.year) + ": #" + str(household[0].id) + " is going to live with one of their next of kin."
+                            self.textUpdateList.append(messageString)
+                                    
+                        for i in household:
+                            if i in potentialHost.house.occupants:
+                                print('Retired already in next-of-kin house!')
+                                
+                        for i in household:        
+                            repetitions = household.count(i)
+                            if repetitions > 1:
+                                print('Person ' + str(i.id) + ' is counted ' + str(repetitions) + ' times in relocatingPensioners')
+                        
+                        self.totalRelocations += 1
+                        self.retiredRelocations += 1
+                        
+                        peopleToMove = list(household)
+                        for i in peopleToMove:
+                            i.elderlyWithFamily = True
+                            i.independentStatus = False
+                            
+                        self.movePeopleIntoChosenHouse(potentialHost.house, household[0].house, peopleToMove, 'relocatingPensioners')
             
     def findNewHouse(self, personList, town, calledBy):
         # Find a new house with a 'good' neighborhood, in the chosen town
