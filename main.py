@@ -27,6 +27,10 @@ def init_params():
     p['loadFromFile'] = False
     p['verboseDebugging'] = False
     p['singleRunGraphs'] = True
+    
+    p['multiprocessing'] = False
+    p['numberProcessors'] = 2
+    p['noPolicySim'] = False
     p['numRepeats'] = 1
     
     p['numberPolicyParameters'] = 4
@@ -34,7 +38,7 @@ def init_params():
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
     
-    p['noPolicySim'] = False
+    
     
     p['initialPop'] = 600
     p['startYear'] = 1860
@@ -350,14 +354,6 @@ def init_params():
 
     
     return p
-
-def simulation(params):
-    
-    p = init_params()
-    bs = Simulation(p)
-    # output = bs.run(params)
-    bs.run(params)
-    #return output
   
 def multipleRunsGraphs(folder, repeats):
     
@@ -992,57 +988,110 @@ def policyGraphs(folder, numPolicies):
     pp.savefig(fig)
     pp.close()
 
-
+def simulation(params):
+    
+    p = init_params()
+    bs = Simulation(p)
+    # output = bs.run(params)
+    bs.run(params)
+    #return output
 
 if __name__ == "__main__":
     
     # multiprocessing.set_start_method('forkserver')
-    
     p = init_params()
     
-    random.seed(p['favouriteSeed'])
-    np.random.seed(p['favouriteSeed'])
-    
-    pool = multiprocessing.Pool(4)
-    
-    if p['noPolicySim'] == True:  
-        runNumber = range(p['numRepeats'])
-        # result = pool.map(simulation, runNumber)
-        pool.map(simulation, runNumber)
-        pool.close()
-        pool.join()
-        
-        folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
-        if not os.path.isdir(os.path.dirname(folder)):
-            os.makedirs(folder)
-        multipleRunsGraphs(folder, p['numRepeats'])
-        
-    else:
-        parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
-        parameters = map(list, zip(*parameters))
-        policies = []
-        defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['socialSupportLevelPolicyChange'],
-                         p['ageOfRetirementPolicyChange'], p['educationCostsPolicyCoefficient']]
-        # Policies' combinations
-        policies.append(defaultValues)
-        for i in range(len(parameters)):
-            for j in range(2):
-                runParameters = [x for x in defaultValues]
-                runParameters[i] = parameters[i][j]
-                policies.append(runParameters)       
-        for p in policies:
-            p.append(policies.index(p))
-        
-        numPolicies = range(len(policies))
-        # result = pool.map(simulation, policies)
-        pool.map(simulation, policies)
-        pool.close()
-        pool.join()
+    if p['multiprocessing'] == True:
 
-        folder  = 'N:/Social Care Model/Charts/SensitivityCharts'
-        if not os.path.isdir(os.path.dirname(folder)):
-            os.makedirs(folder)
-        policyGraphs(folder, numPolicies)
+        random.seed(p['favouriteSeed'])
+        np.random.seed(p['favouriteSeed'])
+        
+        processors = p['numberProcessors']
+        if processors > multiprocessing.cpu_count():
+            processors = multiprocessing.cpu_count()
+        
+        pool = multiprocessing.Pool(processors)
+        
+        if p['noPolicySim'] == True:  
+            runNumber = range(p['numRepeats'])
+            # result = pool.map(simulation, runNumber)
+            pool.imap(simulation, runNumber)
+            pool.close()
+            pool.join()
+            
+            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
+            if not os.path.isdir(os.path.dirname(folder)):
+                os.makedirs(folder)
+            multipleRunsGraphs(folder, p['numRepeats'])
+            
+        else:
+            parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
+            parameters = map(list, zip(*parameters))
+            policies = []
+            defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['socialSupportLevelPolicyChange'],
+                             p['ageOfRetirementPolicyChange'], p['educationCostsPolicyCoefficient']]
+            # Policies' combinations
+            policies.append(defaultValues)
+            for i in range(len(parameters)):
+                for j in range(2):
+                    runParameters = [x for x in defaultValues]
+                    runParameters[i] = parameters[i][j]
+                    policies.append(runParameters)       
+            for p in policies:
+                p.append(policies.index(p))
+            
+            numPolicies = range(len(policies))
+            # result = pool.map(simulation, policies)
+            pool.imap(simulation, policies)
+            pool.close()
+            pool.join()
+    
+            folder  = 'N:/Social Care Model/Charts/SensitivityCharts'
+            if not os.path.isdir(os.path.dirname(folder)):
+                os.makedirs(folder)
+            policyGraphs(folder, numPolicies)
+            
+    else:
+        p = init_params()
+        random.seed(p['favouriteSeed'])
+        np.random.seed(p['favouriteSeed'])
+        
+        if p['noPolicySim'] == True:  
+            for i in range(p['numRepeats']):
+                b = Simulation(p)
+                b.run(i)
+            
+            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
+            if not os.path.isdir(os.path.dirname(folder)):
+                os.makedirs(folder)
+            multipleRunsGraphs(folder, p['numRepeats'])
+            
+        else:
+            parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
+            parameters = map(list, zip(*parameters))
+            policies = []
+            defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['socialSupportLevelPolicyChange'],
+                             p['ageOfRetirementPolicyChange'], p['educationCostsPolicyCoefficient']]
+            # Policies' combinations
+            policies.append(defaultValues)
+            for i in range(len(parameters)):
+                for j in range(2):
+                    runParameters = [x for x in defaultValues]
+                    runParameters[i] = parameters[i][j]
+                    policies.append(runParameters)       
+            for n in policies:
+                n.append(policies.index(n))
+            
+            numPolicies = len(policies)
+            
+            for n in range(numPolicies):
+                b = Simulation(p)
+                b.run(policies[n])
+                
+            folder  = 'N:/Social Care Model/Charts/SensitivityCharts'
+            if not os.path.isdir(os.path.dirname(folder)):
+                os.makedirs(folder)
+            policyGraphs(folder, numPolicies)
     
     
     
