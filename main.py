@@ -42,11 +42,11 @@ def init_params():
     
     p['initialPop'] = 600
     p['startYear'] = 1860
-    p['endYear'] = 1940 # 2030
+    p['endYear'] = 2040
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1900 # 1990
-    p['regressionCollectFrom'] = 1880 # 1960 
-    p['implementPoliciesFromYear'] = 1920 # 2015   
+    p['statsCollectFrom'] = 1990
+    p['regressionCollectFrom'] = 1960 
+    p['implementPoliciesFromYear'] = 2020   
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -1068,7 +1068,7 @@ if __name__ == "__main__":
             pool.close()
             pool.join()
     
-            folder  = 'N:/Social Care Model/Charts/SensitivityCharts'
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             policyGraphs(folder, numPolicies)
