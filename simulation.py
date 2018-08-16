@@ -118,7 +118,7 @@ class Sim:
                    'unmetSocialCareNeedGiniCoefficient_4', 'unmetSocialCareNeedGiniCoefficient_5', 'shareUnmetSocialCareNeedGiniCoefficient', 'shareUnmetSocialCareNeedGiniCoefficient_1',
                    'shareUnmetSocialCareNeedGiniCoefficient_2', 'shareUnmetSocialCareNeedGiniCoefficient_3', 'shareUnmetSocialCareNeedGiniCoefficient_4', 'shareUnmetSocialCareNeedGiniCoefficient_5',
                    'publicSupply', 'totQALY', 'meanQALY', 'discountedQALY', 'averageDiscountedQALY', 'ratioUnmetNeed_CareSupply', 'ratioUnmetNeed_CareSupply_1', 'ratioUnmetNeed_CareSupply_2',
-                   'ratioUnmetNeed_CareSupply_3', 'ratioUnmetNeed_CareSupply_4', 'ratioUnmetNeed_CareSupply_5']
+                   'ratioUnmetNeed_CareSupply_3', 'ratioUnmetNeed_CareSupply_4', 'ratioUnmetNeed_CareSupply_5', 'totalTaxRefund']
         
         self.times = []
         self.pops = []
@@ -654,6 +654,7 @@ class Sim:
         self.incomeInitialLevels = []
         self.incomeFinalLevels = []
         self.pricePublicSocialCare = 0
+        self.totalTaxRefund = 0
         self.priceSocialCare = 0    
         self.check = False
         self.exitWork = 0
@@ -982,7 +983,7 @@ class Sim:
     
     def updatePolicyParameters(self, policyParameters):
         self.p['incomeCareParamPolicyCoeffcient'] = policyParameters[0]
-        self.p['socialSupportLevelPolicyChange'] = policyParameters[1] 
+        self.p['socialSupportLevelPolicyChange'] = policyParameters[1]
         self.p['ageOfRetirementPolicyChange'] = policyParameters[2] 
         self.p['educationCostsPolicyCoefficient'] = policyParameters[3] 
                     
@@ -1366,10 +1367,10 @@ class Sim:
                 dieProb = self.deathProb(rawRate, person.classRank, person.careNeedLevel, person.averageShareUnmetNeed, classPop)
                 
                 if self.p['noPolicySim'] == False:
-                    if  self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                    if  self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['regressionCollectFrom']:
                         age = person.age
                         unmetNeed = person.averageShareUnmetNeed
-                        year = self.year-self.p['startRegressionCollectionFrom']
+                        year = self.year-self.p['regressionCollectFrom']
                         regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
                         self.inputsMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(regressors)
                         dependentVariable = dieProb # [dieProb]
@@ -1378,7 +1379,7 @@ class Sim:
                     elif self.year >= self.p['implementPoliciesFromYear']:
                         age = person.age
                         unmetNeed = person.averageShareUnmetNeed
-                        year = self.year-self.p['startRegressionCollectionFrom']
+                        year = self.year-self.p['regressionCollectFrom']
                         regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
                         s = person.sexIndex
                         r = person.classRank
@@ -1423,10 +1424,10 @@ class Sim:
                 dieProb = self.deathProb(rawRate, person.classRank, person.careNeedLevel, person.averageShareUnmetNeed, classPop)
                 
                 if self.p['noPolicySim'] == False:
-                    if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                    if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['regressionCollectFrom']:
                         age = person.age
                         unmetNeed = person.averageShareUnmetNeed
-                        year = self.year-self.p['startRegressionCollectionFrom']
+                        year = self.year-self.p['regressionCollectFrom']
                         regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
                         self.inputsMortality[person.sexIndex][person.classRank][person.careNeedLevel].append(regressors)
                         dependentVariable = dieProb # [dieProb]
@@ -1435,7 +1436,7 @@ class Sim:
                     elif self.year >= self.p['implementPoliciesFromYear']:
                         age = person.age
                         unmetNeed = person.averageShareUnmetNeed
-                        year = self.year-self.p['startRegressionCollectionFrom']
+                        year = self.year-self.p['regressionCollectFrom']
                         regressors = [age, math.log(age), unmetNeed, year, math.log(year+1)]
                         s = person.sexIndex
                         r = person.classRank
@@ -1722,9 +1723,9 @@ class Sim:
             birthProb = self.computeBirthProb(self.p['fertilityBias'], rawRate, woman.classRank)
             
             if self.p['noPolicySim'] == False:
-                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['regressionCollectFrom']:
                     age = woman.age-16
-                    year = self.year-self.p['startRegressionCollectionFrom']
+                    year = self.year-self.p['regressionCollectFrom']
                     regressors = [age, math.log(age), year, math.log(year+1)]
                     self.inputsFertility[woman.classRank].append(regressors)
                     dependentVariable = birthProb # [birthProb]
@@ -1732,7 +1733,7 @@ class Sim:
                     
                 elif self.year >= self.p['implementPoliciesFromYear']:
                     age = woman.age-16
-                    year = self.year-self.p['startRegressionCollectionFrom']
+                    year = self.year-self.p['regressionCollectFrom']
                     regressors = [age, math.log(age), year, math.log(year+1)]
                     r = woman.classRank
                     try:
@@ -1804,7 +1805,7 @@ class Sim:
 #        return(correctedClassRates[womanRank])
             
     def careNeeds(self):
-        self.publicSupply = 0
+        
         for person in self.pop.livingPeople:
             person.visitedCarer = False
             person.hoursDemand = 0
@@ -1814,6 +1815,9 @@ class Sim:
             person.hoursSocialCareDemand = 0
             person.residualSocialCareNeed = 0
             person.residualIncomeCare = 0
+            person.maxFormalCareSupply = 0
+            person.residualWorkingHours = 0
+            person.incomeByTaxBands = []
             person.hoursChildCareDemand = 0
             person.residualChildCareNeed = 0
             person.hoursInformalSupply = 0
@@ -1842,7 +1846,7 @@ class Sim:
             
             if person.careNeedLevel >= (self.p['socialSupportLevel'] + self.p['socialSupportLevelPolicyChange']):
                 self.publicSupply += person.hoursDemand
-                person.residualNeed = person.hoursDemand
+                person.residualNeed = 0 # person.hoursDemand
                 
 #            person.hoursSocialCareDemand = careNeed
 #            person.residualSocialCareNeed = person.hoursDemand
@@ -1955,6 +1959,93 @@ class Sim:
     
     
             
+#    def careSupplies_Old(self):
+#        
+#        for agent in self.pop.livingPeople:
+#            if agent.visitedCarer == True:
+#                continue
+#            
+#            household = list(agent.house.occupants)
+#                
+#            for member in household:
+#                member.visitedCarer = True
+#                
+#            householdCarers = [x for x in household if x.hoursDemand == 0]
+#            notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
+#            for member in notWorking:
+#                if member.status == 'teenager':
+#                    individualSupply = self.p['teenAgersHours']
+#                elif member.status == 'student':
+#                    individualSupply = self.p['studentHours']
+#                elif member.status == 'retired':
+#                    individualSupply = self.p['retiredHours']
+#                elif member.status == 'unemployed':
+#                    individualSupply = self.p['unemployedHours']
+#                member.residualInformalSupply = int((individualSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+#                member.hoursInformalSupply = member.residualInformalSupply
+#
+#            employed = [x for x in householdCarers if x.status == 'employed']
+#            employed.sort(key=operator.attrgetter("wage"))
+#
+#            householdIncome = self.householdIncome(household)
+#            
+#            householdPerCapitaIncome = householdIncome/float(len(household))
+#            
+#            # Check time series
+#            self.perCapitaHouseholdIncome.append(householdPerCapitaIncome)
+#            
+#            # Compute the total income devoted to informal care supply
+#            incomeCareParameter = self.p['incomeCareParam']*self.p['incomeCareParamPolicyCoeffcient']
+#            incomeCoefficient = 1/math.exp(incomeCareParameter*householdPerCapitaIncome) # Min-Max: 0 - 1500
+#            residualIncomeForCare = householdIncome*(1 - incomeCoefficient)
+#            
+#            # totHours = residualIncomeForCare/self.p['priceSocialCare']
+#            # formalSupplyHours = int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+#            
+#            for member in household:
+#                member.residualIncomeCare = residualIncomeForCare
+#                # member.maxFormalCareSupply = formalSupplyHours
+#                # member.residualFormalSupply = formalSupplyHours
+#                if member.status == 'employed':
+#                    member.residualWorkingHours = self.p['weeklyHours']
+#                    member.income = member.residualWorkingHours*member.wage
+#            
+#            incomes = [x.income for x in household if x.income > 0]
+#            # Compute income by tax band
+#            incomeByTaxBand = self.updateTaxBrackets(incomes)
+#            
+#            for member in household:
+#                member.incomeByTaxBands = incomeByTaxBand
+#                
+#            for worker in employed:
+#                worker.extraworkCare = self.p['employedHours']
+#                worker.hoursInformalSupply = worker.extraworkCare
+#
+#            for worker in employed:
+#                if worker.wage < self.p['priceSocialCare']:
+#                    maxIndividualHours = residualIncomeForCare/worker.wage
+#                    if maxIndividualHours > self.p['weeklyHours']:
+#                        individualSupply = self.p['weeklyHours']
+#                    else:
+#                        individualSupply = int((maxIndividualHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+#                    worker.residualInformalSupply = individualSupply
+#                    worker.hoursInformalSupply += worker.residualInformalSupply
+#                    residualIncomeForCare -= individualSupply*worker.wage
+#                    if residualIncomeForCare <= 0:
+#                        break
+#
+#            totHours = residualIncomeForCare/self.p['priceSocialCare']
+#            formalSupplyHours = int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+#            
+#            earningMembers = [x for x in household if x.income > 0]
+#        
+#            if len(earningMembers) == 0 and formalSupplyHours > 0:
+#                print('Error: no income to pay social care from (careSupplies)')
+#                
+#            for member in household:
+#                member.residualFormalSupply = formalSupplyHours
+#                member.hoursFormalSupply = formalSupplyHours 
+                
     def careSupplies(self):
         
         for agent in self.pop.livingPeople:
@@ -1995,72 +2086,29 @@ class Sim:
             incomeCoefficient = 1/math.exp(incomeCareParameter*householdPerCapitaIncome) # Min-Max: 0 - 1500
             residualIncomeForCare = householdIncome*(1 - incomeCoefficient)
             
+            # totHours = residualIncomeForCare/self.p['priceSocialCare']
+            # formalSupplyHours = int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+            
+            for member in household:
+                member.residualIncomeCare = residualIncomeForCare
+                # member.maxFormalCareSupply = formalSupplyHours
+                # member.residualFormalSupply = formalSupplyHours
+                if member.status == 'employed':
+                    member.residualWorkingHours = self.p['weeklyHours']
+                    member.income = member.residualWorkingHours*member.wage
+            
+            incomes = [x.income for x in household if x.income > 0]
+            # Compute income by tax band
+            incomeByTaxBand = self.updateTaxBrackets(incomes)
+            
+            for member in household:
+                member.incomeByTaxBands = incomeByTaxBand
+                
             for worker in employed:
                 worker.extraworkCare = self.p['employedHours']
                 worker.hoursInformalSupply = worker.extraworkCare
-            
-#           Code for tax breaks policy
-#
-#            higherBandIncome = 0
-#            middleBandIncome = 0
-#            lowerBandIncome = 0
-#            earningMembers = [x for x in household if x.income > 0]
-#            for member in earningMembers:
-#                if member.income > self.p['taxBands'][1]:
-#                    higherBandIncome += member.income - self.p['taxBands'][1]
-#                if member.income > self.p['taxBands'][0] and member.income <= self.p['taxBands'][1]:
-#                    middleBandIncome += member.income - self.p['taxBands'][0]
-#                else:
-#                    lowerBandIncome += member.income
-#            
-#            incomeByTaxBands = []
-#            netSocialCarePrices = []
-#            incomeByTaxBands.append(higherBandIncome, middleBandIncome, lowerBandIncome)
-#            for i in range(self.p['taxBandsNumber']-1, -1, -1):
-#                netSocialCarePrices.append(self.p['priceSocialCare']*(1-self.p['taxBreakRate']*self.p['bandsTaxationRates'][i]))
-#                    
-#            residualIncomeForCare = householdIncome
-#            for worker in employed:
-#                for i in range(self.p['taxBandsNumber']):
-#                    if netSocialCarePrices[i] <= worker.wage:
-#                        optimalIncomeForCare = self.computeIncomeForCare(residualIncomeForCare, len(household), netSocialCarePrices[i])
-#                        incomeForCare = min(optimalIncomeForCare, incomeByTaxBands[i])
-#                        totHours = incomeForCare/netSocialCarePrices[i]
-#                        formalSupplyHours = int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                        for member in household:
-#                            member.residualFormalSupply += formalSupplyHours
-#                            member.hoursFormalSupply += formalSupplyHours
-#                        residualIncomeForCare -= incomeForCare
-#                        if residualIncomeForCare <= 0:
-#                            break
-#                     else:
-#                        optimalIncomeForCare = self.computeIncomeForCare(residualIncomeForCare, len(household), worker.wage)
-#                        maxIndividualHours = optimalIncomeForCare/worker.wage
-#                        if maxIndividualHours > self.p['weeklyHours']:
-#                            individualSupply = self.p['weeklyHours']
-#                        else:
-#                            individualSupply = int((maxIndividualHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                        worker.residualInformalSupply = individualSupply
-#                        worker.hoursInformalSupply += worker.residualInformalSupply
-#                        residualIncomeForCare -= individualSupply*worker.wage
-#                        if residualIncomeForCare <= 0:
-#                            break
                 
-            
-            for worker in employed:
-                if worker.wage < self.p['priceSocialCare']:
-                    maxIndividualHours = residualIncomeForCare/worker.wage
-                    if maxIndividualHours > self.p['weeklyHours']:
-                        individualSupply = self.p['weeklyHours']
-                    else:
-                        individualSupply = int((maxIndividualHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-                    worker.residualInformalSupply = individualSupply
-                    worker.hoursInformalSupply += worker.residualInformalSupply
-                    residualIncomeForCare -= individualSupply*worker.wage
-                    if residualIncomeForCare <= 0:
-                        break
-
-            totHours = residualIncomeForCare/self.p['priceSocialCare']
+            totHours = self.maxCareSupplyHours(household)
             formalSupplyHours = int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
             
             earningMembers = [x for x in household if x.income > 0]
@@ -2072,30 +2120,6 @@ class Sim:
                 member.residualFormalSupply = formalSupplyHours
                 member.hoursFormalSupply = formalSupplyHours 
 
-            
-                ######################    Old code   ###########################
-                
-                # worker.extraworkCare = self.p['employedHours']
-                
-
-            # Compute the total income-based formal social care supply   
-            
-#            workToCareHours = residualIncomeForCare/self.p['priceSocialCare']
-#            workToCareHours = int((workToCareHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-            
-            # householdEmployedFormalSupply = int((householdEmployedFormalSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-            # Assign the total income-based formal care supply to the employed members of the household (according to income) 
-#            residualSupply = residualIncomeForCare
-#            earners = [x for x in household if x.status == 'retired' or x.status == 'employed']
-#            for person in earners:
-#                workToCareHours = min(self.p['weeklyHours'], residualSupply/self.p['priceSocialCare'])
-#                individualSupply = int((workToCareHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-#                person.residualFormalSupply = individualSupply
-#                person.hoursFormalSupply = person.residualFormalSupply
-#                residualIncomeForCare -= individualSupply*self.p['priceSocialCare']
-#                if residualIncomeForCare <= 0:
-#                    break
-   
     def computeIncomeForCare(self, householdIncome, householdSize, formalSocialCarePrice):
         householdPerCapitaIncome = householdIncome/householdSize
         incomeCareParameter = self.p['incomeCareParam']*self.p['incomeCareParamPolicyCoeffcient']
@@ -2435,7 +2459,7 @@ class Sim:
         return(townSCI)
          
     def allocateCare(self):
-        
+
         # The care need is satisfied by the household's informal care supply, starting from the social care need if present.
         # First, select all the agents with care need in the population.
         careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0]
@@ -2461,6 +2485,7 @@ class Sim:
             receiver = np.random.choice(residualReceivers, p = probReceivers)
             
             self.getCare(receiver)
+            
             careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0]
             for receiver in careReceivers:
                 receiver.totalSupply = self.totalSupply(receiver)
@@ -2583,6 +2608,161 @@ class Sim:
             totalSupply += g.householdTotalSupply
         return(totalSupply)
 
+#    def getCare_Old(self, receiver):
+#        receiver.residualNeed -= self.p['quantumCare'] 
+#        townReceiver = receiver.house.town 
+#        informalCare = 0
+#        formalCare = 0
+#
+#        probCarers = self.probSuppliers(receiver)
+#        suppliers = [x for x in receiver.careNetwork.neighbors(receiver)]
+#        carer = np.random.choice(suppliers, p = probCarers)
+#
+#        townCarer = carer.house.town
+#        household = carer.house.occupants
+#        
+##        print('')
+##        for h in household:
+##            print('ID: ' + str(h.id))
+##            print('Status: ' + str(h.status))
+##            print('Income: ' + str(h.income))
+##            print('Residual Income Care: ' + str(h.hoursFormalSupply))
+##            
+##        houseIncome = self.householdIncome(household)
+##        
+##            
+##        print('Household income: ' + str(houseIncome))
+#
+#        residualFormalSupplyHours = household[0].residualFormalSupply
+#        
+#        householdCarers = [x for x in household if x.hoursDemand == 0]
+#        notWorking = [x for x in householdCarers if x.residualInformalSupply > 0]
+#        
+#        householdsGroups = []
+#        groupsAvailability = []
+#        
+#        teenagers = [x for x in notWorking if x.status == 'teenager']
+#        teenagers.sort(key=operator.attrgetter("residualInformalSupply"), reverse=True)
+#        householdsGroups.append(teenagers)
+#        totTeenagersSupply = sum([x.residualInformalSupply for x in teenagers])
+#        groupsAvailability.append(totTeenagersSupply)
+#
+#        retired = [x for x in notWorking if x.status == 'retired']
+#        retiredIncome = sum([x.income for x in retired])
+##        print(len(retired))
+##        print('Retired income: ' + str(retiredIncome))
+#        
+#        retired.sort(key=operator.attrgetter("residualInformalSupply"), reverse=True)
+#        householdsGroups.append(retired)
+#        totRetiredSupply = sum([x.residualInformalSupply for x in retired])
+#        groupsAvailability.append(totRetiredSupply)
+#        
+#        students = [x for x in notWorking if x.status == 'student']
+#        students.sort(key=operator.attrgetter("residualInformalSupply"), reverse=True)
+#        householdsGroups.append(students)
+#        totStudentsSupply = sum([x.residualInformalSupply for x in students])
+#        groupsAvailability.append(totStudentsSupply)
+#        
+#        unemployed = [x for x in notWorking if x.status == 'unemployed']
+#        unemployed.sort(key=operator.attrgetter("residualInformalSupply"))
+#        householdsGroups.append(unemployed)
+#        totUnemployedSupply = sum([x.residualInformalSupply for x in unemployed])
+#        groupsAvailability.append(totUnemployedSupply)
+#        
+#        employed_1 = [x for x in householdCarers if x.status == 'employed' and x.extraworkCare > 0]
+#        employed_1.sort(key=operator.attrgetter("extraworkCare"), reverse=True)
+#        householdsGroups.append(employed_1)
+#        extraWorkSupply = sum([x.extraworkCare for x in employed_1])
+#        groupsAvailability.append(extraWorkSupply)
+#        
+#        employed_2 = [x for x in householdCarers if x.status == 'employed' and x.residualInformalSupply > 0]
+#        employed_2.sort(key=operator.attrgetter("wage"))
+#        householdsGroups.append('Out-of-Income Supply')
+#        totOutOfIncomeSupply = sum([x.residualInformalSupply for x in employed_2])
+#        totOutOfIncomeSupply += residualFormalSupplyHours
+#        groupsAvailability.append(totOutOfIncomeSupply)
+#        
+#        employed = list(set().union(employed_1, employed_2))
+#        employedIncome = sum([x.income for x in employed])
+##        print(len(employed))
+##        print('Employed income:' + str(employedIncome))
+#        
+#        groupsProbabilities = [x/sum(groupsAvailability) for x in groupsAvailability]
+#        
+#        earningMembers = [x for x in household if x.income > 0]
+#        
+#        if len(earningMembers) == 0 and totOutOfIncomeSupply > 0:
+#            print('Error: no income to pay social care from (Get Care)')
+#            
+#        # Finally, extract a 'quantum' of care from one of the selected household's members.
+#        check = 0
+#        supplier = 'none'
+#        if (receiver.father != None and receiver.father in carer.house.occupants) or (receiver.mother != None and receiver.mother in carer.house.occupants) or carer in receiver.children:
+#            if townCarer == townReceiver:
+#                carers = np.random.choice(householdsGroups, p = groupsProbabilities) 
+#                if carers == 'Out-of-Income Supply':
+#                    if len(employed_2) > 0:
+#                        employed_2[0].residualInformalSupply -= self.p['quantumCare']
+#                        employed_2[0].socialWork += self.p['quantumCare']
+#                        informalCare = self.p['quantumCare']
+#                        supplier = 'employed: informal care (close relative, in town)'
+#                    else:
+#                        residualFormalSupplyHours -= self.p['quantumCare']
+#                        if residualFormalSupplyHours <= 0:
+#                            residualFormalSupplyHours = 0
+#                        for agent in household:
+#                            agent.residualFormalSupply = residualFormalSupplyHours
+#                        earningMembers[0].workToCare += self.p['quantumCare']
+#                        formalCare = self.p['quantumCare']
+#                        supplier = 'employed: formal care (close relative, in town)'
+#                else:
+#                    if carers[0].status == 'employed':
+#                        carers[0].extraworkCare -= self.p['quantumCare']
+#                    else:
+#                        carers[0].residualInformalSupply -= self.p['quantumCare']
+#                    carers[0].socialWork += self.p['quantumCare']
+#                    informalCare = self.p['quantumCare']
+#            else:
+#                if residualFormalSupplyHours > 0:
+#                    residualFormalSupplyHours -= self.p['quantumCare']
+#                    if residualFormalSupplyHours <= 0:
+#                        residualFormalSupplyHours = 0
+#                    for agent in household:
+#                        agent.residualFormalSupply = residualFormalSupplyHours
+#                    earningMembers[0].workToCare += self.p['quantumCare']
+#                    formalCare = self.p['quantumCare']
+#                    supplier = 'employed: formal care (close relative, not in town)'
+#        else:
+#            if townCarer == townReceiver: 
+#                groupsAvailability[-1] = 0.0
+#                groupsProbabilities = [x/sum(groupsAvailability) for x in groupsAvailability]
+#                carers = np.random.choice(householdsGroups, p = groupsProbabilities)
+#                if carers[0].status == 'employed':
+#                    carers[0].extraworkCare -= self.p['quantumCare']
+#                else:
+#                    carers[0].residualInformalSupply -= self.p['quantumCare']
+#                carers[0].socialWork += self.p['quantumCare']
+#                informalCare = self.p['quantumCare']
+#                
+#                       
+#        
+#        
+#        receiver.informalCare += informalCare
+#        receiver.formalCare += formalCare
+#        receiver.informalSupplyByKinship[int(receiver.careNetwork[receiver][carer]['distance'])] += informalCare
+#        receiver.formalSupplyByKinship[int(receiver.careNetwork[receiver][carer]['distance'])] += formalCare
+#        if informalCare == 0 and formalCare == 0:
+#            print('Error: no care is transferred')
+#            
+#        for carer in household:  
+#            if receiver not in carer.careReceivers:
+#                carer.careReceivers.append(receiver)
+#                carer.totalCareSupplied.append(formalCare+informalCare)
+#            else:
+#                carer.totalCareSupplied[carer.careReceivers.index(receiver)] += (formalCare+informalCare)
+#        # receiver.totalSupply -= self.p['quantumCare']
+        
+        
     def getCare(self, receiver):
         receiver.residualNeed -= self.p['quantumCare'] 
         townReceiver = receiver.house.town 
@@ -2595,20 +2775,10 @@ class Sim:
 
         townCarer = carer.house.town
         household = carer.house.occupants
-        
-#        print('')
-#        for h in household:
-#            print('ID: ' + str(h.id))
-#            print('Status: ' + str(h.status))
-#            print('Income: ' + str(h.income))
-#            print('Residual Income Care: ' + str(h.hoursFormalSupply))
-#            
-#        houseIncome = self.householdIncome(household)
-#        
-#            
-#        print('Household income: ' + str(houseIncome))
 
+        residualIncomeForCare = household[0].residualIncomeCare
         residualFormalSupplyHours = household[0].residualFormalSupply
+        
         householdCarers = [x for x in household if x.hoursDemand == 0]
         notWorking = [x for x in householdCarers if x.residualInformalSupply > 0]
         
@@ -2622,10 +2792,6 @@ class Sim:
         groupsAvailability.append(totTeenagersSupply)
 
         retired = [x for x in notWorking if x.status == 'retired']
-        retiredIncome = sum([x.income for x in retired])
-#        print(len(retired))
-#        print('Retired income: ' + str(retiredIncome))
-        
         retired.sort(key=operator.attrgetter("residualInformalSupply"), reverse=True)
         householdsGroups.append(retired)
         totRetiredSupply = sum([x.residualInformalSupply for x in retired])
@@ -2638,58 +2804,128 @@ class Sim:
         groupsAvailability.append(totStudentsSupply)
         
         unemployed = [x for x in notWorking if x.status == 'unemployed']
-        unemployed.sort(key=operator.attrgetter("residualInformalSupply"))
+        unemployed.sort(key=operator.attrgetter("residualInformalSupply"), reverse=True)
         householdsGroups.append(unemployed)
         totUnemployedSupply = sum([x.residualInformalSupply for x in unemployed])
         groupsAvailability.append(totUnemployedSupply)
         
-        employed_1 = [x for x in householdCarers if x.status == 'employed' and x.extraworkCare > 0]
-        employed_1.sort(key=operator.attrgetter("extraworkCare"), reverse=True)
-        householdsGroups.append(employed_1)
-        extraWorkSupply = sum([x.extraworkCare for x in employed_1])
+        employed = [x for x in householdCarers if x.status == 'employed']
+        employed.sort(key=operator.attrgetter("extraworkCare"), reverse=True)
+        householdsGroups.append(employed)
+        extraWorkSupply = sum([x.extraworkCare for x in employed])
         groupsAvailability.append(extraWorkSupply)
         
-        employed_2 = [x for x in householdCarers if x.status == 'employed' and x.residualInformalSupply > 0]
-        employed_2.sort(key=operator.attrgetter("wage"))
         householdsGroups.append('Out-of-Income Supply')
-        totOutOfIncomeSupply = sum([x.residualInformalSupply for x in employed_2])
-        totOutOfIncomeSupply += residualFormalSupplyHours
-        groupsAvailability.append(totOutOfIncomeSupply)
+        incomeForCare = 0
+        if len(household) > 0:
+            incomeForCare = household[0].residualIncomeCare
+            incomeByTaxBand = list(household[0].incomeByTaxBands)
+
+        # totHours = self.maxCareSupplyHours(household)
+        # formalSupplyHours = int((totHours+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
         
-        employed = list(set().union(employed_1, employed_2))
-        employedIncome = sum([x.income for x in employed])
-#        print(len(employed))
-#        print('Employed income:' + str(employedIncome))
+        groupsAvailability.append(residualFormalSupplyHours)
         
         groupsProbabilities = [x/sum(groupsAvailability) for x in groupsAvailability]
         
         earningMembers = [x for x in household if x.income > 0]
-        
-        if len(earningMembers) == 0 and totOutOfIncomeSupply > 0:
+        if len(earningMembers) == 0 and residualFormalSupplyHours > 0:
             print('Error: no income to pay social care from (Get Care)')
             
         # Finally, extract a 'quantum' of care from one of the selected household's members.
         check = 0
         supplier = 'none'
-        if (receiver.father != None and receiver.father in carer.house.occupants) or (receiver.mother != None and receiver.mother in carer.house.occupants) or carer in receiver.children:
+        if (receiver.father != None and receiver.father in household) or (receiver.mother != None and receiver.mother in household) or carer in receiver.children:
             if townCarer == townReceiver:
                 carers = np.random.choice(householdsGroups, p = groupsProbabilities) 
                 if carers == 'Out-of-Income Supply':
-                    if len(employed_2) > 0:
-                        employed_2[0].residualInformalSupply -= self.p['quantumCare']
-                        employed_2[0].socialWork += self.p['quantumCare']
-                        informalCare = self.p['quantumCare']
-                        supplier = 'employed: informal care (close relative, in town)'
-                    else:
-                        residualFormalSupplyHours -= self.p['quantumCare']
-                        if residualFormalSupplyHours <= 0:
-                            residualFormalSupplyHours = 0
-                        for agent in household:
-                            agent.residualFormalSupply = residualFormalSupplyHours
+                    residualFormalSupplyHours -= self.p['quantumCare']
+                    availableWorkers = [x for x in household if x.residualWorkingHours > 0]
+                    if len(availableWorkers) > 0:
+                        # Price of formal care and cost of informal care are compared to decide whether the former or the latter will be supplied.
+                        # Cost of informal care: the wage of the worker with the lowest wage (if any)
+                        availableWorkers.sort(key=operator.attrgetter("wage"))
+                        costInformalCare = availableWorkers[0].wage
+                        # Compute price of formal care
+                        totalFormalCareCost = self.p['priceSocialCare']*self.p['quantumCare']
+                        deductibleCost = totalFormalCareCost*(self.p['taxBreakRate']+self.p['tbrPolicyChange'])
+                        notDeductibleCost = totalFormalCareCost - deductibleCost
+                        residualCost = deductibleCost
+                        careBrackets = []
+                        for i in range(self.p['taxBandsNumber']):
+                            careBrackets.append([])
+                            careBrackets[i] = 0
+                        for i in range(self.p['taxBandsNumber']):
+                            if residualCost > incomeByTaxBand[i]:
+                                careBrackets[i] += incomeByTaxBand[i]
+                                residualCost -= incomeByTaxBand[i]
+                                incomeByTaxBand[i] = 0
+                            else:
+                                careBrackets[i] += residualCost
+                                incomeByTaxBand[i] -= residualCost
+                                residualCost = 0
+                                break
+                        taxRefund = sum([a*b for a,b in zip(careBrackets, self.p['bandsTaxationRates'])])
+                        priceFormalCare = (totalFormalCareCost - taxRefund)/float(self.p['quantumCare'])
+                        # Compare the cost of informal care and the price of formal care
+                        if costInformalCare < priceFormalCare:
+                            availableWorkers[0].residualWorkingHours -= self.p['quantumCare']
+                            availableWorkers[0].income = availableWorkers[0].residualWorkingHours*availableWorkers[0].wage
+                            earningMembers = [x for x in household if x.income > 0]
+                            incomes = [x.income for x in earningMembers]
+                            incomeByTaxBand = self.updateTaxBrackets(incomes)
+                            availableWorkers[0].socialWork += self.p['quantumCare']
+                            residualIncomeForCare -= self.p['quantumCare']*costInformalCare
+                            for member in household:
+                                member.residualIncomeCare = residualIncomeForCare
+                                member.incomeByTaxBands = incomeByTaxBand
+                                member.residualFormalSupply = residualFormalSupplyHours
+                            informalCare = self.p['quantumCare']
+                            supplier = 'employed: informal care (close relative, in town)'
+                        else:
+                            residualIncomeForCare -= self.p['quantumCare']*priceFormalCare
+                            self.totalTaxRefund += taxRefund
+                            for member in household:
+                                member.residualIncomeCare = residualIncomeForCare
+                                member.incomeByTaxBands = incomeByTaxBand
+                                member.residualFormalSupply = residualFormalSupplyHours
+                            earningMembers[0].workToCare += self.p['quantumCare']
+                            formalCare = self.p['quantumCare']
+                            supplier = 'employed: formal care (close relative, in town)'
+                    else: 
+                        # If income not from work (e.g. pension) then only formal care is possible
+                        # Compute price of formal care
+                        totalFormalCareCost = self.p['priceSocialCare']*self.p['quantumCare']
+                        deductibleCost = totalFormalCareCost*(self.p['taxBreakRate']+self.p['tbrPolicyChange'])
+                        notDeductibleCost = totalFormalCareCost - deductibleCost
+                        residualCost = deductibleCost
+                        careBrackets = []
+                        for i in range(self.p['taxBandsNumber']):
+                            careBrackets.append([])
+                            careBrackets[i] = 0
+                        for i in range(self.p['taxBandsNumber']):
+                            if residualCost > incomeByTaxBand[i]:
+                                careBrackets[i] += incomeByTaxBand[i]
+                                residualCost -= incomeByTaxBand[i]
+                                incomeByTaxBand[i] = 0
+                            else:
+                                careBrackets[i] += residualCost
+                                incomeByTaxBand[i] -= residualCost
+                                residualCost = 0
+                                break
+                        taxRefund = sum([a*b for a,b in zip(careBrackets, self.p['bandsTaxationRates'])])
+                        priceFormalCare = (totalFormalCareCost - taxRefund)/float(self.p['quantumCare'])
+                        residualIncomeForCare -= self.p['quantumCare']*priceFormalCare
+                        self.totalTaxRefund += taxRefund
+                        for member in household:
+                            member.residualIncomeCare = residualIncomeForCare
+                            member.incomeByTaxBands = incomeByTaxBand
+                            member.residualFormalSupply = residualFormalSupplyHours
                         earningMembers[0].workToCare += self.p['quantumCare']
                         formalCare = self.p['quantumCare']
-                        supplier = 'employed: formal care (close relative, in town)'
+                        supplier = 'employed: formal care (close relative, in town)'    
                 else:
+                    # In this case, informal care is supplied
                     if carers[0].status == 'employed':
                         carers[0].extraworkCare -= self.p['quantumCare']
                     else:
@@ -2697,12 +2933,35 @@ class Sim:
                     carers[0].socialWork += self.p['quantumCare']
                     informalCare = self.p['quantumCare']
             else:
+                # In this case, only formal care can be supplied
                 if residualFormalSupplyHours > 0:
                     residualFormalSupplyHours -= self.p['quantumCare']
-                    if residualFormalSupplyHours <= 0:
-                        residualFormalSupplyHours = 0
-                    for agent in household:
-                        agent.residualFormalSupply = residualFormalSupplyHours
+                    totalFormalCareCost = self.p['priceSocialCare']*self.p['quantumCare']
+                    deductibleCost = totalFormalCareCost*(self.p['taxBreakRate']+self.p['tbrPolicyChange'])
+                    notDeductibleCost = totalFormalCareCost - deductibleCost
+                    residualCost = deductibleCost
+                    careBrackets = []
+                    for i in range(self.p['taxBandsNumber']):
+                        careBrackets.append([])
+                        careBrackets[i] = 0
+                    for i in range(self.p['taxBandsNumber']):
+                        if residualCost > incomeByTaxBand[i]:
+                            careBrackets[i] += incomeByTaxBand[i]
+                            residualCost -= incomeByTaxBand[i]
+                            incomeByTaxBand[i] = 0
+                        else:
+                            careBrackets[i] += residualCost
+                            incomeByTaxBand[i] -= residualCost
+                            residualCost = 0
+                            break
+                    taxRefund = sum([a*b for a,b in zip(careBrackets, self.p['bandsTaxationRates'])])
+                    priceFormalCare = (totalFormalCareCost - taxRefund)/float(self.p['quantumCare'])
+                    residualIncomeForCare -= self.p['quantumCare']*priceFormalCare
+                    self.totalTaxRefund += taxRefund
+                    for member in household:
+                        member.residualIncomeCare = residualIncomeForCare
+                        member.incomeByTaxBands = incomeByTaxBand
+                        member.residualFormalSupply = residualFormalSupplyHours
                     earningMembers[0].workToCare += self.p['quantumCare']
                     formalCare = self.p['quantumCare']
                     supplier = 'employed: formal care (close relative, not in town)'
@@ -2735,7 +2994,91 @@ class Sim:
             else:
                 carer.totalCareSupplied[carer.careReceivers.index(receiver)] += (formalCare+informalCare)
         # receiver.totalSupply -= self.p['quantumCare']
+    
+    def updateTaxBrackets(self, incomes):
+        incomeByTaxBand = []
+        for i in range(self.p['taxBandsNumber']):
+            incomeByTaxBand.append([])
+            incomeByTaxBand[i] = 0
+        incomeByTaxBand[-1] = sum(incomes)
+        for i in range(self.p['taxBandsNumber']-1):
+            for income in incomes:
+                if income > self.p['taxBrackets'][i]:
+                    bracket = income-self.p['taxBrackets'][i]
+                    incomeByTaxBand[i] += bracket
+                    incomeByTaxBand[-1] -= bracket
+                    incomes[incomes.index(income)] -= bracket
+        return incomeByTaxBand
         
+        
+    def maxCareSupplyHours(self, household):
+        incomeByTaxBand = household[0].incomeByTaxBands
+        residualIncomeForCare = household[0].residualIncomeCare
+        availableWorkers = [x for x in household if x.status == 'employed' and x.residualWorkingHours > 0]
+        availableWorkers.sort(key=operator.attrgetter("wage"))
+        residualWorkingHours = [x.residualWorkingHours for x in availableWorkers]
+        wages = [x.wage for x in availableWorkers]
+        
+        totCareSupply = 0
+        
+        while residualIncomeForCare > 0:
+            totalFormalCareCost = self.p['priceSocialCare']
+            deductibleCost = totalFormalCareCost*(self.p['taxBreakRate']+self.p['tbrPolicyChange'])
+            notDeductibleCost = totalFormalCareCost - deductibleCost
+            residualCost = deductibleCost
+            careBrackets = []
+            for i in range(self.p['taxBandsNumber']):
+                careBrackets.append([])
+                careBrackets[i] = 0
+            for i in range(self.p['taxBandsNumber']):
+                if residualCost > incomeByTaxBand[i]:
+                    careBrackets[i] += incomeByTaxBand[i]
+                    residualCost -= incomeByTaxBand[i]
+                    incomeByTaxBand[i] = 0
+                else:
+                    careBrackets[i] += residualCost
+                    incomeByTaxBand[i] -= residualCost
+                    residualCost = 0
+                    break
+            taxRefund = sum([a*b for a,b in zip(careBrackets, self.p['bandsTaxationRates'])])
+            priceFormalCare = (totalFormalCareCost - taxRefund)
+            
+            if sum(residualWorkingHours) > 0:
+                index = -1
+                for i in residualWorkingHours:
+                    if i > 0:
+                        index = residualWorkingHours.index(i)
+                costInformalCare = wages[index]
+                if costInformalCare < priceFormalCare:
+                    residualWorkingHours[index] -= 1
+                    residualIncomeForCare -= costInformalCare
+                    incomes = [a*b for a,b in zip(residualWorkingHours, wages)]
+                    incomeByTaxBand = self.updateTaxBrackets(incomes)
+                    totCareSupply += 1
+                else:
+                    residualIncomeForCare -= priceFormalCare
+                    for i in range(self.p['taxBandsNumber']):
+                        if priceFormalCare > incomeByTaxBand[i]:
+                            priceFormalCare -= incomeByTaxBand[i]
+                            incomeByTaxBand[i] = 0
+                        else:
+                            incomeByTaxBand[i] -= priceFormalCare
+                            priceFormalCare = 0
+                            break
+                    totCareSupply += 1
+            else:
+                residualIncomeForCare -= priceFormalCare
+                for i in range(self.p['taxBandsNumber']):
+                    if priceFormalCare > incomeByTaxBand[i]:
+                        priceFormalCare -= incomeByTaxBand[i]
+                        incomeByTaxBand[i] = 0
+                    else:
+                        incomeByTaxBand[i] -= priceFormalCare
+                        priceFormalCare = 0
+                        break
+                totCareSupply += 1
+                
+        return totCareSupply
     
     def probSuppliers(self, receiver):       
         townReceiver = receiver.house.town 
@@ -2830,7 +3173,7 @@ class Sim:
         activePop = [x for x in self.pop.livingPeople if x.status != 'inactive']
         
         for person in activePop:
-            if person.age == (self.p['ageOfRetirement'] + self.p['ageOfRetirementPolicyChange']) and person.status != 'inactive':
+            if person.age >= (self.p['ageOfRetirement'] + self.p['ageOfRetirementPolicyChange']) and person.status != 'inactive' and person.status != 'retired':
                 person.status = 'retired'
                 person.income = self.p['pensionWage'][person.classRank]*self.p['weeklyHours']
                 person.disposableIncome = person.income
@@ -2846,7 +3189,7 @@ class Sim:
                 careWorkingHours = 0
             workingHours = float(max(self.p['weeklyHours'] - careWorkingHours, 0))
             workTime = workingHours/float(self.p['weeklyHours'])
-            person.netIncome = workTime*person.income
+            person.netIncome = person.residualWorkingHours*person.wage
         # self.updateNetIncomeStat()
                 
     def healthServiceCost(self):
@@ -3235,7 +3578,7 @@ class Sim:
                                                          self.ageBand(person.age), person.classRank)
                 
             if self.p['noPolicySim'] == False:
-                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['startRegressionCollectionFrom']:
+                if self.year < self.p['implementPoliciesFromYear'] and self.year >= self.p['regressionCollectFrom']:
                     self.unemploymentRateClasses[person.classRank][self.ageBand(person.age)].append(person.unemploymentRate)
                 elif self.year >= self.p['implementPoliciesFromYear']:
                     if self.meanUnemploymentRates[person.classRank][self.ageBand(person.age)] != -1:
@@ -4472,7 +4815,30 @@ class Sim:
         for person in self.pop.livingPeople:
             person.justMarried = None
             if person.partner != None and person.independentStatus + person.partner.independentStatus < 2 and person.elderlyWithFamily + person.partner.elderlyWithFamily == 0:
-                print('Error: not independent person in married couple!')
+                print('Error: not independent person in married couple after joining couples')
+                print(person.id)
+                print(person.sex)
+                print(person.status)
+                print(person.classRank)
+                print(person.independentStatus)
+                print(person.age)
+                print(person.ageStartWorking)
+                print(person.justMarried)
+                print(person.yearMarried)
+                print(person.yearsSeparated)
+                print(person.numberPartner)
+                print('')
+                print(person.partner.id)
+                print(person.partner.sex)
+                print(person.partner.status)
+                print(person.partner.classRank)
+                print(person.partner.independentStatus)
+                print(person.partner.age)
+                print(person.partner.ageStartWorking)
+                print(person.partner.justMarried)
+                print(person.partner.yearMarried)
+                print(person.partner.yearsSeparated)
+                print(person.partner.numberPartner)
                 sys.exit()
             if person.partner != None and person.house != person.partner.house:
                 print('Error: couple not joined!')
@@ -5053,15 +5419,15 @@ class Sim:
         currentPop = float(len(self.pop.livingPeople))
         
         totQALY = sum([x.qaly for x in self.pop.livingPeople])
-
         meanQALY = totQALY/currentPop
+        
         discountedQALY = 0
         if self.year >= self.p['implementPoliciesFromYear']:
             discountedQALY = totQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear'])
             
         averageDiscountedQALY = 0
         if self.year >= self.p['implementPoliciesFromYear']:
-            averageDiscountedQALY = (meanQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))/currentPop
+            averageDiscountedQALY = (totQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))/currentPop
         
         unskilled = [x for x in adultPop if x.classRank == 0]
         numUnskilled = float(len(unskilled))
@@ -6191,6 +6557,10 @@ class Sim:
         totalCareReceived = informalCareReceived + formalCareReceived
         totalUnnmetCareNeed = sum([x.residualNeed for x in self.pop.livingPeople])
         
+        taxRefund = self.totalTaxRefund
+        
+        
+        
         outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass,
                    shareUnskilled, shareSkilled, shareLowClass, shareMidClass, shareUpClass, numOccupiedHouses, averageHouseholdSize, self.marriageTally, self.divorceTally,
                    averageHouseholdSize_1, averageHouseholdSize_2, averageHouseholdSize_3, averageHouseholdSize_4, averageHouseholdSize_5, totalCareSupply, informalCareSupply,
@@ -6250,10 +6620,12 @@ class Sim:
                    unmetSocialCareNeedGiniCoefficient_4, unmetSocialCareNeedGiniCoefficient_5, shareUnmetSocialCareNeedGiniCoefficient, shareUnmetSocialCareNeedGiniCoefficient_1, 
                    shareUnmetSocialCareNeedGiniCoefficient_2, shareUnmetSocialCareNeedGiniCoefficient_3, shareUnmetSocialCareNeedGiniCoefficient_4, shareUnmetSocialCareNeedGiniCoefficient_5, 
                    self.publicSupply, totQALY, meanQALY, discountedQALY, averageDiscountedQALY, ratioUnmetNeed_CareSupply, ratioUnmetNeed_CareSupply_1, ratioUnmetNeed_CareSupply_2, 
-                   ratioUnmetNeed_CareSupply_3, ratioUnmetNeed_CareSupply_4, ratioUnmetNeed_CareSupply_5]
+                   ratioUnmetNeed_CareSupply_3, ratioUnmetNeed_CareSupply_4, ratioUnmetNeed_CareSupply_5, taxRefund]
                    
         self.marriageTally = 0      
-        self.divorceTally = 0    
+        self.divorceTally = 0   
+        self.totalTaxRefund = 0
+        self.publicSupply = 0
         
         if self.year == self.p['startYear']:
             with open(os.path.join(self.folder, "Outputs.csv"), "w") as file:
@@ -8354,11 +8726,11 @@ class Sim:
         ax.stackplot(output['year'], output['socialCareNeed'], output['childCareNeed'], labels = ['Social Care Need','Child Care Need'])
         # ax.plot(years, self.totalSocialCareDemand, linewidth=2, label = 'Social Care Need', color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         ax.set_title('Care Needs and Potential Supply')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8380,9 +8752,9 @@ class Sim:
         p6, = ax.plot(output['year'], output['shareCareGivers_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Share of Population')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.set_title('Share of Care Givers')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -8401,8 +8773,8 @@ class Sim:
                       output['shareSocialCareTakers_N3'], output['shareSocialCareTakers_N4'],
                       labels = ['Need Level 1','Need Level 2', 'Need Level 3', 'Need level 4'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Care Takers')
-        ax.set_xlabel('Year')
+        # ax.set_ylabel('Share of Care Takers')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Care Takers by Care Need Level')
@@ -8427,8 +8799,8 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareSocialCare_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareSocialCare_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Care Need')
-        ax.set_xlabel('Year')
+        # ax.set_ylabel('Share of Care Need')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Social Care Need')
@@ -8447,10 +8819,10 @@ class Sim:
         fig, ax = plt.subplots()
         ax.stackplot(output['year'], output['perCapitaCareReceived'], output['perCapitaUnmetCareDemand'], labels = ['Care Received','Unmet Care Need'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
-        ax.set_title('Per Capita Care and Unmet Care')
+        ax.legend(loc = 'lower left')
+        ax.set_title('Per Capita Received Care and Unmet Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8466,9 +8838,9 @@ class Sim:
         fig, ax = plt.subplots()
         ax.stackplot(output['year'], output['perCapitaSocialCareReceived'], output['perCapitaUnmetSocialCareDemand'], labels = ['Care Received','Unmet Care Need'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Per Capita Demand and Unmet Social Care')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -8486,7 +8858,7 @@ class Sim:
         fig, ax = plt.subplots()
         ax.stackplot(output['year'], output['perCapitaChildCareReceived'], output['perCapitaUnmetChildCareDemand'], labels = ['Care Received','Unmet Care Need'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Per Capita Demand and Unmet Child Care')
@@ -8507,10 +8879,10 @@ class Sim:
         ax.stackplot(output['year'], output['informalCareReceived'], output['formalCareReceived'], output['totalUnnmetCareNeed'], 
                      labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
-        ax.set_title('Care and Unmet Care Needs')
+        ax.set_title('Care by Type and Unmet Care Needs')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8606,10 +8978,10 @@ class Sim:
         ax.stackplot(output['year'], output['informalSocialCareReceived'], output['formalSocialCareReceived'], output['unmetSocialCareNeed'], 
                      labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
-        ax.set_title('Social Care and Unmet Care Needs')
+        ax.legend(loc = 'lower left')
+        ax.set_title('Social Care by Type and Unmet Care Needs')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8627,11 +8999,11 @@ class Sim:
         ax.stackplot(output['year'], output['informalChildCareReceived'], output['formalChildCareReceived'], output['unmetChildCareNeed'], 
                      labels = ['Informal Care','Formal Care', 'Unmet Care Needs'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
-        ax.set_title('Child Social Care and Unmet Child Care Needs')
+        ax.set_title('Child Care by Type and Unmet Care Needs')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         fig.tight_layout()
@@ -8729,7 +9101,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['perCapitaUnmetCareDemand_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['perCapitaUnmetCareDemand_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
@@ -8738,7 +9110,7 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaUnmetNeedChartByClass.pdf'
+        filename = folder + '/PerCapitaUnmetNeedByClassChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
@@ -8754,7 +9126,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['averageUnmetCareDemand_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['averageUnmetCareDemand_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
@@ -8801,7 +9173,7 @@ class Sim:
         p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
         handles, labels = ax.get_legend_handles_labels()
@@ -8825,8 +9197,8 @@ class Sim:
         p5, = ax.plot(output['year'], output['informalCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['informalCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Informal Care Per Recipient')
@@ -8850,8 +9222,8 @@ class Sim:
         p5, = ax.plot(output['year'], output['formalCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['formalCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Formal Care Per Recipient')
@@ -8877,8 +9249,8 @@ class Sim:
         p5, = ax.plot(output['year'], output['unmetCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['unmetCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Unmet Care Need Per Recipient')
@@ -8895,14 +9267,14 @@ class Sim:
         
         # Chart 23: informal and formal care and unmet care need
         fig, ax = plt.subplots()
-        p1, = ax.plot(output['year'], output['informalCarePerRecipient'], label = 'Informal Care')
-        p2, = ax.plot(output['year'], output['formalCarePerRecipient'], label = 'Formal Care')
-        p3, = ax.plot(output['year'], output['unmetCarePerRecipient'], label = 'Unmet Care')
+        p1, = ax.plot(output['year'], output['informalCarePerRecipient'], linewidth = 3, label = 'Informal Care')
+        p2, = ax.plot(output['year'], output['formalCarePerRecipient'], linewidth = 3, label = 'Formal Care')
+        p3, = ax.plot(output['year'], output['unmetCarePerRecipient'], linewidth = 3, label = 'Unmet Care')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Delivered and Unmet Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -8946,7 +9318,7 @@ class Sim:
         p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
         handles, labels = ax.get_legend_handles_labels()
@@ -8991,7 +9363,7 @@ class Sim:
         p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
         handles, labels = ax.get_legend_handles_labels()
@@ -9015,10 +9387,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['informalSocialCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['informalSocialCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Informal Social Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9040,10 +9412,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['formalSocialCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['formalSocialCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Formal Social Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9065,10 +9437,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['unmetSocialCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['unmetSocialCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Unmet Social Care Need Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9087,10 +9459,10 @@ class Sim:
         p2, = ax.plot(output['year'], output['formalSocialCarePerRecipient'], label = 'Formal Care')
         p3, = ax.plot(output['year'], output['unmetSocialCarePerRecipient'], label = 'Unmet Care')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Delivered and Unmet Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9134,7 +9506,7 @@ class Sim:
         p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
         handles, labels = ax.get_legend_handles_labels()
@@ -9180,7 +9552,7 @@ class Sim:
         p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_ylim([0, max(totCare)*1.1])
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
@@ -9206,8 +9578,8 @@ class Sim:
         p5, = ax.plot(output['year'], output['informalChildCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['informalChildCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Informal Child Care Per Recipient')
@@ -9231,10 +9603,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['formalChildCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['formalChildCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Formal Child Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9260,12 +9632,13 @@ class Sim:
         maxValue = max(maxValues)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylim([0, maxValue*2.0])
-        ax.set_ylabel('Hours of Supply')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
-        ax.set_title('Average Hours of Potential Supply')
+        ax.set_title('Average Hours of Care By Class')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        ax.set_ylim([0, 60])
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
@@ -9286,10 +9659,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['unmetChildCarePerRecipient_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['unmetChildCarePerRecipient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Unmet Child Care Need Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9308,13 +9681,14 @@ class Sim:
         p2, = ax.plot(output['year'], output['formalChildCarePerRecipient'], label = 'Formal Care')
         p3, = ax.plot(output['year'], output['unmetChildCarePerRecipient'], label = 'Unmet Care')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
-        ax.set_xlabel('Year')
+        ax.set_ylabel('Hours per week')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Delivered and Unmet Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        ax.set_ylim([0, 30])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/Delivered_UnmetChildCarePerRecipientChart.pdf'
@@ -9356,7 +9730,7 @@ class Sim:
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
         ax.set_ylim([0, max(totCare)*1.1])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
         handles, labels = ax.get_legend_handles_labels()
@@ -9373,16 +9747,16 @@ class Sim:
         # Chart 38: informal and formal care supplied per carer by social class (mean of last 20 years)
         
         n_groups = self.p['numberClasses']
-        meanInformalCareSupplied_1 = np.mean(output['informalChildCarePerCarer_1'][-20:])
-        meanFormalCareSupplied_1 = np.mean(output['formalChildCarePerCarer_1'][-20:])
-        meanInformalCareSupplied_2 = np.mean(output['informalChildCarePerCarer_2'][-20:])
-        meanFormalCareSupplied_2 = np.mean(output['formalChildCarePerCarer_2'][-20:])
-        meanInformalCareSupplied_3 = np.mean(output['informalChildCarePerCarer_3'][-20:])
-        meanFormalCareSupplied_3 = np.mean(output['formalChildCarePerCarer_3'][-20:])
-        meanInformalCareSupplied_4 = np.mean(output['informalChildCarePerCarer_4'][-20:])
-        meanFormalCareSupplied_4 = np.mean(output['formalChildCarePerCarer_4'][-20:])
-        meanInformalCareSupplied_5 = np.mean(output['informalChildCarePerCarer_5'][-20:])
-        meanFormalCareSupplied_5 = np.mean(output['formalChildCarePerCarer_5'][-20:])
+        meanInformalCareSupplied_1 = np.mean(output['informalCarePerCarer_1'][-20:])
+        meanFormalCareSupplied_1 = np.mean(output['formalCarePerCarer_1'][-20:])
+        meanInformalCareSupplied_2 = np.mean(output['informalCarePerCarer_2'][-20:])
+        meanFormalCareSupplied_2 = np.mean(output['formalCarePerCarer_2'][-20:])
+        meanInformalCareSupplied_3 = np.mean(output['informalCarePerCarer_3'][-20:])
+        meanFormalCareSupplied_3 = np.mean(output['formalCarePerCarer_3'][-20:])
+        meanInformalCareSupplied_4 = np.mean(output['informalCarePerCarer_4'][-20:])
+        meanFormalCareSupplied_4 = np.mean(output['formalCarePerCarer_4'][-20:])
+        meanInformalCareSupplied_5 = np.mean(output['informalCarePerCarer_5'][-20:])
+        meanFormalCareSupplied_5 = np.mean(output['formalCarePerCarer_5'][-20:])
         informalCare = (meanInformalCareSupplied_1, meanInformalCareSupplied_2, meanInformalCareSupplied_3,
                         meanInformalCareSupplied_4, meanInformalCareSupplied_5)
         formalCare = (meanFormalCareSupplied_1, meanFormalCareSupplied_2, meanFormalCareSupplied_3,
@@ -9394,7 +9768,7 @@ class Sim:
         p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
         p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
         ax.set_ylim([0, max(totCare)*1.1])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours per week')
         ax.set_xticks(ind)
         plt.xticks(ind, ('I', 'II', 'III', 'IV', 'V'))
         handles, labels = ax.get_legend_handles_labels()
@@ -9445,17 +9819,17 @@ class Sim:
        
         fig, ax = plt.subplots()
         p1, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales'], linewidth = 3, label = 'Population')
-        p2, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_1'], label = 'Class I')
-        p3, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_2'], label = 'Class II')
-        p4, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_3'], label = 'Class III')
-        p5, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_4'], label = 'Class IV')
-        p6, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_5'], label = 'Class V')
+#        p2, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_1'], label = 'Class I')
+#        p3, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_2'], label = 'Class II')
+#        p4, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_3'], label = 'Class III')
+#        p5, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_4'], label = 'Class IV')
+#        p6, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Share of care')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
-        ax.set_title('Share of Care supplied by Women')
+        ax.set_title('Share of Informal Care supplied by Women')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -9494,7 +9868,7 @@ class Sim:
                          alpha=opacity,
                          color='g',
                          label='Male')
-        ax.set_ylabel('Hours of Care')
+        ax.set_ylabel('Hours per week')
         ax.set_xlabel('Socio-Economic Classes')
         ax.set_title('Informal Care Supplied by Gender')
         ax.set_xticks(ind + bar_width/2)
@@ -9520,7 +9894,7 @@ class Sim:
         p6, = ax.plot(output['year'], output['ratioWage_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Wage Ratio')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Women and Men Wage Ratio')
@@ -9588,7 +9962,7 @@ class Sim:
         p6, = ax.plot(output['year'], output['ratioIncome_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Income Ratio')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Women and Men Income Ratio')
@@ -9654,8 +10028,8 @@ class Sim:
                       output['numMidClass'], output['numUpClass'], 
                       labels = ['Unskilled Class (I)','Skilled Class (II)', 'Lower Class (III)', 'Middel Class (IV)', 'Upper Class (V)'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
-        ax.set_xlabel('Year')
+        # ax.set_ylabel('Hours of care')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Population and Number of Taxpayers')
@@ -9680,11 +10054,12 @@ class Sim:
         maxValue = max(output['averageHouseholdSize_1']+output['averageHouseholdSize_2']+output['averageHouseholdSize_3']+output['averageHouseholdSize_4']+output['averageHouseholdSize_5'])
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylim([0, maxValue*2.0])
-        ax.set_ylabel('Household Members')
-        ax.set_xlabel('Year')
+        # ax.set_ylabel('Average Household Members')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Average Family Size')
+        ax.set_ylim([0, 15])
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -9712,7 +10087,7 @@ class Sim:
         ax.plot(output['year'], output['taxBurden'], linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Care costs per taxpayer per year')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         ax.set_title('Average Tax Burden in pounds')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9725,12 +10100,31 @@ class Sim:
         pp.savefig(fig)
         pp.close()  
       
+        # total Tax Refund
+        
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['totalTaxRefund'], linewidth = 2, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Tax Refund')
+        # ax.set_xlabel('Year')
+        ax.set_title('Total Tax Burden in pounds')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/totalTaxRefundChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()  
+        
         # Chart 49: Proportion of married adult women (1960-2020)
         fig, ax = plt.subplots()
         ax.plot(output['year'], output['marriageProp'], linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Proportion of married adult women')
-        ax.set_title('Marriage Rate (females)')
+        # ax.set_ylabel('Proportion of married adult women')
+        ax.set_title('Proportion of married adult women')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -9747,7 +10141,7 @@ class Sim:
         ax.plot(output['year'], output['hospitalizationCost'], linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Cost in Pounds')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         ax.set_title('Total Health Care Cost')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9765,7 +10159,7 @@ class Sim:
         ax.plot(output['year'], output['perCapitaHospitalizationCost'], linewidth = 2, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Cost in Pounds')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         ax.set_title('Per Capita Health Care Cost')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9789,7 +10183,7 @@ class Sim:
         p6, = ax.plot(output['year'], output['unmetSocialCareNeedGiniCoefficient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Gini Coefficient')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Unmet Social Care Gini Coeffcient')
@@ -9814,7 +10208,7 @@ class Sim:
         p6, = ax.plot(output['year'], output['shareUnmetSocialCareNeedGiniCoefficient_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Gini Coefficient')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Unmet Social Care Gini Coeffcient')
@@ -9896,9 +10290,10 @@ class Sim:
         ax.plot(output['year'], output['publicSupply'], linewidth = 3)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours of care')
-        ax.set_xlabel('Year')
-        # handles, labels = ax.get_legend_handles_labels()
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
+        ax.legend_.remove()
         ax.set_title('Public Social Care Supply')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9916,9 +10311,10 @@ class Sim:
         ax.plot(output['year'], output['totQALY'], linewidth = 3)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('QALY Index')
-        ax.set_xlabel('Year')
-        # handles, labels = ax.get_legend_handles_labels()
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
+        ax.legend_.remove()
         ax.set_title('Aggregate QALY Index')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9936,9 +10332,10 @@ class Sim:
         ax.plot(output['year'], output['meanQALY'], linewidth = 3)
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('QALY Index')
-        ax.set_xlabel('Year')
-        # handles, labels = ax.get_legend_handles_labels()
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
+        ax.legend_.remove()
         ax.set_title('Average QALY Index')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9967,9 +10364,9 @@ class Sim:
         p6, = ax.plot(output['year'], output['ratioUnmetNeed_CareSupply_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Share of Total Supply')
-        ax.set_xlabel('Year')
+        # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Ratio of Unmet Care Need and Total Supply')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -10402,7 +10799,7 @@ class Sim:
         ax.set_ylabel('Hours of care')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Average Unmet Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -11244,6 +11641,7 @@ class Sim:
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
+        
         ax.set_title('Average QALY Index')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])

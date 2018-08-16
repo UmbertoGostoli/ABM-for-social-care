@@ -162,6 +162,9 @@ class Person:
         self.mortalityRate = 0
         self.fertilityRate = 0
         self.residualIncomeCare = 0
+        self.residualWorkingHours = 0
+        self.incomeByTaxBands = []
+        self.maxFormalCareSupply = 0
         self.qaly = 0
         self.residualSupply = 0
         self.formalCare = 0

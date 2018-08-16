@@ -27,7 +27,7 @@ def init_params():
     p['loadFromFile'] = False
     p['verboseDebugging'] = False
     p['singleRunGraphs'] = True
-    
+     
     p['multiprocessing'] = False
     p['numberProcessors'] = 2
     p['noPolicySim'] = False
@@ -42,11 +42,11 @@ def init_params():
     
     p['initialPop'] = 600
     p['startYear'] = 1860
-    p['endYear'] = 2030
+    p['endYear'] = 1940 # 2030
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1990
-    p['startRegressionCollectionFrom'] = 1960 
-    p['implementPoliciesFromYear'] = 2015   
+    p['statsCollectFrom'] = 1900 # 1990
+    p['regressionCollectFrom'] = 1880 # 1960 
+    p['implementPoliciesFromYear'] = 1920 # 2015   
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -153,12 +153,15 @@ def init_params():
     p['ageOfRetirementPolicyChange'] = 0
     
     ###   Prices   ####
-    p['pricePublicSocialCare'] = 20 # [2.55] # 20
-    p['priceSocialCare'] = 17 # [2.29] # 18
-    p['taxBands'] = [221, 865] # [28.16, 110.23] # [221, 865]
+    p['pricePublicSocialCare'] = 20.0 # [2.55] # 20
+    p['priceSocialCare'] = 17.0 # [2.29] # 18
+    p['taxBrackets'] = [663, 228, 0] # [28.16, 110.23] # [221, 865]
     p['taxBandsNumber'] = 3
-    p['bandsTaxationRates'] = [0.0, 0.0, 0.0] # [0.0, 0.2, 0.4]
-    p['taxBreakRate'] = 1.0
+    p['bandsTaxationRates'] = [0.4, 0.2, 0.0] # [0.0, 0.2, 0.4]
+    # Tax Break Policy
+    p['taxBreakRate'] = 0.0
+    p['tbrPolicyChange'] = 0.0 # 1.0
+    
     p['pensionWage'] = [5.0, 7.0, 10.0, 13.0, 18.0] # [0.64, 0.89, 1.27, 1.66, 2.29] #  
     p['incomeInitialLevels'] = [5.0, 7.0, 9.0, 11.0, 14.0] #[0.64, 0.89, 1.15, 1.40, 1.78] #  
     p['incomeFinalLevels'] = [10.0, 15.0, 22.0, 33.0, 50.0] #[1.27, 1.91, 2.80, 4.21, 6.37] #  
@@ -359,7 +362,7 @@ def multipleRunsGraphs(folder, repeats):
     
     outputs = []
     for r in range(repeats):
-        repFolder = 'N:/Social Care Model II/Charts/NoPolicy_Sim/Repeat_' + str(r)
+        repFolder = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\NoPolicy_Sim\Repeat_' + str(r)
         filename = repFolder + '/Outputs.csv'
         output = pd.read_csv(filename, sep=',',header=0)
         outputs.append(output)
@@ -391,15 +394,13 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['shareUnmetCareDemand'], label = 'Run ' + str(i))
-#          p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#          p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#          p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#          p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#          p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
-        
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['shareUnmetCareDemand'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['shareUnmetCareDemand'])
+
     ax.set_xlim(left = p['statsCollectFrom'])
-    ax.set_ylabel('Share of Care')
+    ax.set_ylabel('Share of Care Need')
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'lower left')
@@ -421,14 +422,13 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['unmetCarePerRecipient'], label = 'Run ' + str(i))
-#           p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#           p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#           p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#           p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#           p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['unmetCarePerRecipient'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['unmetCarePerRecipient'])
+
     ax.set_xlim(left = p['statsCollectFrom'])
-    ax.set_ylabel('Hours of Care')
+    ax.set_ylabel('Hours of Unmet Care Need')
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'upper left')
@@ -451,12 +451,11 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['totQALY'], label = 'Run ' + str(i))
-#           p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#           p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#           p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#           p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#           p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['totQALY'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['totQALY'])
+
     ax.set_xlim(left = p['statsCollectFrom'])
     ax.set_ylabel('Aggregate QALY')
     # ax.set_xlabel('Year')
@@ -480,14 +479,13 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['meanQALY'], label = 'Run ' + str(i))
-#           p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#           p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#           p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#           p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#           p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['meanQALY'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['meanQALY'])
+
     ax.set_xlim(left = p['statsCollectFrom'])
-    ax.set_ylabel('average QALY')
+    ax.set_ylabel('Average QALY')
     # ax.set_xlabel('Year')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(loc = 'upper left')
@@ -509,12 +507,11 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['discountedQALY'], label = 'Run ' + str(i))
-#           p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#           p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#           p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#           p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#           p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['discountedQALY'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['discountedQALY'])
+
     ax.set_xlim(left = p['implementPoliciesFromYear'])
     ax.set_ylabel('Discounted QALY')
     # ax.set_xlabel('Year')
@@ -538,12 +535,11 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['averageDiscountedQALY'], label = 'Run ' + str(i))
-#           p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#           p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#           p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#           p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#           p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['averageDiscountedQALY'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['averageDiscountedQALY'])
+
     ax.set_xlim(left = p['implementPoliciesFromYear'])
     ax.set_ylabel('Discounted Average QALY')
     # ax.set_xlabel('Year')
@@ -567,12 +563,11 @@ def multipleRunsGraphs(folder, repeats):
     fig, ax = plt.subplots()
     chart = [None]*repeats
     for i in range(repeats):
-        chart[i], = ax.plot(outputs[i]['year'], outputs[i]['perCapitaHospitalizationCost'], label = 'Run ' + str(i))
-#           p2, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_1, label = 'Class I')
-#           p3, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_2, label = 'Class II')
-#           p4, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_3, label = 'Class III')
-#           p5, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_4, label = 'Class IV')
-#           p6, = ax.plot(outputs[i]['year'], shareUnmetCareDemand_5, label = 'Class V')
+        if repeats > 1:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['perCapitaHospitalizationCost'], label = 'Run ' + str(i))
+        else:
+            chart[i], = ax.plot(outputs[i]['year'], outputs[i]['perCapitaHospitalizationCost'])
+
     ax.set_xlim(left = p['statsCollectFrom'])
     ax.set_ylabel('Per-capita Yearly Cost')
     # ax.set_xlabel('Year')
@@ -599,7 +594,7 @@ def policyGraphs(folder, numPolicies):
     
     outputs = []
     for r in range(numPolicies):
-        repFolder = 'N:/Social Care Model II/Charts/SocPolicy_Sim/Policy_' + str(r)
+        repFolder = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SocPolicy_Sim\Policy_' + str(r)
         filename = repFolder + '/Outputs.csv'
         output = pd.read_csv(filename, sep=',',header=0)
         outputs.append(output)
@@ -612,29 +607,6 @@ def policyGraphs(folder, numPolicies):
         outputsByParams[i].append(outputs[n+1])
         n += 2
         
-    
-#    times = []
-#    shareUnmetCareDemand = []
-#    averageUnmetCareDemand = []
-#    totalQALY = []
-#    averageQALY = []
-#    discountedQALY = []
-#    averageDiscountedQALY = []
-#    perCapitaHealthCareCost = []
-#    
-#    for output in outputs:
-#        shareUnmetCareDemand.append(output[0])
-#        averageUnmetCareDemand.append(output[1])
-#        totalQALY.append(output[2])
-#        averageQALY.append(output[3])
-#        discountedQALY.append(output[4])
-#        averageDiscountedQALY.append(output[5])
-#        perCapitaHealthCareCost.append(output[6])
-#        times.append(output[7])
-        
-    # years = [int(i) for i in times[0]]
-        
-    # Chart 1: effect of incomeCareParamPolicyCoeffcient on share of unmet care demand.
     for r in range(p['numberPolicyParameters']):
         
         fig, ax = plt.subplots()
@@ -645,8 +617,8 @@ def policyGraphs(folder, numPolicies):
         ax.set_ylabel('Share of Unmet Care Demand')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
-        ax.set_title('Policy Lever' + str(r))
+        ax.legend(loc = 'lower left')
+        ax.set_title('Policy Lever ' + str(r))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
@@ -658,18 +630,16 @@ def policyGraphs(folder, numPolicies):
         pp.savefig(fig)
         pp.close()
     
-
-        # Chart 2: effect of incomeCareParamPolicyCoeffcient on average of unmet care demand.
         fig, ax = plt.subplots()
         p1, = ax.plot(outputs[0]['year'], outputs[0]['unmetCarePerRecipient'], linewidth = 2, label = 'Benchmark')
         p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['unmetCarePerRecipient'], label = 'Policy A')
         p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['unmetCarePerRecipient'], label = 'Policy B')
         ax.set_xlim(left = p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Care')
+        ax.set_ylabel('Hours of Unmet Care Need')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
-        ax.set_title('Policy Lever' + str(r))
+        ax.legend(loc = 'lower left')
+        ax.set_title('Policy Lever ' + str(r))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
@@ -680,52 +650,50 @@ def policyGraphs(folder, numPolicies):
         pp = PdfPages(filename)
         pp.savefig(fig)
         pp.close()
+        
     
-        # Chart 9: effect of incomeCareParamPolicyCoeffcient on total quality-adjusted life years.
         fig, ax = plt.subplots()
-        p1, = ax.plot(outputs[0]['year'], outputs[0]['discountedQALY'], linewidth = 2, label = 'Benchmark')
-        p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['discountedQALY'], label = 'Policy A')
-        p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['discountedQALY'], label = 'Policy B')
+        p1, = ax.plot(outputs[0]['year'], outputs[0]['totQALY'], linewidth = 2, label = 'Benchmark')
+        p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['totQALY'], label = 'Policy A')
+        p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['totQALY'], label = 'Policy B')
         ax.set_xlim(left = p['statsCollectFrom'])
         ax.set_ylabel('Aggregate QALY')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
-        ax.set_title('Policy Lever' + str(r))
+        ax.set_title('Policy Lever ' + str(r))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/discountedQALY_L' + str(r) + '_Chart.pdf'
+        filename = folder + '/aggregateQALY_L' + str(r) + '_Chart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
         pp.savefig(fig)
         pp.close()
     
-        # Chart 13: effect of incomeCareParamPolicyCoeffcient on average quality-adjusted life years.
         fig, ax = plt.subplots()
-        p1, = ax.plot(outputs[0]['year'], outputs[0]['averageDiscountedQALY'], linewidth = 2, label = 'Benchmark')
-        p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['averageDiscountedQALY'], label = 'Policy A')
-        p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['averageDiscountedQALY'], label = 'Policy B')
+        p1, = ax.plot(outputs[0]['year'], outputs[0]['meanQALY'], linewidth = 2, label = 'Benchmark')
+        p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['meanQALY'], label = 'Policy A')
+        p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['meanQALY'], label = 'Policy B')
         ax.set_xlim(left = p['statsCollectFrom'])
         ax.set_ylabel('Average QALY')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
-        ax.set_title('Policy Lever' + str(r))
+        ax.set_title('Policy Lever ' + str(r))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/averageDiscountedQALY_L' + str(r) + '_Chart.pdf'
+        filename = folder + '/averageQALY_L' + str(r) + '_Chart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
         pp.savefig(fig)
         pp.close()
     
-        # Chart 17: effect of incomeCareParamPolicyCoeffcient on per-capita Health Care Cost.
         fig, ax = plt.subplots()
         p1, = ax.plot(outputs[0]['year'], outputs[0]['perCapitaHospitalizationCost'], linewidth = 2, label = 'Benchmark')
         p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['perCapitaHospitalizationCost'], label = 'Policy A')
@@ -734,8 +702,8 @@ def policyGraphs(folder, numPolicies):
         ax.set_ylabel('Per-capita Yearly Cost')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
-        ax.set_title('Policy Lever' + str(r))
+        ax.legend(loc = 'lower left')
+        ax.set_title('Policy Lever ' + str(r))
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
@@ -747,8 +715,10 @@ def policyGraphs(folder, numPolicies):
         pp.savefig(fig)
         pp.close()
     
-   
-    # Chart 21: SharesUnmetCareSensitivityGroupedBarChart
+    # Grouped Bar Charts
+    
+    policyYears = (p['endYear']-p['implementPoliciesFromYear']) + 1
+    
     P1_M = []
     P2_M = []
     P0_M = []
@@ -757,35 +727,37 @@ def policyGraphs(folder, numPolicies):
     P0_SD = []
     
     for r in range(p['numberPolicyParameters']):
-        P1_M.append(np.mean(outputsByParams[r][0]['shareUnmetCareDemand'][-20:]))
-        P2_M.append(np.mean(outputsByParams[r][1]['shareUnmetCareDemand'][-20:]))
-        P0_M.append(np.mean(outputs[0]['shareUnmetCareDemand'][-20:]))
+        P1_M.append(np.mean(outputsByParams[r][0]['shareUnmetCareDemand'][-policyYears:]))
+        P2_M.append(np.mean(outputsByParams[r][1]['shareUnmetCareDemand'][-policyYears:]))
+        P0_M.append(np.mean(outputs[0]['shareUnmetCareDemand'][-policyYears:]))
             
-        P1_M.append(np.std(outputsByParams[r][0]['shareUnmetCareDemand'][-20:]))
-        P2_M.append(np.std(outputsByParams[r][1]['shareUnmetCareDemand'][-20:]))
-        P0_M.append(np.std(outputs[0]['shareUnmetCareDemand'][-20:]))
+        P1_SD.append(np.std(outputsByParams[r][0]['shareUnmetCareDemand'][-policyYears:]))
+        P2_SD.append(np.std(outputsByParams[r][1]['shareUnmetCareDemand'][-policyYears:]))
+        P0_SD.append(np.std(outputs[0]['shareUnmetCareDemand'][-policyYears:]))
     
     N = len(P1_M)
     fig, ax = plt.subplots()
     index = np.arange(N)    # the x locations for the groups
-    bar_width = 0.35         # the width of the bars
+    bar_width = 0.25         # the width of the bars
     p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, yerr = P1_SD, 
-                label = 'P1')
+                label = 'Policy 1')
     p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, yerr = P2_SD, 
-                label = 'P2')
+                label = 'Policy 2')
     p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, yerr = P0_SD, 
-                label = 'No policy change')
-    ax.set_ylabel('Share of Unmet Care')
-    ax.set_xlabel('Parameters')
+                label = 'Benchmark')
+    ax.set_ylabel('Share of Unmet Care Need')
+    # ax.set_xlabel('Policy Levers')
     ax.set_title('Shares of Unmet Care Need')
-    ax.set_xticks(index + bar_width/2)
+    # ax.set_xticks(index + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r))
     xlab = tuple(xLabels)
-    plt.xticks(index + bar_width/2, xlab)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
     filename = folder + '/SharesUnmetCareSensitivityGroupedBarChart.pdf'
     if not os.path.isdir(os.path.dirname(filename)):
@@ -794,7 +766,6 @@ def policyGraphs(folder, numPolicies):
     pp.savefig(fig)
     pp.close()
     
-    # Chart 22: AveragesUnmetCareSensitivityGroupedBarChart
     P1_M = []
     P2_M = []
     P0_M = []
@@ -803,35 +774,37 @@ def policyGraphs(folder, numPolicies):
     P0_SD = []
     
     for r in range(p['numberPolicyParameters']):
-        P1_M.append(np.mean(outputsByParams[r][0]['unmetCarePerRecipient'][-20:]))
-        P2_M.append(np.mean(outputsByParams[r][1]['unmetCarePerRecipient'][-20:]))
-        P0_M.append(np.mean(outputs[0]['unmetCarePerRecipient'][-20:]))
+        P1_M.append(np.mean(outputsByParams[r][0]['unmetCarePerRecipient'][-policyYears:]))
+        P2_M.append(np.mean(outputsByParams[r][1]['unmetCarePerRecipient'][-policyYears:]))
+        P0_M.append(np.mean(outputs[0]['unmetCarePerRecipient'][-policyYears:]))
             
-        P1_M.append(np.std(outputsByParams[r][0]['unmetCarePerRecipient'][-20:]))
-        P2_M.append(np.std(outputsByParams[r][1]['unmetCarePerRecipient'][-20:]))
-        P0_M.append(np.std(outputs[0]['unmetCarePerRecipient'][-20:]))
+        P1_SD.append(np.std(outputsByParams[r][0]['unmetCarePerRecipient'][-policyYears:]))
+        P2_SD.append(np.std(outputsByParams[r][1]['unmetCarePerRecipient'][-policyYears:]))
+        P0_SD.append(np.std(outputs[0]['unmetCarePerRecipient'][-policyYears:]))
     
     N = len(P1_M)
     fig, ax = plt.subplots()
     index = np.arange(N)    # the x locations for the groups
-    bar_width = 0.35         # the width of the bars
+    bar_width = 0.25         # the width of the bars
     p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, yerr = P1_SD, 
-                label = 'P1')
+                label = 'Policy 1')
     p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, yerr = P2_SD, 
-                label = 'P2')
+                label = 'Policy 2')
     p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, yerr = P0_SD, 
-                label = 'No policy change')
-    ax.set_ylabel('Average Unmet Care')
-    ax.set_xlabel('Parameters')
+                label = 'Benchmark')
+    ax.set_ylabel('Hours of Unmet Care Need')
+    # ax.set_xlabel('Policy Levers')
     ax.set_title('Average Unmet Care Need')
-    ax.set_xticks(index + bar_width/2)
+    # ax.set_xticks(index + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r))
     xlab = tuple(xLabels)
-    plt.xticks(index + bar_width/2, xlab)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
     filename = folder + '/AveragesUnmetCareSensitivityGroupedBarChart.pdf'
     if not os.path.isdir(os.path.dirname(filename)):
@@ -840,48 +813,104 @@ def policyGraphs(folder, numPolicies):
     pp.savefig(fig)
     pp.close()
     
-    # Chart 23: TotalQALYSensitivityGroupedBarChart
+    # Add chart of cost per hour of additional care
+    # unmetSocialCareNeed
+    
     P1_M = []
     P2_M = []
     P0_M = []
-    
-    for r in range(p['numberPolicyParameters']):
-        P1_M.append(np.mean(outputsByParams[r][0]['discountedQALY'][-20:]))
-        P2_M.append(np.mean(outputsByParams[r][1]['discountedQALY'][-20:]))
-        P0_M.append(np.mean(outputs[0]['discountedQALY'][-20:]))
-        
 #        P1_SD = []
 #        P2_SD = []
 #        P0_SD = []
-#        P1_SD.append(np.std(discountedQALY[1][-20:]))
-#        P2_SD.append(np.std(discountedQALY[2][-20:]))
-#        P1_SD.append(np.std(discountedQALY[3][-20:]))
-#        P2_SD.append(np.std(discountedQALY[4][-20:]))
-#        P1_SD.append(np.std(discountedQALY[5][-20:]))
-#        P2_SD.append(np.std(discountedQALY[6][-20:]))
-#        P1_SD.append(np.std(discountedQALY[7][-20:]))
-#        P2_SD.append(np.std(discountedQALY[8][-20:]))
-#        for i in range(4):
-#            P0_SD.append(np.std(discountedQALY[0][-20:]))
     
+    for r in range(p['numberPolicyParameters']):
+        
+        costPerAdditionalCare_P1 = []
+        costPerAdditionalCare_P2 = []
+        
+        for i in range(len(outputs[0]['unmetSocialCareNeed'])):
+            if outputsByParams[r][0]['totalTaxRefund'][i] != 0:
+                costPerAdditionalCare_P1.append((outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[r][0]['unmetSocialCareNeed'][i])/outputsByParams[r][0]['totalTaxRefund'][i])
+            else:
+                costPerAdditionalCare_P1.append(0.0)
+            if outputsByParams[r][1]['totalTaxRefund'][i] != 0:
+                costPerAdditionalCare_P2.append((outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[r][1]['unmetSocialCareNeed'][i])/outputsByParams[r][1]['totalTaxRefund'][i])
+            else:
+                costPerAdditionalCare_P2.append(0.0)
+        
+        P1_M.append(np.mean(costPerAdditionalCare_P1[-policyYears:]))
+        P2_M.append(np.mean(costPerAdditionalCare_P2[-policyYears:]))
+        
+#        P1_SD.append(np.std(outputsByParams[r][0]['discountedQALY'][-policyYears:]))
+#        P2_SD.append(np.std(outputsByParams[r][1]['discountedQALY'][-policyYears:]))
+#        P0_SD.append(np.std(outputs[0]['discountedQALY'][-policyYears:]))
+        
     N = len(P1_M)
     fig, ax = plt.subplots()
     index = np.arange(N)    # the x locations for the groups
     bar_width = 0.35         # the width of the bars
-    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'P1') # yerr = P1_SD,
-    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'P2') # yerr = P2_SD,
-    p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'No policy change') # yerr = P0_SD,
-    ax.set_ylabel('Aggregate QALY')
-    ax.set_xlabel('Parameters')
-    ax.set_title('Aggregate Quality-adjusted Life Years')
-    ax.set_xticks(index + bar_width)
+    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD,
+    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD,
+    # p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD,
+    ax.set_ylabel('Cost per Hour')
+    # ax.set_xlabel('Policy Levers')
+    ax.set_title('Cost per Hour of Additional Care')
+    # ax.set_xticks(index + bar_width + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r))
     xlab = tuple(xLabels)
-    plt.xticks(index + bar_width/2, xlab)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
+    fig.tight_layout()
+    filename = folder + '/CostPerHourOfCareSensitivityGroupedBarChart.pdf'
+    if not os.path.isdir(os.path.dirname(filename)):
+        os.mkdir(os.path.dirname(filename))
+    pp = PdfPages(filename)
+    pp.savefig(fig)
+    pp.close()
+    
+    ###########################################################################################################################
+    
+    P1_M = []
+    P2_M = []
+    P0_M = []
+#        P1_SD = []
+#        P2_SD = []
+#        P0_SD = []
+    
+    for r in range(p['numberPolicyParameters']):
+        P1_M.append(np.mean(outputsByParams[r][0]['discountedQALY'][-policyYears:]))
+        P2_M.append(np.mean(outputsByParams[r][1]['discountedQALY'][-policyYears:]))
+        P0_M.append(np.mean(outputs[0]['discountedQALY'][-policyYears:]))
+        
+#        P1_SD.append(np.std(outputsByParams[r][0]['discountedQALY'][-policyYears:]))
+#        P2_SD.append(np.std(outputsByParams[r][1]['discountedQALY'][-policyYears:]))
+#        P0_SD.append(np.std(outputs[0]['discountedQALY'][-policyYears:]))
+        
+    N = len(P1_M)
+    fig, ax = plt.subplots()
+    index = np.arange(N)    # the x locations for the groups
+    bar_width = 0.25         # the width of the bars
+    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD,
+    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD,
+    p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD,
+    ax.set_ylabel('Aggregate QALY')
+    # ax.set_xlabel('Policy Levers')
+    ax.set_title('Aggregate Quality-adjusted Life Years')
+    # ax.set_xticks(index + bar_width + bar_width/2)
+    xLabels = []
+    for r in range(p['numberPolicyParameters']):
+        xLabels.append('Lever ' + str(r))
+    xlab = tuple(xLabels)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
     filename = folder + '/TotalQALYSensitivityGroupedBarChart.pdf'
     if not os.path.isdir(os.path.dirname(filename)):
@@ -890,49 +919,42 @@ def policyGraphs(folder, numPolicies):
     pp.savefig(fig)
     pp.close()
     
-    # Chart 24: AverageQALYSensitivityGroupedBarChart
-    
     P1_M = []
     P2_M = []
     P0_M = []
-    
-    for r in range(p['numberPolicyParameters']):
-        P1_M.append(np.mean(outputsByParams[r][0]['averageDiscountedQALY'][-20:]))
-        P2_M.append(np.mean(outputsByParams[r][1]['averageDiscountedQALY'][-20:]))
-        P0_M.append(np.mean(outputs[0]['averageDiscountedQALY'][-20:]))
-        
 #        P1_SD = []
 #        P2_SD = []
 #        P0_SD = []
-#        P1_SD.append(np.std(averageDiscountedQALY[1][-20:]))
-#        P2_SD.append(np.std(averageDiscountedQALY[2][-20:]))
-#        P1_SD.append(np.std(averageDiscountedQALY[3][-20:]))
-#        P2_SD.append(np.std(averageDiscountedQALY[4][-20:]))
-#        P1_SD.append(np.std(averageDiscountedQALY[5][-20:]))
-#        P2_SD.append(np.std(averageDiscountedQALY[6][-20:]))
-#        P1_SD.append(np.std(averageDiscountedQALY[7][-20:]))
-#        P2_SD.append(np.std(averageDiscountedQALY[8][-20:]))
-#        for i in range(4):
-#            P0_SD.append(np.std(averageDiscountedQALY[0][-20:]))
     
+    for r in range(p['numberPolicyParameters']):
+        P1_M.append(np.mean(outputsByParams[r][0]['averageDiscountedQALY'][-policyYears:]))
+        P2_M.append(np.mean(outputsByParams[r][1]['averageDiscountedQALY'][-policyYears:]))
+        P0_M.append(np.mean(outputs[0]['averageDiscountedQALY'][-policyYears:]))
+        
+#        P1_SD.append(np.std(outputsByParams[r][0]['averageDiscountedQALY'][-policyYears:]))
+#        P2_SD.append(np.std(outputsByParams[r][1]['averageDiscountedQALY'][-policyYears:]))
+#        P0_SD.append(np.std(outputs[0]['averageDiscountedQALY'][-policyYears:]))
+        
     N = len(P1_M)
     fig, ax = plt.subplots()
     index = np.arange(N)    # the x locations for the groups
-    bar_width = 0.35         # the width of the bars
-    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'P1') # yerr = P1_SD,
-    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'P2') # yerr = P2_SD,
-    p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'No policy change') # yerr = P0_SD,
+    bar_width = 0.25         # the width of the bars
+    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD,
+    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD,
+    p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD,
     ax.set_ylabel('Average QALY')
-    ax.set_xlabel('Parameters')
+    # ax.set_xlabel('Policy Levers')
     ax.set_title('Average Quality-adjusted Life Years')
-    ax.set_xticks(index + bar_width)
+    # ax.set_xticks(index + bar_width)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r))
     xlab = tuple(xLabels)
-    plt.xticks(index + bar_width/2, xlab)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
     filename = folder + '/AverageQALYSensitivityGroupedBarChart.pdf'
     if not os.path.isdir(os.path.dirname(filename)):
@@ -940,8 +962,6 @@ def policyGraphs(folder, numPolicies):
     pp = PdfPages(filename)
     pp.savefig(fig)
     pp.close()
-    
-    # Chart 25: perCapitaHospitalizationCostsSensitivityGroupedBarChart
 
     P1_M = []
     P2_M = []
@@ -951,35 +971,37 @@ def policyGraphs(folder, numPolicies):
     P0_SD = []
     
     for r in range(p['numberPolicyParameters']):
-        P1_M.append(np.mean(outputsByParams[r][0]['perCapitaHospitalizationCost'][-20:]))
-        P2_M.append(np.mean(outputsByParams[r][1]['perCapitaHospitalizationCost'][-20:]))
-        P0_M.append(np.mean(outputs[0]['perCapitaHospitalizationCost'][-20:]))
+        P1_M.append(np.mean(outputsByParams[r][0]['perCapitaHospitalizationCost'][-policyYears:]))
+        P2_M.append(np.mean(outputsByParams[r][1]['perCapitaHospitalizationCost'][-policyYears:]))
+        P0_M.append(np.mean(outputs[0]['perCapitaHospitalizationCost'][-policyYears:]))
             
-        P1_M.append(np.std(outputsByParams[r][0]['perCapitaHospitalizationCost'][-20:]))
-        P2_M.append(np.std(outputsByParams[r][1]['perCapitaHospitalizationCost'][-20:]))
-        P0_M.append(np.std(outputs[0]['perCapitaHospitalizationCost'][-20:]))
+        P1_SD.append(np.std(outputsByParams[r][0]['perCapitaHospitalizationCost'][-policyYears:]))
+        P2_SD.append(np.std(outputsByParams[r][1]['perCapitaHospitalizationCost'][-policyYears:]))
+        P0_SD.append(np.std(outputs[0]['perCapitaHospitalizationCost'][-policyYears:]))
     
     N = len(P1_M)
     fig, ax = plt.subplots()
     index = np.arange(N)    # the x locations for the groups
-    bar_width = 0.35         # the width of the bars
+    bar_width = 0.25         # the width of the bars
     p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, yerr = P1_SD, 
-                label = 'P1')
+                label = 'Policy 1')
     p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, yerr = P2_SD, 
-                label = 'P2')
+                label = 'Policy 2')
     p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, yerr = P0_SD, 
-                label = 'No policy change')
+                label = 'Benchmark')
     ax.set_ylabel('Per-capita Yearly Cost')
-    ax.set_xlabel('Parameters')
+    # ax.set_xlabel('Policy Levers')
     ax.set_title('Per-capita Hospitalization Costs')
-    ax.set_xticks(index + bar_width/2)
+    # ax.set_xticks(index + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r))
     xlab = tuple(xLabels)
-    plt.xticks(index + bar_width/2, xlab)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
     filename = folder + '/perCapitaHospitalizationCostsSensitivityGroupedBarChart.pdf'
     if not os.path.isdir(os.path.dirname(filename)):
@@ -1019,7 +1041,7 @@ if __name__ == "__main__":
             pool.close()
             pool.join()
             
-            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\MultipleRunsCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             multipleRunsGraphs(folder, p['numRepeats'])
@@ -1061,7 +1083,8 @@ if __name__ == "__main__":
                 b = Simulation(p)
                 b.run(i)
             
-            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\MultipleRunsCharts'
+            
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             multipleRunsGraphs(folder, p['numRepeats'])
@@ -1088,7 +1111,7 @@ if __name__ == "__main__":
                 b = Simulation(p)
                 b.run(policies[n])
                 
-            folder  = 'N:/Social Care Model/Charts/SensitivityCharts'
+            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             policyGraphs(folder, numPolicies)
