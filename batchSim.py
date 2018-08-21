@@ -65,9 +65,9 @@ class Simulation:
                 random.seed(rdTime)
                 np.random.seed(rdTime)
                 
-            values = zip(np.array([self.randomSeed, self.p['incomeCareParam'], self.p['socialSupportLevel'], self.p['ageOfRetirement'], 
-                        self.p['educationCosts'][0], self.p['educationCosts'][1], self.p['educationCosts'][2], self.p['educationCosts'][3]]))
-            names = ('randomSeed, incomeCareParam, socialSupportLevel, ageOfRetirement, educationCosts_II, educationCosts_III, educationCosts_IV, educationCosts_V')
+            values = zip(np.array([self.randomSeed, self.p['incomeCareParam'], self.p['tbrPolicyChange'], self.p['ageOfRetirement'], 
+                        self.p['socialSupportLevel']]))
+            names = ('randomSeed, incomeCareParam, tbrPolicyChange, ageOfRetirement, socialSupportLevel')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
             
             s = Sim(self.p, self.randomSeed, folder)
@@ -129,11 +129,9 @@ class Simulation:
             if not os.path.isdir(os.path.dirname(filename)):
                 os.mkdir(os.path.dirname(filename))
 
-            values = zip(np.array([self.randomSeed, self.p['incomeCareParam']*params[0], self.p['socialSupportLevel']+params[1], 
-                        self.p['ageOfRetirement']+params[2], self.p['educationCosts'][0]*params[3], 
-                        self.p['educationCosts'][1]*params[3], self.p['educationCosts'][2]*params[3], 
-                        self.p['educationCosts'][3]*params[3]]))
-            names = ('randomSeed, incomeCareParam, socialSupportLevel, ageOfRetirement, educationCosts_II, educationCosts_III, educationCosts_IV, educationCosts_V')
+            values = zip(np.array([self.randomSeed, self.p['incomeCareParam']*params[0], self.p['tbrPolicyChange']+params[1], 
+                        self.p['ageOfRetirement']+params[2], self.p['socialSupportLevel']+params[3]]))
+            names = ('randomSeed, incomeCareParam, tbrPolicyChange, ageOfRetirement, socialSupportLevel')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
         
             for self.year in range(self.p['startYear'], self.p['endYear']+1):
