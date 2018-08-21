@@ -37,16 +37,17 @@ def init_params():
     
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
-    
+    p['careBankingSchemeOn'] = False
+    p['discountingFactor'] = 0.03
     
     
     p['initialPop'] = 600
     p['startYear'] = 1860
-    p['endYear'] = 2040
+    p['endYear'] = 2030
     p['thePresent'] = 2012
     p['statsCollectFrom'] = 1990
     p['regressionCollectFrom'] = 1960 
-    p['implementPoliciesFromYear'] = 2020   
+    p['implementPoliciesFromYear'] = 2015   
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -362,7 +363,7 @@ def multipleRunsGraphs(folder, repeats):
     
     outputs = []
     for r in range(repeats):
-        repFolder = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\NoPolicy_Sim\Repeat_' + str(r)
+        repFolder = 'N:/Social Care Model II/Charts/NoPolicy_Sim/Repeat_' + str(r)
         filename = repFolder + '/Outputs.csv'
         output = pd.read_csv(filename, sep=',',header=0)
         outputs.append(output)
@@ -594,7 +595,7 @@ def policyGraphs(folder, numPolicies):
     
     outputs = []
     for r in range(numPolicies):
-        repFolder = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SocPolicy_Sim\Policy_' + str(r)
+        repFolder = 'N:/Social Care Model II/Charts/SocPolicy_Sim/Policy_' + str(r)
         filename = repFolder + '/Outputs.csv'
         output = pd.read_csv(filename, sep=',',header=0)
         outputs.append(output)
@@ -825,19 +826,31 @@ def policyGraphs(folder, numPolicies):
     
     for r in range(p['numberPolicyParameters']):
         
+        additionalSocialCare_1 = []
+        additionalCost_1 = []
+        additionalSocialCare_2 = []
+        additionalCost_2 = []
         costPerAdditionalCare_P1 = []
         costPerAdditionalCare_P2 = []
         
         for i in range(len(outputs[0]['unmetSocialCareNeed'])):
-            if outputsByParams[r][0]['totalTaxRefund'][i] != 0:
-                costPerAdditionalCare_P1.append((outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[r][0]['unmetSocialCareNeed'][i])/outputsByParams[r][0]['totalTaxRefund'][i])
+            additionalSocialCare_1.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[r][0]['unmetSocialCareNeed'][i])
+            additionalCost_1.append(outputsByParams[r][0]['totalCost'][i] - outputs[0]['totalCost'][i])
+            additionalSocialCare_2.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[r][1]['unmetSocialCareNeed'][i])
+            additionalCost_2.append(outputsByParams[r][1]['totalCost'][i] - outputs[0]['totalCost'][i])
+            
+        for i in range(len(additionalSocialCare_1)):    
+            if additionalCost_1[i] != 0:
+                costPerAdditionalCare_P1.append(additionalSocialCare_1[i]/additionalCost_1[i])
             else:
                 costPerAdditionalCare_P1.append(0.0)
-            if outputsByParams[r][1]['totalTaxRefund'][i] != 0:
-                costPerAdditionalCare_P2.append((outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[r][1]['unmetSocialCareNeed'][i])/outputsByParams[r][1]['totalTaxRefund'][i])
+                
+        for i in range(len(additionalSocialCare_2)):    
+            if additionalCost_2[i] != 0:
+                costPerAdditionalCare_P2.append(additionalSocialCare_2[i]/additionalCost_2[i])
             else:
-                costPerAdditionalCare_P2.append(0.0)
-        
+                costPerAdditionalCare_P2.append(0.0)         
+           
         P1_M.append(np.mean(costPerAdditionalCare_P1[-policyYears:]))
         P2_M.append(np.mean(costPerAdditionalCare_P2[-policyYears:]))
         
@@ -1009,6 +1022,213 @@ def policyGraphs(folder, numPolicies):
     pp = PdfPages(filename)
     pp.savefig(fig)
     pp.close()
+    
+    # Total Cost charts
+    P1_M = []
+    P2_M = []
+    P0_M = []
+    P1_SD = []
+    P2_SD = []
+    P0_SD = []
+    
+    P1_M.append(np.sum(outputsByParams[1][0]['totalTaxRefund'][-policyYears:]))
+    P1_M.append(np.sum(outputsByParams[2][0]['pensionBudget'][-policyYears:]))
+    P1_M.append(np.sum(outputsByParams[3][0]['costDirectFunding'][-policyYears:]))
+    
+    P2_M.append(np.sum(outputsByParams[1][1]['totalTaxRefund'][-policyYears:]))
+    P2_M.append(np.sum(outputsByParams[2][1]['pensionBudget'][-policyYears:]))
+    P2_M.append(np.sum(outputsByParams[3][1]['costDirectFunding'][-policyYears:]))
+    
+    P0_M.append(np.sum(outputs[1]['totalTaxRefund'][-policyYears:]))
+    P0_M.append(np.sum(outputs[2]['pensionBudget'][-policyYears:]))
+    P0_M.append(np.sum(outputs[3]['costDirectFunding'][-policyYears:]))
+        
+#    P1_SD.append(np.std(outputsByParams[r][0]['totalCost'][-policyYears:]))
+#    P2_SD.append(np.std(outputsByParams[r][1]['totalCost'][-policyYears:]))
+#    P0_SD.append(np.std(outputs[0]['totalCost'][-policyYears:]))
+    
+    N = len(P1_M)
+    fig, ax = plt.subplots()
+    index = np.arange(N)    # the x locations for the groups
+    bar_width = 0.25         # the width of the bars
+    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD, 
+    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD, 
+    p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD, 
+    ax.set_ylabel('Cost per Week')
+    # ax.set_xlabel('Policy Levers')
+    ax.set_title('Policies Net Cost')
+    # ax.set_xticks(index + bar_width/2)
+    xLabels = []
+    for r in range(p['numberPolicyParameters']-1):
+        xLabels.append('Lever ' + str(r+1))
+    xlab = tuple(xLabels)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
+    fig.tight_layout()
+    filename = folder + '/PoliciesNetCostsSensitivityGroupedBarChart.pdf'
+    if not os.path.isdir(os.path.dirname(filename)):
+        os.mkdir(os.path.dirname(filename))
+    pp = PdfPages(filename)
+    pp.savefig(fig)
+    pp.close()
+    
+    # Discounted Cost charts
+    P1_M = []
+    P2_M = []
+    P0_M = []
+    P1_SD = []
+    P2_SD = []
+    P0_SD = []
+    
+    P1_M.append(discountedSum(outputsByParams[1][0]['totalTaxRefund'][-policyYears:]))
+    P1_M.append(discountedSum(outputsByParams[2][0]['pensionBudget'][-policyYears:]))
+    P1_M.append(discountedSum(outputsByParams[3][0]['costDirectFunding'][-policyYears:]))
+    
+    P2_M.append(discountedSum(outputsByParams[1][1]['totalTaxRefund'][-policyYears:]))
+    P2_M.append(discountedSum(outputsByParams[2][1]['pensionBudget'][-policyYears:]))
+    P2_M.append(discountedSum(outputsByParams[3][1]['costDirectFunding'][-policyYears:]))
+    
+    P0_M.append(discountedSum(outputs[1]['totalTaxRefund'][-policyYears:]))
+    P0_M.append(discountedSum(outputs[2]['pensionBudget'][-policyYears:]))
+    P0_M.append(discountedSum(outputs[3]['costDirectFunding'][-policyYears:]))
+        
+#    P1_SD.append(np.std(outputsByParams[r][0]['totalCost'][-policyYears:]))
+#    P2_SD.append(np.std(outputsByParams[r][1]['totalCost'][-policyYears:]))
+#    P0_SD.append(np.std(outputs[0]['totalCost'][-policyYears:]))
+    
+    N = len(P1_M)
+    fig, ax = plt.subplots()
+    index = np.arange(N)    # the x locations for the groups
+    bar_width = 0.25         # the width of the bars
+    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD, 
+    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD, 
+    p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD, 
+    ax.set_ylabel('Cost per Week')
+    # ax.set_xlabel('Policy Levers')
+    ax.set_title('Policies Net Cost')
+    # ax.set_xticks(index + bar_width/2)
+    xLabels = []
+    for r in range(p['numberPolicyParameters']-1):
+        xLabels.append('Lever ' + str(r+1))
+    xlab = tuple(xLabels)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
+    fig.tight_layout()
+    filename = folder + '/PoliciesNetCostsSensitivityGroupedBarChart.pdf'
+    if not os.path.isdir(os.path.dirname(filename)):
+        os.mkdir(os.path.dirname(filename))
+    pp = PdfPages(filename)
+    pp.savefig(fig)
+    pp.close()
+    
+    # Cost per additional hour of delivered social care
+    P1_M = []
+    P2_M = []
+    P1_SD = []
+    P2_SD = []
+    
+    additionalSocialCare_1 = []
+    additionalCost_1 = []
+    additionalSocialCare_2 = []
+    additionalCost_2 = []
+    additionalSocialCare_3 = []
+    additionalCost_3 = []
+    
+    for j in range(2):
+        deltaCare_1 = []
+        deltaCost_1 = []
+        deltaCare_2 = []
+        deltaCost_2 = []
+        deltaCare_3 = []
+        deltaCost_3 = []
+        for i in range(len(outputs[0]['unmetSocialCareNeed'])):
+            deltaCare_1.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[1][0]['unmetSocialCareNeed'][i])
+            deltaCost_1.append(outputsByParams[1][0]['totalTaxRefund'][i] - outputs[0]['totalTaxRefund'][i])
+            deltaCare_2.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[2][0]['unmetSocialCareNeed'][i])
+            deltaCost_2.append(outputsByParams[2][0]['pensionBudget'][i] - outputs[0]['pensionBudget'][i])
+            deltaCare_3.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[3][0]['unmetSocialCareNeed'][i])
+            deltaCost_3.append(outputsByParams[3][0]['costDirectFunding'][i] - outputs[0]['costDirectFunding'][i])
+        additionalSocialCare_1.append(deltaCare_1)
+        additionalCost_1.append(deltaCost_1)
+        additionalSocialCare_2.append(deltaCare_2)
+        additionalCost_2.append(deltaCost_2)
+        additionalSocialCare_3.append(deltaCare_3)
+        additionalCost_3.append(deltaCost_3)
+    
+    efficiency_1 = []
+    efficiency_2 = []
+    efficiency_3 = []
+    
+    for j in range(2):
+        e_1 = []
+        e_2 = []
+        e_3 = []
+        for i in range(len(additionalSocialCare_1)):
+            if additionalCost_1[j][i] != 0:
+                e_1.append(additionalSocialCare_1/additionalCost_1)
+            else:
+                e_1.append(0.0)
+            if additionalCost_2[i] != 0:
+                e_2.append(additionalSocialCare_2/additionalCost_2)
+            else:
+                e_2.append(0.0)
+            if additionalCost_3[i] != 0:
+                e_3.append(additionalSocialCare_3/additionalCost_3)
+            else:
+                e_3.append(0.0)
+        efficiency_1.append(e_1)
+        efficiency_2.append(e_2)
+        efficiency_3.append(e_3)
+        
+    P1_M.append(np.mean(efficiency_1[0][-policyYears:]))
+    P1_M.append(np.mean(efficiency_2[0][-policyYears:]))
+    P1_M.append(np.mean(efficiency_3[0][-policyYears:]))
+    
+    P2_M.append(np.mean(efficiency_1[1][-policyYears:]))
+    P2_M.append(np.mean(efficiency_2[1][-policyYears:]))
+    P2_M.append(np.mean(efficiency_3[1][-policyYears:]))
+    
+    N = len(P1_M)
+    fig, ax = plt.subplots()
+    index = np.arange(N)    # the x locations for the groups
+    bar_width = 0.35         # the width of the bars
+    p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD, 
+    p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD, 
+    
+    ax.set_ylabel('Pounds')
+    # ax.set_xlabel('Policy Levers')
+    ax.set_title('Cost per Additional Hour of Care')
+    # ax.set_xticks(index + bar_width/2)
+    xLabels = []
+    for r in range(p['numberPolicyParameters']-1):
+        xLabels.append('Lever ' + str(r+1))
+    xlab = tuple(xLabels)
+    plt.xticks(index + bar_width, xlab)
+    ax.xaxis.set_ticks_position('none')
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(handles[::-1], labels[::-1])
+    ax.legend(loc = 'lower right')
+    fig.tight_layout()
+    filename = folder + '/CostPerAdditionalCareSensitivityGroupedBarChart.pdf'
+    if not os.path.isdir(os.path.dirname(filename)):
+        os.mkdir(os.path.dirname(filename))
+    pp = PdfPages(filename)
+    pp.savefig(fig)
+    pp.close()
+
+    
+    
+def discountedSum(timeSeries):
+    discountedSum = 0
+    for i in range(len(timeSeries)):
+        discountedSum += timeSeries[i]/math.pow((1.0 + p['discountingFactor']), float(i))
+    return discountedSum
 
 def simulation(params):
     
@@ -1041,7 +1261,7 @@ if __name__ == "__main__":
             pool.close()
             pool.join()
             
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\MultipleRunsCharts'
+            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             multipleRunsGraphs(folder, p['numRepeats'])
@@ -1050,8 +1270,8 @@ if __name__ == "__main__":
             parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
             parameters = map(list, zip(*parameters))
             policies = []
-            defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['socialSupportLevelPolicyChange'],
-                             p['ageOfRetirementPolicyChange'], p['educationCostsPolicyCoefficient']]
+            defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['tbrPolicyChange'],
+                             p['ageOfRetirementPolicyChange'], p['socialSupportLevelPolicyChange']]
             # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
@@ -1068,7 +1288,7 @@ if __name__ == "__main__":
             pool.close()
             pool.join()
     
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
+            folder  = 'N:/Social Care Model II/Charts/SensitivityCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             policyGraphs(folder, numPolicies)
@@ -1083,7 +1303,7 @@ if __name__ == "__main__":
                 b = Simulation(p)
                 b.run(i)
             
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\MultipleRunsCharts'
+            folder  = 'N:/Social Care Model II/Charts/MultipleRunsCharts'
             
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
@@ -1093,8 +1313,8 @@ if __name__ == "__main__":
             parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
             parameters = map(list, zip(*parameters))
             policies = []
-            defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['socialSupportLevelPolicyChange'],
-                             p['ageOfRetirementPolicyChange'], p['educationCostsPolicyCoefficient']]
+            defaultValues = [p['incomeCareParamPolicyCoeffcient'], p['tbrPolicyChange'], 
+                             p['ageOfRetirementPolicyChange'], p['socialSupportLevelPolicyChange']]
             # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
@@ -1111,7 +1331,7 @@ if __name__ == "__main__":
                 b = Simulation(p)
                 b.run(policies[n])
                 
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model\Charts\SensitivityCharts'
+            folder  = 'N:/Social Care Model II/Charts/SensitivityCharts'
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             policyGraphs(folder, numPolicies)

@@ -117,8 +117,9 @@ class Sim:
                    'perCapitaHospitalizationCost', 'unmetSocialCareNeedGiniCoefficient', 'unmetSocialCareNeedGiniCoefficient_1', 'unmetSocialCareNeedGiniCoefficient_2', 'unmetSocialCareNeedGiniCoefficient_3',
                    'unmetSocialCareNeedGiniCoefficient_4', 'unmetSocialCareNeedGiniCoefficient_5', 'shareUnmetSocialCareNeedGiniCoefficient', 'shareUnmetSocialCareNeedGiniCoefficient_1',
                    'shareUnmetSocialCareNeedGiniCoefficient_2', 'shareUnmetSocialCareNeedGiniCoefficient_3', 'shareUnmetSocialCareNeedGiniCoefficient_4', 'shareUnmetSocialCareNeedGiniCoefficient_5',
-                   'publicSupply', 'totQALY', 'meanQALY', 'discountedQALY', 'averageDiscountedQALY', 'ratioUnmetNeed_CareSupply', 'ratioUnmetNeed_CareSupply_1', 'ratioUnmetNeed_CareSupply_2',
-                   'ratioUnmetNeed_CareSupply_3', 'ratioUnmetNeed_CareSupply_4', 'ratioUnmetNeed_CareSupply_5', 'totalTaxRefund']
+                   'publicSupply', 'costDirectFunding','totQALY', 'meanQALY', 'discountedQALY', 'averageDiscountedQALY', 'ratioUnmetNeed_CareSupply', 'ratioUnmetNeed_CareSupply_1', 'ratioUnmetNeed_CareSupply_2',
+                   'ratioUnmetNeed_CareSupply_3', 'ratioUnmetNeed_CareSupply_4', 'ratioUnmetNeed_CareSupply_5', 'totalTaxRefund', 'pensionBudget', 'careCreditSupply', 'careCreditCost', 
+                   'totalCost', 'perCapitaCost']
         
         self.times = []
         self.pops = []
@@ -654,13 +655,19 @@ class Sim:
         self.incomeInitialLevels = []
         self.incomeFinalLevels = []
         self.pricePublicSocialCare = 0
-        self.totalTaxRefund = 0
         self.priceSocialCare = 0    
         self.check = False
         self.exitWork = 0
         self.enterWork = 0
-        self.publicSupply = 0
+        
         self.hospitalizationCost = 0
+        
+        # Budget variables
+        self.totalTaxRefund = 0
+        self.publicSupply = 0
+        self.pensionBudget = 0
+        self.careCreditSupply = 0
+        
         self.year = self.p['startYear']
         self.pyramid = PopPyramid(self.p['num5YearAgeClasses'],
                                   self.p['numCareLevels'])
@@ -983,9 +990,9 @@ class Sim:
     
     def updatePolicyParameters(self, policyParameters):
         self.p['incomeCareParamPolicyCoeffcient'] = policyParameters[0]
-        self.p['socialSupportLevelPolicyChange'] = policyParameters[1]
+        self.p['tbrPolicyChange'] = policyParameters[1]
         self.p['ageOfRetirementPolicyChange'] = policyParameters[2] 
-        self.p['educationCostsPolicyCoefficient'] = policyParameters[3] 
+        self.p['socialSupportLevelPolicyChange'] = policyParameters[3] 
                     
     def doOneYear(self, year):
         
@@ -1021,7 +1028,7 @@ class Sim:
         executionTimes.append(end-start)
         
 #        if a == False:
-#            a = self.checkPartners(3)
+#            a = self.checkPartners(3
         
         # 4
         start = time.time()
@@ -1134,6 +1141,7 @@ class Sim:
         self.computeNetIncome()
         end = time.time()
         executionTimes.append(end-start)
+        
         
 #        if a == False:
 #            a = self.checkPartners(14)
@@ -1892,6 +1900,7 @@ class Sim:
                 child.mother.socialWork = self.p['zeroYearCare']
                 child.mother.income = 0
                 child.mother.disposableIncome = child.mother.income
+                child.mother.netIncome = child.mother.income
                 child.mother.status = 'maternity'
                 child.mother.babyCarer = True
                 child.residualNeed = 0
@@ -1949,6 +1958,7 @@ class Sim:
                         person.income *= shareWorkingLife
                     else:
                         person.income *= (shareWorkingLife + self.p['seriouslyHillSupportRate']*(1-shareWorkingLife))
+                    person.netIncome = person.income
 #                    if person.income == 0:
 #                        print('Inactive person ' + str(person.id) + ' is ' + str(person.income))
             if person.house == self.displayHouse:
@@ -3177,11 +3187,15 @@ class Sim:
                 person.status = 'retired'
                 person.income = self.p['pensionWage'][person.classRank]*self.p['weeklyHours']
                 person.disposableIncome = person.income
+                person.netIncome = person.income
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " has now retired.")
     
     
     def computeNetIncome(self):
+        pensioners = [x for x in self.pop.livingPeople if x.status != 'employed' and x.income > 0]
+        for person in pensioners:
+            self.pensionBudget += person.income
         employedPop = [x for x in self.pop.livingPeople if x.status == 'employed']
         for person in employedPop:
             careWorkingHours = person.socialWork - self.p['employedHours']
@@ -3190,6 +3204,15 @@ class Sim:
             workingHours = float(max(self.p['weeklyHours'] - careWorkingHours, 0))
             workTime = workingHours/float(self.p['weeklyHours'])
             person.netIncome = person.residualWorkingHours*person.wage
+            income = person.netIncome
+            # Compute pension budget
+            for i in range(self.p['taxBandsNumber']-1):
+                if income > self.p['taxBrackets'][i]:
+                    bracket = income-self.p['taxBrackets'][i]
+                    self.pensionBudget -= bracket*self.p['bandsTaxationRates'][i]
+                    income -= bracket
+        
+            
         # self.updateNetIncomeStat()
                 
     def healthServiceCost(self):
@@ -3342,6 +3365,7 @@ class Sim:
         person.wage = self.marketWage(person)
         person.income = 0
         person.disposableIncome = 0
+        person.netIncome = 0
         person.finalIncome = 0
         person.jobTenure = 0
         person.jobLocation = None
@@ -3591,8 +3615,7 @@ class Sim:
                                 if self.meanUnemploymentRates[i][j] == -1:
                                     continue
                                 person.unemploymentRate = self.meanUnemploymentRates[i][j]
-
-            
+        
     def updateJobMap(self):
         
         # This function computes the class-specific 'weight' of towns in the job market, 
@@ -4102,6 +4125,7 @@ class Sim:
         a.hourlyWage = a.wage
         a.income = a.wage*self.p['weeklyHours']
         a.disposableIncome = a.income
+        a.netIncome = a.income
         a.finalIncome = a.newK
         a.jobLocation = a.newTown
         a.jobTenure = 0
@@ -4114,6 +4138,7 @@ class Sim:
             person.hourlyWage = 0
             person.income = 0
             person.disposableIncome = 0
+            person.netIncome = 0
             person.finalIncome = 0
             person.jobTenure = 0
             person.jobLocation = None
@@ -6557,10 +6582,11 @@ class Sim:
         totalCareReceived = informalCareReceived + formalCareReceived
         totalUnnmetCareNeed = sum([x.residualNeed for x in self.pop.livingPeople])
         
-        taxRefund = self.totalTaxRefund
-        
-        
-        
+        costDirectFunding = self.publicSupply*self.p['priceSocialCare']
+        careCreditCost = self.careCreditSupply*self.p['priceSocialCare']
+        totalCost = self.pensionBudget + self.totalTaxRefund + costDirectFunding + careCreditCost
+        perCapitaCost = totalCost/currentPop
+       
         outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass,
                    shareUnskilled, shareSkilled, shareLowClass, shareMidClass, shareUpClass, numOccupiedHouses, averageHouseholdSize, self.marriageTally, self.divorceTally,
                    averageHouseholdSize_1, averageHouseholdSize_2, averageHouseholdSize_3, averageHouseholdSize_4, averageHouseholdSize_5, totalCareSupply, informalCareSupply,
@@ -6619,13 +6645,17 @@ class Sim:
                    perCapitaHospitalizationCost, unmetSocialCareNeedGiniCoefficient, unmetSocialCareNeedGiniCoefficient_1, unmetSocialCareNeedGiniCoefficient_2, unmetSocialCareNeedGiniCoefficient_3, 
                    unmetSocialCareNeedGiniCoefficient_4, unmetSocialCareNeedGiniCoefficient_5, shareUnmetSocialCareNeedGiniCoefficient, shareUnmetSocialCareNeedGiniCoefficient_1, 
                    shareUnmetSocialCareNeedGiniCoefficient_2, shareUnmetSocialCareNeedGiniCoefficient_3, shareUnmetSocialCareNeedGiniCoefficient_4, shareUnmetSocialCareNeedGiniCoefficient_5, 
-                   self.publicSupply, totQALY, meanQALY, discountedQALY, averageDiscountedQALY, ratioUnmetNeed_CareSupply, ratioUnmetNeed_CareSupply_1, ratioUnmetNeed_CareSupply_2, 
-                   ratioUnmetNeed_CareSupply_3, ratioUnmetNeed_CareSupply_4, ratioUnmetNeed_CareSupply_5, taxRefund]
+                   self.publicSupply, costDirectFunding, totQALY, meanQALY, discountedQALY, averageDiscountedQALY, ratioUnmetNeed_CareSupply, ratioUnmetNeed_CareSupply_1, ratioUnmetNeed_CareSupply_2, 
+                   ratioUnmetNeed_CareSupply_3, ratioUnmetNeed_CareSupply_4, ratioUnmetNeed_CareSupply_5, self.totalTaxRefund, self.pensionBudget, 
+                   self.careCreditSupply, careCreditCost, totalCost, perCapitaCost]
                    
         self.marriageTally = 0      
-        self.divorceTally = 0   
+        self.divorceTally = 0 
+        
         self.totalTaxRefund = 0
         self.publicSupply = 0
+        self.pensionBudget = 0
+        self.careCreditSupply = 0
         
         if self.year == self.p['startYear']:
             with open(os.path.join(self.folder, "Outputs.csv"), "w") as file:
@@ -8730,7 +8760,7 @@ class Sim:
         # ax.set_xlabel('Year')
         ax.set_title('Care Needs and Potential Supply')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8751,10 +8781,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareCareGivers_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareCareGivers_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Population')
+        ax.set_ylabel('Share of population')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'upper left')
+        ax.legend(loc = 'lower left')
         ax.set_title('Share of Care Givers')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -8841,7 +8871,7 @@ class Sim:
         ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
-        ax.set_title('Per Capita Demand and Unmet Social Care')
+        ax.set_title('Per Capita Demand and Unmet Social Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8861,7 +8891,7 @@ class Sim:
         ax.set_ylabel('Hours per week')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
-        ax.set_title('Per Capita Demand and Unmet Child Care')
+        ax.set_title('Per Capita Demand and Unmet Child Care Need')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -8907,7 +8937,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareInformalCareReceived_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareInformalCareReceived_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of care')
+        ax.set_ylabel('Share of care received')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Informal Care Received')
@@ -8932,7 +8962,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareInformalSocialCare_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareInformalSocialCare_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of care')
+        ax.set_ylabel('Share of care received')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Informal Social Care Received')
@@ -8957,7 +8987,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareInformalChildCare_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareInformalChildCare_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of care')
+        ax.set_ylabel('Share of care received')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
         ax.set_title('Share of Informal Child Care Received')
@@ -9024,7 +9054,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareUnmetCareDemand_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareUnmetCareDemand_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Care')
+        ax.set_ylabel('Share of care need')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
@@ -9050,7 +9080,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareUnmetSocialCareDemand_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareUnmetSocialCareDemand_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Care')
+        ax.set_ylabel('Share of care need')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
@@ -9076,7 +9106,7 @@ class Sim:
         p5, = ax.plot(output['year'], output['shareUnmetChildCareDemand_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['shareUnmetChildCareDemand_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Care')
+        ax.set_ylabel('Share of care need')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
@@ -9204,6 +9234,7 @@ class Sim:
         ax.set_title('Informal Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        ax.set_ylim([0, 50])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/InformalCarePerRecipientChart.pdf'
@@ -9274,10 +9305,11 @@ class Sim:
         ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.set_title('Delivered and Unmet Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        ax.set_ylim([0, 50])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/Delivered_UnmetCarePerRecipientChart.pdf'
@@ -9390,7 +9422,7 @@ class Sim:
         ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.set_title('Informal Social Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9415,7 +9447,7 @@ class Sim:
         ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.set_title('Formal Social Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9440,7 +9472,7 @@ class Sim:
         ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.set_title('Unmet Social Care Need Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
@@ -9455,9 +9487,9 @@ class Sim:
         
         # Chart 29: informal and formal care and unmet care need
         fig, ax = plt.subplots()
-        p1, = ax.plot(output['year'], output['informalSocialCarePerRecipient'], label = 'Informal Care')
-        p2, = ax.plot(output['year'], output['formalSocialCarePerRecipient'], label = 'Formal Care')
-        p3, = ax.plot(output['year'], output['unmetSocialCarePerRecipient'], label = 'Unmet Care')
+        p1, = ax.plot(output['year'], output['informalSocialCarePerRecipient'], linewidth = 3, label = 'Informal Care')
+        p2, = ax.plot(output['year'], output['formalSocialCarePerRecipient'], linewidth = 3, label = 'Formal Care')
+        p3, = ax.plot(output['year'], output['unmetSocialCarePerRecipient'], linewidth = 3, label = 'Unmet Care')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
@@ -9677,15 +9709,15 @@ class Sim:
         
         # Chart 36: informal and formal care and unmet care need
         fig, ax = plt.subplots()
-        p1, = ax.plot(output['year'], output['informalChildCarePerRecipient'], label = 'Informal Care')
-        p2, = ax.plot(output['year'], output['formalChildCarePerRecipient'], label = 'Formal Care')
-        p3, = ax.plot(output['year'], output['unmetChildCarePerRecipient'], label = 'Unmet Care')
+        p1, = ax.plot(output['year'], output['informalChildCarePerRecipient'], linewidth = 3, label = 'Informal Care')
+        p2, = ax.plot(output['year'], output['formalChildCarePerRecipient'], linewidth = 3, label = 'Formal Care')
+        p3, = ax.plot(output['year'], output['unmetChildCarePerRecipient'], linewidth = 3, label = 'Unmet Care')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Hours per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
-        ax.set_title('Delivered and Unmet Care Per Recipient')
+        ax.set_title('Delivered and Unmet Child Care Per Recipient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         ax.set_ylim([0, 30])
@@ -9829,9 +9861,11 @@ class Sim:
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
+        ax.legend_remove()
         ax.set_title('Share of Informal Care supplied by Women')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        ax.set_ylim([0, 0.8])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareCareWomedChart.pdf'
@@ -10059,7 +10093,7 @@ class Sim:
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'upper left')
         ax.set_title('Average Family Size')
-        ax.set_ylim([0, 15])
+        ax.set_ylim([0, 8])
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -10084,7 +10118,7 @@ class Sim:
         # Chart 48: Average Tax Burden (1960-2020)
        
         fig, ax = plt.subplots()
-        ax.plot(output['year'], output['taxBurden'], linewidth = 2, color = 'red')
+        ax.plot(output['year'], output['taxBurden'], linewidth = 3, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Care costs per taxpayer per year')
         # ax.set_xlabel('Year')
@@ -10103,11 +10137,11 @@ class Sim:
         # total Tax Refund
         
         fig, ax = plt.subplots()
-        ax.plot(output['year'], output['totalTaxRefund'], linewidth = 2, color = 'red')
+        ax.plot(output['year'], output['totalTaxRefund'], linewidth = 3, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Tax Refund')
         # ax.set_xlabel('Year')
-        ax.set_title('Total Tax Burden in pounds')
+        ax.set_title('Total Tax Refund in pounds')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
@@ -10119,9 +10153,28 @@ class Sim:
         pp.savefig(fig)
         pp.close()  
         
+         # pension budget
+        
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['pensionBudget'], linewidth = 3, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Tax Refund')
+        # ax.set_xlabel('Year')
+        ax.set_title('Budget balance in pounds')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/pensionBudgetChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()  
+        
         # Chart 49: Proportion of married adult women (1960-2020)
         fig, ax = plt.subplots()
-        ax.plot(output['year'], output['marriageProp'], linewidth = 2, color = 'red')
+        ax.plot(output['year'], output['marriageProp'], linewidth = 3, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         # ax.set_ylabel('Proportion of married adult women')
         ax.set_title('Proportion of married adult women')
@@ -10138,7 +10191,7 @@ class Sim:
         
         # Chart 50: Health Care Cost (1960-2020)
         fig, ax = plt.subplots()
-        ax.plot(output['year'], output['hospitalizationCost'], linewidth = 2, color = 'red')
+        ax.plot(output['year'], output['hospitalizationCost'], linewidth = 3, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Cost in Pounds')
         # ax.set_xlabel('Year')
@@ -10156,7 +10209,7 @@ class Sim:
         
         # Chart 51: Per Capita Health Care Cost (1960-2020)
         fig, ax = plt.subplots()
-        ax.plot(output['year'], output['perCapitaHospitalizationCost'], linewidth = 2, color = 'red')
+        ax.plot(output['year'], output['perCapitaHospitalizationCost'], linewidth = 3, color = 'red')
         ax.set_xlim(left = self.p['statsCollectFrom'])
         ax.set_ylabel('Cost in Pounds')
         # ax.set_xlabel('Year')
@@ -10189,6 +10242,7 @@ class Sim:
         ax.set_title('Unmet Social Care Gini Coeffcient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.ylim(0.5, 1.0)
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/UnmetSocialCareGiniCoefficientChart.pdf'
@@ -10214,6 +10268,7 @@ class Sim:
         ax.set_title('Share of Unmet Social Care Gini Coeffcient')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.ylim(0.5, 1.0)
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/ShareUnmetSocialCareGiniCoefficientChart.pdf'
@@ -10289,7 +10344,7 @@ class Sim:
         fig, ax = plt.subplots()
         ax.plot(output['year'], output['publicSupply'], linewidth = 3)
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Hours of care')
+        ax.set_ylabel('Hours of per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
@@ -10300,6 +10355,67 @@ class Sim:
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         filename = folder + '/PublicSocialCareSupplyChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+      
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['costDirectFunding'], linewidth = 3)
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Pounds per week')
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.legend_.remove()
+        ax.set_title('Cost of Public Social Care')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/CostDirectFundingChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        # care credit charts
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['careCreditSupply'], linewidth = 3)
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Hours of per week')
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.legend_.remove()
+        ax.set_title('Credit Public Care Supply')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/CreditPublicSocialCareSupplyChart.pdf'
+        if not os.path.isdir(os.path.dirname(filename)):
+            os.mkdir(os.path.dirname(filename))
+        pp = PdfPages(filename)
+        pp.savefig(fig)
+        pp.close()
+        
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['careCreditCost'], linewidth = 3)
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        ax.set_ylabel('Pounds per week')
+        # ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.legend_.remove()
+        ax.set_title('Cost of Credit Public Social Care')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        filename = folder + '/CostCreditSocialCareChart.pdf'
         if not os.path.isdir(os.path.dirname(filename)):
             os.mkdir(os.path.dirname(filename))
         pp = PdfPages(filename)
@@ -10363,10 +10479,10 @@ class Sim:
         p5, = ax.plot(output['year'], output['ratioUnmetNeed_CareSupply_4'], label = 'Class IV')
         p6, = ax.plot(output['year'], output['ratioUnmetNeed_CareSupply_5'], label = 'Class V')
         ax.set_xlim(left = self.p['statsCollectFrom'])
-        ax.set_ylabel('Share of Total Supply')
+        ax.set_ylabel('Share of total supply')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         ax.set_title('Ratio of Unmet Care Need and Total Supply')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
