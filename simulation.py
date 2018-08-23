@@ -667,6 +667,7 @@ class Sim:
         self.publicSupply = 0
         self.pensionBudget = 0
         self.careCreditSupply = 0
+        self.socialCareCredits = 0
         
         self.year = self.p['startYear']
         self.pyramid = PopPyramid(self.p['num5YearAgeClasses'],
@@ -1135,6 +1136,7 @@ class Sim:
         
 #        if a == False:
 #            a = self.checkPartners(13)
+        self.careBankingAllocation()
         
         # 15
         start = time.time()
@@ -1844,6 +1846,8 @@ class Sim:
             person.careNetwork.add_node(person)
             person.householdTotalSupply = 0
             
+            person.volunteerCareSupply = 0
+            
             person.careReceivers = []
             person.totalCareSupplied = []
             
@@ -2467,12 +2471,12 @@ class Sim:
         # Min-Max: -6000 - 3000
         townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare)
         return(townSCI)
-         
+    
     def allocateCare(self):
 
         # The care need is satisfied by the household's informal care supply, starting from the social care need if present.
         # First, select all the agents with care need in the population.
-        careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0]
+        careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0 or x.age >= self.p['socialCareBankingAge']]
         for receiver in careReceivers:
             self.kinshipNetwork(receiver)
             # receiver.networkSupplies = []
@@ -3214,6 +3218,9 @@ class Sim:
         
             
         # self.updateNetIncomeStat()
+    
+    def careBankingAllocation(self):
+        
                 
     def healthServiceCost(self):
         self.hospitalizationCost = 0

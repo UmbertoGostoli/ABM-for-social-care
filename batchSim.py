@@ -150,7 +150,7 @@ class Simulation:
             # f.outputFile(folder)
             
             if self.p['singleRunGraphs']:
-                s.doGraphs_fromFile(folder)
+                f.doGraphs_fromFile(folder)
                 
                 # s.doGraphs(folder)
                 

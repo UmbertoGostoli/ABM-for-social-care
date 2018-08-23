@@ -148,6 +148,9 @@ class Person:
         self.socialWork = 0
         self.workToCare = 0
         
+        self.socialCareCredits = 0
+        self.volunteerCareSupply = 0
+        
         self.cumulativeUnmetNeed = 0
         self.totalDiscountedShareUnmetNeed = 0
         self.totalDiscountedTime = 0

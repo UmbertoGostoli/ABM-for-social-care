@@ -37,7 +37,6 @@ def init_params():
     
     # The basics: starting population and year, etc.
     p['policyOnlySim'] = False
-    p['careBankingSchemeOn'] = False
     p['discountingFactor'] = 0.03
     
     
@@ -149,6 +148,12 @@ def init_params():
     
     ########   Key parameter 3  ##############
     p['ageOfRetirement'] = 65
+    
+    p['careBankingSchemeOn'] = False
+    p['socialCareBankingAge'] = 65
+    p['socialCareCreditShare'] = 0.5
+    p['socialCareCreditQuantity'] = 0
+    
     p['hillHealthLevelThreshold'] = 3
     p['seriouslyHillSupportRate'] = 0.5
     p['ageOfRetirementPolicyChange'] = 0
