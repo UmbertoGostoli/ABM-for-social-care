@@ -1,3 +1,3 @@
-incomeCareParamPolicyCoeffcient,tbrPolicyChange,ageOfRetirementPolicyChange,socialSupportLevelPolicyChange
-0.5,0.5,-5,-1
-2,1,5,-2
+socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel
+0.25,0.5,60,4
+0.5,1,70,3
