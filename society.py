@@ -150,6 +150,9 @@ class Person:
         
         self.socialCareCredits = 0
         self.volunteerCareSupply = 0
+        self.creditNeedRatio = 0
+        self.maxNokSupply = 0
+        self.potentialVolunteer = False
         
         self.cumulativeUnmetNeed = 0
         self.totalDiscountedShareUnmetNeed = 0
@@ -172,6 +175,7 @@ class Person:
         self.residualSupply = 0
         self.formalCare = 0
         self.informalCare = 0
+        self.careReceived = 0
         self.socialNetwork = []
         
         self.careNetwork = nx.Graph()
