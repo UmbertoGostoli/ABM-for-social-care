@@ -16,13 +16,12 @@ def init_params():
     """Set up the simulation parameters."""
     p = {}
     
-    p['endYear'] = 1940 # 2040
-    p['statsCollectFrom'] = 1900 # 1990
+    p['endYear'] = 2040
+    p['statsCollectFrom'] = 1990
     p['numberPolicyParameters'] = 4
-    p['implementPoliciesFromYear'] = 1920
-    p['discountingFactor'] = 0.03
     p['numberScenarios'] = 9
-    
+    p['implementPoliciesFromYear'] = 2020
+    p['discountingFactor'] = 0.03
     
     return p
 
@@ -34,8 +33,8 @@ def createSensitivityGraphs(folder, numPolicies):
     
     outputs = []
     for r in range(numPolicies):
-        repFolder = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model II\Charts\SocPolicy_Sim\Policy_' + str(r)
-        filename = repFolder + '\Outputs.csv'
+        repFolder = 'N:/Social Care Model III/Charts/SocPolicy_Sim/Policy_' + str(r)
+        filename = repFolder + '/Outputs.csv'
         output = pd.read_csv(filename, sep=',',header=0)
         outputs.append(output)
     
@@ -63,10 +62,8 @@ def createSensitivityGraphs(folder, numPolicies):
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/shareUnmetCareDemand_L' + str(r) + '_Chart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'shareUnmetCareDemand_L' + str(r) + '_Chart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
     
@@ -84,10 +81,8 @@ def createSensitivityGraphs(folder, numPolicies):
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/averageUnmetCareDemand_L' + str(r) + '_Chart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'averageUnmetCareDemand_L' + str(r) + '_Chart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -106,10 +101,8 @@ def createSensitivityGraphs(folder, numPolicies):
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/aggregateQALY_L' + str(r) + '_Chart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'aggregateQALY_L' + str(r) + '_Chart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
     
@@ -127,10 +120,8 @@ def createSensitivityGraphs(folder, numPolicies):
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/averageQALY_L' + str(r) + '_Chart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'averageQALY_L' + str(r) + '_Chart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
     
@@ -148,10 +139,8 @@ def createSensitivityGraphs(folder, numPolicies):
         plt.xlim(p['statsCollectFrom'], p['endYear'])
         plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/perCapitaHealthCareCost_L' + str(r) + '_Chart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'perCapitaHealthCareCost_L' + str(r) + '_Chart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
     
@@ -197,12 +186,10 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
-    ax.legend(loc = 'upper right')
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/SharesUnmetCareSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'SharesUnmetCareSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -244,12 +231,10 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
-    ax.legend(loc = 'upper right')
+    ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/AveragesUnmetCareSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'AveragesUnmetCareSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -310,7 +295,7 @@ def createSensitivityGraphs(folder, numPolicies):
     # ax.set_xticks(index + bar_width + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
-        xLabels.append('Lever ' + str(r))
+        xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
     plt.xticks(index + bar_width, xlab)
     ax.xaxis.set_ticks_position('none')
@@ -318,10 +303,8 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.legend(handles[::-1], labels[::-1])
     ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/CostPerHourOfCareSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'CostPerHourOfCareSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -356,7 +339,7 @@ def createSensitivityGraphs(folder, numPolicies):
     # ax.set_xticks(index + bar_width + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
-        xLabels.append('Lever ' + str(r))
+        xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
     plt.xticks(index + bar_width, xlab)
     ax.xaxis.set_ticks_position('none')
@@ -364,10 +347,8 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.legend(handles[::-1], labels[::-1])
     ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/TotalQALYSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'TotalQALYSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -400,7 +381,7 @@ def createSensitivityGraphs(folder, numPolicies):
     # ax.set_xticks(index + bar_width)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
-        xLabels.append('Lever ' + str(r))
+        xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
     plt.xticks(index + bar_width, xlab)
     ax.xaxis.set_ticks_position('none')
@@ -408,10 +389,8 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.legend(handles[::-1], labels[::-1])
     ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/AverageQALYSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'AverageQALYSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
 
@@ -447,7 +426,7 @@ def createSensitivityGraphs(folder, numPolicies):
     # ax.set_xticks(index + bar_width/2)
     xLabels = []
     for r in range(p['numberPolicyParameters']):
-        xLabels.append('Lever ' + str(r))
+        xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
     plt.xticks(index + bar_width, xlab)
     ax.xaxis.set_ticks_position('none')
@@ -455,10 +434,8 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.legend(handles[::-1], labels[::-1])
     ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/perCapitaHospitalizationCostsSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'perCapitaHospitalizationCostsSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -470,14 +447,17 @@ def createSensitivityGraphs(folder, numPolicies):
     P2_SD = []
     P0_SD = []
     
+    P1_M.append(np.sum(outputsByParams[0][0]['careCreditCost'][-policyYears:]))
     P1_M.append(np.sum(outputsByParams[1][0]['totalTaxRefund'][-policyYears:]))
     P1_M.append(np.sum(outputsByParams[2][0]['pensionBudget'][-policyYears:]))
     P1_M.append(np.sum(outputsByParams[3][0]['costDirectFunding'][-policyYears:]))
     
+    P2_M.append(np.sum(outputsByParams[1][1]['careCreditCost'][-policyYears:]))
     P2_M.append(np.sum(outputsByParams[1][1]['totalTaxRefund'][-policyYears:]))
     P2_M.append(np.sum(outputsByParams[2][1]['pensionBudget'][-policyYears:]))
     P2_M.append(np.sum(outputsByParams[3][1]['costDirectFunding'][-policyYears:]))
     
+    P0_M.append(np.sum(outputs[1]['careCreditCost'][-policyYears:]))
     P0_M.append(np.sum(outputs[1]['totalTaxRefund'][-policyYears:]))
     P0_M.append(np.sum(outputs[2]['pensionBudget'][-policyYears:]))
     P0_M.append(np.sum(outputs[3]['costDirectFunding'][-policyYears:]))
@@ -493,14 +473,14 @@ def createSensitivityGraphs(folder, numPolicies):
     p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD, 
     p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD, 
     p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD, 
-    plt.axhline(y = 0.0, color = 'black', linewidth = 1)
+    plt.axhline(y = 0.0, color = 'black', linewidth = 0.5)
     ax.set_ylabel('Cost per Week')
-    plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
     # ax.set_xlabel('Policy Levers')
     ax.set_title('Policies Net Cost')
+    plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
     # ax.set_xticks(index + bar_width/2)
     xLabels = []
-    for r in range(p['numberPolicyParameters']-1):
+    for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
     plt.xticks(index + bar_width, xlab)
@@ -509,10 +489,8 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.legend(handles[::-1], labels[::-1])
     ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/PoliciesNetCostsSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'PoliciesNetCostsSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -524,14 +502,17 @@ def createSensitivityGraphs(folder, numPolicies):
     P2_SD = []
     P0_SD = []
     
+    P1_M.append(discountedSum(outputsByParams[1][0]['careCreditCost'][-policyYears:]))
     P1_M.append(discountedSum(outputsByParams[1][0]['totalTaxRefund'][-policyYears:]))
     P1_M.append(discountedSum(outputsByParams[2][0]['pensionBudget'][-policyYears:]))
     P1_M.append(discountedSum(outputsByParams[3][0]['costDirectFunding'][-policyYears:]))
     
+    P2_M.append(discountedSum(outputsByParams[1][1]['careCreditCost'][-policyYears:]))
     P2_M.append(discountedSum(outputsByParams[1][1]['totalTaxRefund'][-policyYears:]))
     P2_M.append(discountedSum(outputsByParams[2][1]['pensionBudget'][-policyYears:]))
     P2_M.append(discountedSum(outputsByParams[3][1]['costDirectFunding'][-policyYears:]))
     
+    P0_M.append(discountedSum(outputs[1]['careCreditCost'][-policyYears:]))
     P0_M.append(discountedSum(outputs[1]['totalTaxRefund'][-policyYears:]))
     P0_M.append(discountedSum(outputs[2]['pensionBudget'][-policyYears:]))
     P0_M.append(discountedSum(outputs[3]['costDirectFunding'][-policyYears:]))
@@ -547,14 +528,14 @@ def createSensitivityGraphs(folder, numPolicies):
     p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD, 
     p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD, 
     p0 = ax.bar(index + bar_width + bar_width, P0_M, bar_width,color='y', bottom = 0, label = 'Benchmark') # yerr = P0_SD, 
-    plt.axhline(y = 0.0, color = 'black', linewidth = 1)
+    plt.axhline(y = 0.0, color = 'black', linewidth = 0.5)
     ax.set_ylabel('Cost per Week')
     # ax.set_xlabel('Policy Levers')
-    ax.set_title('Policies Net Discounted Cost')
+    ax.set_title('Policies Discounted Net Cost')
     plt.ticklabel_format(axis='y', style='sci', scilimits=(-2,2))
     # ax.set_xticks(index + bar_width/2)
     xLabels = []
-    for r in range(p['numberPolicyParameters']-1):
+    for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
     plt.xticks(index + bar_width, xlab)
@@ -563,10 +544,8 @@ def createSensitivityGraphs(folder, numPolicies):
     ax.legend(handles[::-1], labels[::-1])
     ax.legend(loc = 'lower right')
     fig.tight_layout()
-    filename = folder + '/PoliciesNetCostsSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'PoliciesDiscountedNetCostsSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
     
@@ -582,6 +561,8 @@ def createSensitivityGraphs(folder, numPolicies):
     additionalCost_2 = []
     additionalSocialCare_3 = []
     additionalCost_3 = []
+    additionalSocialCare_4 = []
+    additionalCost_4 = []
     
     for j in range(2):
         deltaCare_1 = []
@@ -590,28 +571,36 @@ def createSensitivityGraphs(folder, numPolicies):
         deltaCost_2 = []
         deltaCare_3 = []
         deltaCost_3 = []
+        deltaCare_4 = []
+        deltaCost_4 = []
         for i in range(len(outputs[0]['unmetSocialCareNeed'])):
-            deltaCare_1.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[1][j]['unmetSocialCareNeed'][i])
-            deltaCost_1.append(outputsByParams[1][j]['totalTaxRefund'][i] - outputs[0]['totalTaxRefund'][i])
-            deltaCare_2.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[2][j]['unmetSocialCareNeed'][i])
-            deltaCost_2.append(outputsByParams[2][j]['pensionBudget'][i] - outputs[0]['pensionBudget'][i])
-            deltaCare_3.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[3][j]['unmetSocialCareNeed'][i])
-            deltaCost_3.append(outputsByParams[3][j]['costDirectFunding'][i] - outputs[0]['costDirectFunding'][i])
+            deltaCare_1.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[0][j]['unmetSocialCareNeed'][i])
+            deltaCost_1.append(outputsByParams[0][j]['careCreditCost'][i] - outputs[0]['careCreditCost'][i])
+            deltaCare_2.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[1][j]['unmetSocialCareNeed'][i])
+            deltaCost_2.append(outputsByParams[1][j]['totalTaxRefund'][i] - outputs[0]['totalTaxRefund'][i])
+            deltaCare_3.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[2][j]['unmetSocialCareNeed'][i])
+            deltaCost_3.append(outputsByParams[2][j]['pensionBudget'][i] - outputs[0]['pensionBudget'][i])
+            deltaCare_4.append(outputs[0]['unmetSocialCareNeed'][i]-outputsByParams[3][j]['unmetSocialCareNeed'][i])
+            deltaCost_4.append(outputsByParams[3][j]['costDirectFunding'][i] - outputs[0]['costDirectFunding'][i])
         additionalSocialCare_1.append(deltaCare_1)
         additionalCost_1.append(deltaCost_1)
         additionalSocialCare_2.append(deltaCare_2)
         additionalCost_2.append(deltaCost_2)
         additionalSocialCare_3.append(deltaCare_3)
         additionalCost_3.append(deltaCost_3)
+        additionalSocialCare_4.append(deltaCare_4)
+        additionalCost_4.append(deltaCost_4)
     
     efficiency_1 = []
     efficiency_2 = []
     efficiency_3 = []
+    efficiency_4 = []
     
     for j in range(2):
         e_1 = []
         e_2 = []
         e_3 = []
+        e_4 = []
         for i in range(len(additionalSocialCare_1[j])):
             if additionalCost_1[j][i] != 0:
                 e_1.append(additionalSocialCare_1[j][i]/additionalCost_1[j][i])
@@ -625,17 +614,24 @@ def createSensitivityGraphs(folder, numPolicies):
                 e_3.append(additionalSocialCare_3[j][i]/additionalCost_3[j][i])
             else:
                 e_3.append(0.0)
+            if additionalCost_4[j][i] != 0:
+                e_4.append(additionalSocialCare_4[j][i]/additionalCost_4[j][i])
+            else:
+                e_4.append(0.0)
         efficiency_1.append(e_1)
         efficiency_2.append(e_2)
         efficiency_3.append(e_3)
-    
+        efficiency_4.append(e_4)
+        
     P1_M.append(np.mean(efficiency_1[0][-policyYears:]))
     P1_M.append(np.mean(efficiency_2[0][-policyYears:]))
     P1_M.append(np.mean(efficiency_3[0][-policyYears:]))
+    P1_M.append(np.mean(efficiency_4[0][-policyYears:]))
     
     P2_M.append(np.mean(efficiency_1[1][-policyYears:]))
     P2_M.append(np.mean(efficiency_2[1][-policyYears:]))
     P2_M.append(np.mean(efficiency_3[1][-policyYears:]))
+    P2_M.append(np.mean(efficiency_4[1][-policyYears:]))
     
     N = len(P1_M)
     fig, ax = plt.subplots()
@@ -643,36 +639,34 @@ def createSensitivityGraphs(folder, numPolicies):
     bar_width = 0.35         # the width of the bars
     p1 = ax.bar(index, P1_M, bar_width, color='b', bottom = 0, label = 'Policy 1') # yerr = P1_SD, 
     p2 = ax.bar(index + bar_width, P2_M, bar_width,color='g', bottom = 0, label = 'Policy 2') # yerr = P2_SD, 
-    plt.axhline(y = 0.0, color = 'black', linewidth = 1)
+    plt.axhline(y = 0.0, color = 'black', linewidth = 0.5)
     ax.set_ylabel('Pounds')
     # ax.set_xlabel('Policy Levers')
     ax.set_title('Cost per Additional Hour of Care')
     # ax.set_xticks(index + bar_width/2)
     xLabels = []
-    for r in range(p['numberPolicyParameters']-1):
+    for r in range(p['numberPolicyParameters']):
         xLabels.append('Lever ' + str(r+1))
     xlab = tuple(xLabels)
-    plt.xticks(index + bar_width, xlab)
+    plt.xticks(index + bar_width/2, xlab)
     ax.xaxis.set_ticks_position('none')
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1])
-    ax.legend(loc = 'lower right')
+    ax.legend(loc = 'upper right')
     fig.tight_layout()
-    filename = folder + '/CostPerAdditionalCareSensitivityGroupedBarChart.pdf'
-    if not os.path.isdir(os.path.dirname(filename)):
-        os.mkdir(os.path.dirname(filename))
-    pp = PdfPages(filename)
+    path = os.path.join(folder, 'CostPerAdditionalCareSensitivityGroupedBarChart.pdf')
+    pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
 
 def discountedSum(timeSeries):
-    dSum = 0
+    discountedSum = 0
     ts = np.array(timeSeries)
     for i in range(len(ts)):
-        dSum += ts[i]/math.pow((1.0 + p['discountingFactor']), i)
-    return dSum
+        discountedSum += ts[i]/pow((1.0 + p['discountingFactor']), float(i))
+    return discountedSum
 
-folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model II\Charts\SensitivityCharts'
+folder  = 'N:/Social Care Model III/Charts/SensitivityCharts'
 if not os.path.isdir(os.path.dirname(folder)):
     os.makedirs(folder)
 
