@@ -21,17 +21,24 @@ def init_params():
     """Set up the simulation parameters."""
     p = {}
     
+    p['rootFolder'] = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model II'
+    #p['rootFolder'] = 'N:/Social Care Model III'
+    p['noPolicySim'] = True
+    p['numRepeats'] = 1
+    
+    p['multiprocessing'] = False
+    p['numberProcessors'] = 4
+    
     p['favouriteSeed'] = 123
     p['loadFromFile'] = False
     p['verboseDebugging'] = False
-    p['singleRunGraphs'] = True
-     
-    p['multiprocessing'] = True
-    p['numberProcessors'] = 4
-    p['noPolicySim'] = False
-    p['numRepeats'] = 1
-    
+    p['singleRunGraphs'] = False
+    p['saveChecks'] = False
+    p['getCheckVariablesAtYear'] = 1950
+    # To change through command-line arguments
+
     p['numberPolicyParameters'] = 4
+    p['numberScenarios'] = 9
     
     ############  Policy Parameters    #######################
     p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
@@ -40,20 +47,22 @@ def init_params():
     p['socialSupportLevel'] = 5
     # p['educationCosts']
     #############################################################
-    p['socialCareCreditShare'] = 0.0
-    
+    p['socialCareCreditShare'] = 0.5
+    p['maxWtWChildAge'] = 5
      # The basics: starting population and year, etc.
-    p['policyOnlySim'] = False
     
+    p['discountingFactor'] = 0.03
     
     
     p['initialPop'] = 600
+    
     p['startYear'] = 1860
-    p['endYear'] = 2040 # 2040
+    p['endYear'] = 1960 # 2040
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1990 # 1990
-    p['regressionCollectFrom'] = 1960 # 1960 
-    p['implementPoliciesFromYear'] = 2020 # 2020   
+    p['statsCollectFrom'] = 1920 # 1990
+    p['regressionCollectFrom'] = 1880 # 1960 
+    p['implementPoliciesFromYear'] = 1940 # 2020   
+    
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
     p['numberClasses'] = 5
@@ -160,7 +169,7 @@ def init_params():
     p['socialCareCreditQuantity'] = 0
     p['kinshipNetworkCarePropension'] = 0.5
     p['volunteersCarePropensionCoefficient'] = 0.01
-    
+    p['pensionContributionRate'] = 0.05
     
     p['hillHealthLevelThreshold'] = 3
     p['seriouslyHillSupportRate'] = 0.5

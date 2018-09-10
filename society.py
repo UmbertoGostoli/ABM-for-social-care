@@ -152,6 +152,7 @@ class Person:
         self.volunteerCareSupply = 0
         self.creditNeedRatio = 0
         self.maxNokSupply = 0
+        self.residualNetNeed = 0
         self.potentialVolunteer = False
         
         self.cumulativeUnmetNeed = 0
