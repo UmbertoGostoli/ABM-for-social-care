@@ -301,7 +301,7 @@ class Sim:
         if self.p['singleRunGraphs']:
             self.doGraphs_fromFile(folder)
         
-        if self.['saveChecks']:
+        if self.p['saveChecks']:
             self.saveChecks(folder)
 
         self.interactiveGraphics()
