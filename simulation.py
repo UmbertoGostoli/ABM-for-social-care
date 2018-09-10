@@ -54,7 +54,7 @@ class Sim:
         self.periodCount = 0
         self.year = 0
         ###################### Demographic outputs ###################
-        self.Outputs = ['year', 'currentPop', 'taxPayers', 'numUnskilled', 'numSkilled', 'numLowClass', 'numMidClass', 'numUpClass',
+        self.Outputs = ['year', 'currentPop', 'taxPayers', 'numUnskilled', 'numSkilled', 'numLowClass', 'numMidClass', 'numUpClass', 'shareLoneParents',
                    'shareUnskilled', 'shareSkilled', 'shareLowClass', 'shareMidClass', 'shareUpClass', 'numOccupiedHouses', 'averageHouseholdSize', 
                    'marriageTally', 'divorceTally', 'averageHouseholdSize_1', 'averageHouseholdSize_2', 'averageHouseholdSize_3', 'averageHouseholdSize_4', 
                    'averageHouseholdSize_5', 'totalCareSupply', 'informalCareSupply', 'formalCareSupply', 'totalCareNeed', 'socialCareNeed', 'childCareNeed', 
@@ -237,7 +237,7 @@ class Sim:
         
         if self.p['noPolicySim'] == True:
                 
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model II\Charts\NoPolicy_Sim\Repeat_' + str(policyParams)
+            folder  = self.p['rootFolder'] + '/Charts/NoPolicy_Sim/Repeat_' + str(policyParams)
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
            
@@ -250,15 +250,20 @@ class Sim:
                 self.randomSeed = rdTime
                 random.seed(rdTime)
                 np.random.seed(rdTime)
-                
-            values = zip(np.array([self.randomSeed, self.p['socialCareCreditShare'], self.p['taxBreakRate'], self.p['ageOfRetirement'], self.p['socialSupportLevel']]))
-            names = ('randomSeed, socialCareCreditShare, taxBreakRate, ageOfRetirement, socialSupportLevel')
+
+            values = zip(np.array([self.randomSeed, self.p['endYear'], self.p['statsCollectFrom'], 
+                                   self.p['numRepeats'], self.p['numberPolicyParameters'], self.p['numberScenarios'],
+                                   self.p['numberClasses'], self.p['implementPoliciesFromYear'], self.p['discountingFactor'], 
+                                   self.p['socialCareCreditShare'], self.p['taxBreakRate'], self.p['ageOfRetirement'], 
+                                   self.p['socialSupportLevel']]))
+            names = ('randomSeed,endYear,statCollectionYear,numRepeats,numParameters,numScenarios,numberClasses,startPoliciesYear,'
+                     'discountingFactor,socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
 
         else:
             print('Policy Combination: ' + str(policyParams[-1]))
             
-            folder  = 'C:\Users\Umberto Gostoli\SPHSU\Social Care Model II\Charts\SocPolicy_Sim\Policy_' + str(policyParams[-1]) #
+            folder  = self.p['rootFolder'] + '/Charts/SocPolicy_Sim/Policy_' + str(policyParams[-1]) #
             if not os.path.isdir(os.path.dirname(folder)):
                 os.makedirs(folder)
             
@@ -271,8 +276,12 @@ class Sim:
             if not os.path.isdir(os.path.dirname(filename)):
                 os.mkdir(os.path.dirname(filename))
     
-            values = zip(np.array([self.randomSeed, policyParams[0], policyParams[1], policyParams[2], policyParams[3]]))
-            names = ('randomSeed, socialCareCreditShare, taxBreakRate, ageOfRetirement, socialSupportLevel')
+            values = zip(np.array([self.randomSeed, self.p['endYear'], self.p['statsCollectFrom'], 
+                                   self.p['numRepeats'], self.p['numberPolicyParameters'], self.p['numberScenarios'],
+                                   self.p['numberClasses'], self.p['implementPoliciesFromYear'], self.p['discountingFactor'],
+                                   policyParams[0], policyParams[1], policyParams[2], policyParams[3]]))
+            names = ('randomSeed,endYear,statCollectionYear,numRepeats,numParameters,numScenarios,numberClasses,startPoliciesYear,'
+                     'discountingFactor,socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
         
         self.initializePop()
@@ -291,6 +300,8 @@ class Sim:
             
         if self.p['singleRunGraphs']:
             self.doGraphs_fromFile(folder)
+        
+        if self.['saveChecks']:
             self.saveChecks(folder)
 
         self.interactiveGraphics()
@@ -1245,6 +1256,7 @@ class Sim:
             person.volunteerCareSupply = 0
             person.potentialVolunteer = False
             person.maxNokSupply = 0
+            person.residualNetNeed = 0
             
             person.careReceivers = []
             person.totalCareSupplied = []
@@ -1301,8 +1313,7 @@ class Sim:
         if self.year > self.p['implementPoliciesFromYear']:
             totalCareCredits = 0
             creditPop = [x for x in self.pop.livingPeople if x.socialCareCredits > 0]
-            for person in creditPop:
-                totalCareCredits += person.socialCareCredits
+            totalCareCredits = sum([x.socialCareCredits for x in creditPop])
             if self.p['absoluteCreditQuantity'] == True:
                 newCredit = max(self.initialCareCredits*self.p['quantityYearlyIncrease'] - totalCareCredits, 0)
             else:
@@ -1316,12 +1327,13 @@ class Sim:
             person.creditNeedRatio = float(person.socialCareCredits)/float(person.residualNeed)
         while newCredit > 0:
             careReceivers.sort(key=operator.attrgetter("creditNeedRatio"))
-            careReceivers[0].socialCareCredits += 1
-            careReceivers[0].creditNeedRatio = float(careReceivers[0].socialCareCredits)/float(careReceivers[0].residualNeed)
-            newCredit -=1
+            receiver = careReceivers[0]
+            receiver.socialCareCredits += 1
+            receiver.creditNeedRatio = float(receiver.socialCareCredits)/float(receiver.residualNeed)
+            newCredit -= 1
         for person in careReceivers:
             person.maxNokSupply = max(person.residualNeed - round(person.socialCareCredits*(1-self.p['kinshipNetworkCarePropension'])), 0)
-         
+            person.residualNetNeed = int((person.maxNokSupply+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
         self.socialCareCredits = sum([x.socialCareCredits for x in self.pop.livingPeople if x.socialCareCredits > 0])
         
     def careTransitions(self):
@@ -1344,7 +1356,7 @@ class Sim:
             
             careProb = baseProb*math.pow(self.p['careBias'], person.classRank)/unmetNeedFactor 
             
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.careTransitionRate[person.classRank].append(careProb)
             
             if random.random() < careProb:
@@ -1415,7 +1427,7 @@ class Sim:
             householdPerCapitaIncome = householdIncome/float(len(household))
             
             # Check time series
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.perCapitaHouseholdIncome.append(householdPerCapitaIncome)
             
             # Compute the total income devoted to informal care supply
@@ -1595,7 +1607,7 @@ class Sim:
                     networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
                 
                 # Check variable
-                if self.year == self.p['endYear'] and deltaHouseholdCare*deltaNetworkCare != 0:
+                if self.year == self.p['getCheckVariablesAtYear'] and deltaHouseholdCare*deltaNetworkCare != 0:
                     self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
                     
                 # Min-Max: -6000 - 3000
@@ -1799,7 +1811,7 @@ class Sim:
 
         # The care need is satisfied by the household's informal care supply, starting from the social care need if present.
         # First, select all the agents with care need in the population.
-        careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0 or x.age >= self.p['socialCareBankingAge']]
+        careReceivers = [x for x in self.pop.livingPeople if x.residualNetNeed > 0 or x.age >= self.p['socialCareBankingAge']]
         for receiver in careReceivers:
             self.kinshipNetwork(receiver)
             # receiver.networkSupplies = []
@@ -1808,30 +1820,24 @@ class Sim:
             receiver.totalSupply = self.totalSupply(receiver)
             #receiver.totalInformalSupply = self.totalInformalSupply(receiver)
             
-        residualReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0 and x.totalSupply > 0 and x.careReceived < x.maxNokSupply]
+        residualReceivers = [x for x in self.pop.livingPeople if x.residualNetNeed > 0 and x.totalSupply > 0]
         while len(residualReceivers) > 0:
             
-            totalResidualNeed_init = sum([x.residualNeed for x in residualReceivers])
+            totalResidualNeed_init = sum([x.residualNetNeed for x in residualReceivers])
             
-            careList = []
-            for x in residualReceivers:
-                if x.age < 16:
-                    needWeight = x.residualNeed
-                else:
-                    needWeight = x.residualNeed*self.p['socialCareWeightBias']
-                careList.append(needWeight)
+            careList = [x.residualNetNeed for x in residualReceivers]
             probReceivers = [i/sum(careList) for i in careList]
             receiver = np.random.choice(residualReceivers, p = probReceivers)
             
             self.getCare(receiver)
             
-            careReceivers = [x for x in self.pop.livingPeople if x.residualNeed > 0 and x.careReceived < x.maxNokSupply]
+            careReceivers = [x for x in self.pop.livingPeople if x.residualNetNeed > 0]
             for receiver in careReceivers:
                 receiver.totalSupply = self.totalSupply(receiver)
             residualReceivers = [x for x in careReceivers if x.totalSupply > 0]
             
             # Check process
-            totalResidualNeed_end = sum([x.residualNeed for x in residualReceivers])
+            totalResidualNeed_end = sum([x.residualNetNeed for x in residualReceivers])
             if totalResidualNeed_init == totalResidualNeed_end:
                 print('Error: final and initial need is equal')
                 
@@ -1951,6 +1957,7 @@ class Sim:
         
     def getCare(self, receiver):
         receiver.residualNeed -= self.p['quantumCare'] 
+        receiver.residualNetNeed -= self.p['quantumCare']
         townReceiver = receiver.house.town 
         informalCare = 0
         formalCare = 0
@@ -2382,7 +2389,7 @@ class Sim:
             workTime = workingHours/float(self.p['weeklyHours'])
             person.netIncome = person.residualWorkingHours*person.wage
             income = person.netIncome
-            # Compute pension budget
+            self.pensionBudget -= income*self.p['pensionContributionRate']
             for i in range(self.p['taxBandsNumber']-1):
                 if income > self.p['taxBrackets'][i]:
                     bracket = income-self.p['taxBrackets'][i]
@@ -2399,8 +2406,9 @@ class Sim:
             volunteers = [x for x in self.pop.livingPeople if x.age >= self.p['socialCareBankingAge'] and x.hoursDemand == 0]
             for person in volunteers:
                 person.potentialVolunteer = True
+                person.totalSupply += person.socialCareCredits
                 # Check variable
-                if self.year == self.p['endYear']:
+                if self.year == self.p['getCheckVariablesAtYear']:
                     self.volunteersTotalSupply.append(person.totalSupply)
                     
                 shareResidualSupply = 1/math.exp(self.p['volunteersCarePropensionCoefficient']*(1+person.totalSupply))
@@ -2411,7 +2419,7 @@ class Sim:
                 availableVolunteers = [x for x in receiver.careNetwork.neighbors(receiver) if x.potentialVolunteer == True and x.house.town == receiver.house.town and x.volunteerCareSupply > 0]
                 receiver.totalSupply = sum([x.volunteerCareSupply for x in availableVolunteers])
             residualReceivers = [x for x in potentialReceivers if x.totalSupply > 0]
-            while len(residualReceivers):
+            while len(residualReceivers) > 0:
                 # Select receiver by residual need
                 careList = [x.residualNeed for x in residualReceivers]
                 probReceivers = [i/sum(careList) for i in careList]
@@ -2426,6 +2434,8 @@ class Sim:
                 receiver.residualNeed -= 1
                 supplier.socialCareCredits += 1
                 receiver.socialCareCredits -= 1
+                supplier.socialWork += 1
+                receiver.informalCare += 1
                 self.socialCreditSpent += 1
                 # Create new set of receivers
                 potentialReceivers = [x for x in potentialReceivers if x.residualNeed > 0 and x.socialCareCredits > 0]
@@ -2454,6 +2464,8 @@ class Sim:
                 receiver.residualNeed -= 1
                 supplier.socialCareCredits += 1
                 receiver.socialCareCredits -= 1
+                supplier.socialWork += 1
+                receiver.informalCare += 1
                 self.socialCreditSpent += 1
                 # Create new set of receivers
                 potentialReceivers = [x for x in potentialReceivers if x.residualNeed > 0 and x.socialCareCredits > 0]
@@ -2581,7 +2593,7 @@ class Sim:
                 relCost = (forgoneSalary+educationCosts)/perCapitaDisposableIncome
                 
                 # Check variable
-                if self.year == self.p['endYear']:
+                if self.year == self.p['getCheckVariablesAtYear']:
                     self.relativeEducationCost.append(relCost) # 0.2 - 5
                 
                 incomeEffect = self.p['costantIncomeParam']/(math.exp(self.p['eduWageSensitivity']*relCost) + (self.p['costantIncomeParam']-1)) # Min-Max: 0 - 10
@@ -2595,7 +2607,7 @@ class Sim:
                 if pStudy < 0:
                     pStudy = 0
                 # Check
-                if self.year == self.p['endYear']:
+                if self.year == self.p['getCheckVariablesAtYear']:
                     self.probKeepStudying.append(pStudy)
                     self.stageStudent.append(stage)
                 
@@ -2688,7 +2700,7 @@ class Sim:
         
         for man in potentialGrooms: # for man in eligibleMen: # 
             # maxEncounters = self.datingActivity(man)
-            eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.age >= self.p['minPregnancyAge'] and x.partner == None]
+            eligibleWomen = [x for x in self.pop.livingPeople if x.sex == 'female' and x.age >= self.p['minPregnancyAge'] and x.house != man.house and x.partner == None]
             
             potentialBrides = []
             for woman in eligibleWomen:
@@ -2968,7 +2980,7 @@ class Sim:
                     
                     jobMobilityRate = (self.p['jobMobilitySlope']/unemploymentRate + self.p['jobMobilityIntercept'])*self.p['ageBiasParam'][a]
                     
-                    if self.year == self.p['endYear']:
+                    if self.year == self.p['getCheckVariablesAtYear']:
                         self.changeJobRate.append(jobMobilityRate)
                     
                     if jobMobilityRate > 0.85:
@@ -3011,7 +3023,7 @@ class Sim:
                             deltaIncome = newHouseholdIncome - householdStatusQuo
                             
                             # Check variables
-                            if self.year == self.p['endYear']:
+                            if self.year == self.p['getCheckVariablesAtYear']:
                                 self.changeJobdIncome.append(deltaIncome)
                                 self.relocationCareLoss.append(relocationNetLoss)
                             
@@ -3124,7 +3136,7 @@ class Sim:
         townJobDensity = self.jobMarketMap[person.classRank][townIndex]
         
         # Check variable
-        if self.year == self.p['endYear']:
+        if self.year == self.p['getCheckVariablesAtYear']:
             self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.006 - 0.05
         
         townFactor = math.exp(self.p['incomeDiscountingExponent']*townJobDensity) # + self.p['incomeDiscountingParam']))
@@ -3134,7 +3146,7 @@ class Sim:
             print('Error: unemploymentRate is NAN!')
             
         # Check variable
-        if self.year == self.p['endYear']:
+        if self.year == self.p['getCheckVariablesAtYear']:
             self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.009 - 0.07
         
         expIncome = income*math.exp(-1*discountingFactor*self.p['discountingMultiplier'])#discountingFactor
@@ -3292,7 +3304,7 @@ class Sim:
         socialAttraction = (self.spousesCareLocation(agent, household) - rcA)/perCapitaIncome
         
         # Check variable
-        if self.year == self.p['endYear']:
+        if self.year == self.p['getCheckVariablesAtYear']:
             self.spousesTownSocialAttraction.append(socialAttraction) 
         
         attractionFactor = math.exp(self.p['propensityRelocationParam']*socialAttraction)
@@ -3323,7 +3335,7 @@ class Sim:
                 rcA += math.pow(float(child.yearsInTown), self.p['yearsInTownSensitivityParam'])
         
         # Check variable
-        if self.year == self.p['endYear']:
+        if self.year == self.p['getCheckVariablesAtYear']:
             self.relocationCost.append(rcA)  # Min-Max: 0 - 8
         
         rcA *= self.p['relocationCostParam']
@@ -3337,7 +3349,7 @@ class Sim:
                 townAttraction = (agent.socialCareMap[index] - rcA)/perCapitaIncome
                 
             # Check variable
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.townRelocationAttraction.append(townAttraction)
             
             townAttractions.append(townAttraction)
@@ -3367,14 +3379,14 @@ class Sim:
               #  print('Relative Attraction is:')
               #  print(relativeAttraction)
             # Check variable
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.03 - 0.00
             
             attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
             rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
             
             # Check variable
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.townRelativeAttraction.append(rp) # 0.87 - 0.9
             
             propensities.append(rp)
@@ -3440,7 +3452,7 @@ class Sim:
             townDensity.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
             
             # Check
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.townsJobProb.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
             
             index += 1
@@ -4298,7 +4310,7 @@ class Sim:
                     inactiveInHousehold = len([x for x in potentialHost.house.occupants if x.status == 'inactive'])
                     totalInactive = inactiveInHousehold + len(household)
                     # Check variable
-                    if self.year == self.p['endYear']:
+                    if self.year == self.p['getCheckVariablesAtYear']:
                         self.potentialHostSupply.append(potentialHost.householdSupply) # 
                         
                     if len([x for x in potentialHost.house.occupants if x.independentStatus == True]) == 0:
@@ -4425,7 +4437,7 @@ class Sim:
                 # Softmax function
                 
             # Check variable
-            if self.year == self.p['endYear']:
+            if self.year == self.p['getCheckVariablesAtYear']:
                 self.houseScore.append(count) # Min-Max: -4 - 4
             
             socialDesirability.append(math.exp(self.p['distanceSensitivityParam']*count))
@@ -4724,6 +4736,25 @@ class Sim:
         averageDiscountedQALY = 0
         if self.year >= self.p['implementPoliciesFromYear']:
             averageDiscountedQALY = (totQALY/math.pow(1+self.p['qalyDiscountRate'], self.year-self.p['implementPoliciesFromYear']))/currentPop
+        
+        # Lone Parents
+        parents = []
+        for person in adultPop:
+            for child in person.children:
+                if person.house == child.house and child.age <= self.p['maxWtWChildAge'] and person.partner != None:
+                    parents.append(person)
+                    break
+        numberParents = len(parents)
+        loneParents = []
+        for person in parents:
+            for child in person.children:
+                if person.house == child.house and child.age <= self.p['maxWtWChildAge'] and person.partner == None:
+                    loneParents.append(person)
+                    break
+        numberLoneParents = len(loneParents)
+        shareLoneParents = float(numberLoneParents)/float(numberParents)
+        
+        # Compute line parents' shares by social class
         
         unskilled = [x for x in adultPop if x.classRank == 0]
         numUnskilled = float(len(unskilled))
@@ -5862,7 +5893,7 @@ class Sim:
         else:
             shareCreditsSpent = 0
        
-        outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass,
+        outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass, shareLoneParents,
                    shareUnskilled, shareSkilled, shareLowClass, shareMidClass, shareUpClass, numOccupiedHouses, averageHouseholdSize, self.marriageTally, self.divorceTally,
                    averageHouseholdSize_1, averageHouseholdSize_2, averageHouseholdSize_3, averageHouseholdSize_4, averageHouseholdSize_5, totalCareSupply, informalCareSupply,
                    formalCareSupply, totalCareNeed, socialCareNeed, childCareNeed, shareCareGivers, shareCareGivers_1, shareCareGivers_2, shareCareGivers_3, shareCareGivers_4, 
@@ -5987,7 +6018,7 @@ class Sim:
         deltaOccupants = (totOcc-firstocc)/float(firstocc)
         
         # Check variable
-        if self.year == self.p['endYear']:
+        if self.year == self.p['getCheckVariablesAtYear']:
             self.deltaHouseOccupants.append(deltaOccupants) # Min-Max: -0.5 - 3
         
         prob = 1.0 - 1.0/math.exp(self.p['relocationParameter']*deltaOccupants)
@@ -6383,10 +6414,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/DemandSupplyStackedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'DemandSupplyStackedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6408,10 +6437,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareCareGiversChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareCareGiversChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6431,10 +6458,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareByNeedLevelsStackedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareByNeedLevelsStackedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6456,10 +6481,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareSocialCareNeedsChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareSocialCareNeedsChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6475,10 +6498,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaCareUnmetCareChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PerCapitaCareUnmetCareChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6494,10 +6515,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaDemandUnmetSocialCareChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PerCapitaDemandUnmetSocialCareChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6514,10 +6533,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaDemandUnmetChildCareChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PerCapitaDemandUnmetChildCareChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6535,10 +6552,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/CareReceivedStackedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CareReceivedStackedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6563,13 +6578,10 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareInformalCareReceivedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareInformalCareReceivedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
-        
         
         # Chart 10: Shares informal social care received (from 1960 to 2020)
         fig, ax = plt.subplots()
@@ -6588,10 +6600,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareInformalSocialCareReceivedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareInformalSocialCareReceivedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6613,10 +6623,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareInformalChildCareReceivedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareInformalChildCareReceivedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6634,10 +6642,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/SocialCareReceivedStackedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'SocialCareReceivedStackedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6655,10 +6661,8 @@ class Sim:
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         fig.tight_layout()
-        filename = folder + '/ChildCareReceivedStackedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ChildCareReceivedStackedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6681,10 +6685,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareUnmetCareNeedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareUnmetCareNeedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6707,10 +6709,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareUnmetSocialCareNeedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareUnmetSocialCareNeedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6733,10 +6733,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareUnmetChildCareNeedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareUnmetChildCareNeedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6758,10 +6756,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaUnmetNeedByClassChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PerCapitaUnmetNeedByClassChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6783,10 +6779,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/AverageUnmetCareNeedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'AverageUnmetCareNeedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6828,10 +6822,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal, Formal and Unmet Care Need by Class')
         fig.tight_layout()
-        filename = folder + '/CareByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CareByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6855,10 +6847,8 @@ class Sim:
         ax.set_ylim([0, 50])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/InformalCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'InformalCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6880,10 +6870,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/FormalCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'FormalCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6907,10 +6895,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/UnmetCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'UnmetCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6930,10 +6916,8 @@ class Sim:
         ax.set_ylim([0, 50])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/Delivered_UnmetCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'Delivered_UnmetCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -6975,10 +6959,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal, Formal and Unmet Care Need per Recipient')
         fig.tight_layout()
-        filename = folder + '/CarePerRecipientByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CarePerRecipientByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7020,10 +7002,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal, Formal and Unmet Social Care Need by Class')
         fig.tight_layout()
-        filename = folder + '/SocialCareByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'SocialCareByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7046,10 +7026,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/informalSocialCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'informalSocialCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7071,10 +7049,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/formalSocialCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'formalSocialCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
 
@@ -7096,10 +7072,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/UnmetSocialCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'UnmetSocialCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7118,10 +7092,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/Delivered_UnmetSocialCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'Delivered_UnmetSocialCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7163,10 +7135,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal, Formal and Unmet Social Care Need per Recipient')
         fig.tight_layout()
-        filename = folder + '/SocialCarePerRecipientByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'SocialCarePerRecipientByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7210,10 +7180,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal, Formal and Unmet Child Care Need by Class')
         fig.tight_layout()
-        filename = folder + '/ChildCareByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ChildCareByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7237,10 +7205,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/informalChildCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'informalChildCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7262,10 +7228,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/formalChildCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'formalChildCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
 
@@ -7292,10 +7256,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/CarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7318,10 +7280,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/UnmetChildCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'UnmetChildCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7341,10 +7301,8 @@ class Sim:
         ax.set_ylim([0, 30])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/Delivered_UnmetChildCarePerRecipientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'Delivered_UnmetChildCarePerRecipientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7387,10 +7345,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal, Formal and Unmet Child Care Need per Recipient')
         fig.tight_layout()
-        filename = folder + '/ChildCarePerRecipientByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ChildCarePerRecipientByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7425,10 +7381,8 @@ class Sim:
         ax.legend(loc = 'lower left')
         ax.set_title('Informal and Formal Care per Carer')
         fig.tight_layout()
-        filename = folder + '/CarePerCarerByClassStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CarePerCarerByClassStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7458,10 +7412,8 @@ class Sim:
         ax.legend(loc = 'upper right')
         ax.set_title('Informal and Formal Care per Kinship Level')
         fig.tight_layout()
-        filename = folder + '/InformalFormalCareByKinshipStackedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'InformalFormalCareByKinshipStackedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7486,10 +7438,8 @@ class Sim:
         # ax.set_ylim([0, 0.8])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareCareWomedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareCareWomedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7528,10 +7478,8 @@ class Sim:
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles[::-1], labels[::-1])
         fig.tight_layout()
-        filename = folder + '/InformalCareByGenderAndClassGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'InformalCareByGenderAndClassGroupedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7554,10 +7502,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/WomenMenWageRatioChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'WomenMenWageRatioChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7596,10 +7542,8 @@ class Sim:
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles[::-1], labels[::-1])
         plt.tight_layout()
-        filename = folder + '/WageByGenderAndClassGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'WageByGenderAndClassGroupedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7622,10 +7566,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/WomenMenIncomeRatioChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'WomenMenIncomeRatioChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7664,10 +7606,8 @@ class Sim:
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles[::-1], labels[::-1])
         plt.tight_layout()
-        filename = folder + '/IncomeByGenderAndClassGroupedBarChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'IncomeByGenderAndClassGroupedBarChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7689,10 +7629,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PopulationTaxPayersStackedChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PopulationTaxPayersStackedChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7716,10 +7654,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/AverageFamilySizeChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'AverageFamilySizeChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()         
                  
@@ -7745,10 +7681,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/TaxBurdenChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'TaxBurdenChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()  
       
@@ -7764,10 +7698,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/totalTaxRefundChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'totalTaxRefundChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()  
         
@@ -7783,10 +7715,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/pensionBudgetChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'pensionBudgetChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()  
         
@@ -7800,10 +7730,23 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/MarriageRateChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'MarriageRateChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 49: Proportion of lone parents (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['shareLoneParents'], linewidth = 3, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        # ax.set_ylabel('Proportion of married adult women')
+        ax.set_title('Share of lone parents')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        path = os.path.join(folder, 'LoneParentsShareChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7818,10 +7761,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/TotalHealthCareCostChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'TotalHealthCareCostChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7836,10 +7777,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PerCapitaHealthCareCostChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PerCapitaHealthCareCostChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7863,10 +7802,8 @@ class Sim:
         plt.ylim(0.5, 1.0)
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/UnmetSocialCareGiniCoefficientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'UnmetSocialCareGiniCoefficientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -7889,76 +7826,12 @@ class Sim:
         plt.ylim(0.5, 1.0)
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareUnmetSocialCareGiniCoefficientChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareUnmetSocialCareGiniCoefficientChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
-        # Chart 41: Unmet Social Care Density (2030)
-        
-#        data1 = self.unmetSocialCareNeedDistribution
-#        data2 = self.unmetSocialCareNeedDistribution_1
-#        data3 = self.unmetSocialCareNeedDistribution_2
-#        data4 = self.unmetSocialCareNeedDistribution_3
-#        data5 = self.unmetSocialCareNeedDistribution_4
-#        data6 = self.unmetSocialCareNeedDistribution_5
-#        data = [data1, data2, data3, data4, data5, data6]
-#        fig, ax = plt.subplots()
-#        ax.boxplot(data, labels = ('Pop', 'I', 'II', 'III', 'IV', 'V'))
-#        ax.set_ylabel("Unmet Social Care")
-#        ax.set_xlabel("Populations")
-#        ax.set_title('Unmet Social Care Distribution')
-#        fig.tight_layout()
-#        filename = folder + '/UnmetSocialCareDistributionChart.pdf'
-#        if not os.path.isdir(os.path.dirname(filename)):
-#            os.mkdir(os.path.dirname(filename))
-#        pp = PdfPages(filename)
-#        pp.savefig(fig)
-#        pp.close()
-        
-        # Chart 42: Unmet Social Care Density by SES (2030)
-        
-#        data1 = self.shareUnmetSocialCareNeedDistribution
-#        data2 = self.shareUnmetSocialCareNeedDistribution_1
-#        data3 = self.shareUnmetSocialCareNeedDistribution_2
-#        data4 = self.shareUnmetSocialCareNeedDistribution_3
-#        data5 = self.shareUnmetSocialCareNeedDistribution_4
-#        data6 = self.shareUnmetSocialCareNeedDistribution_5
-#        data = [data1, data2, data3, data4, data5, data6]
-#        fig, ax = plt.subplots()
-#        ax.boxplot(data, labels = ('Pop', 'I', 'II', 'III', 'IV', 'V'))
-#        ax.set_ylabel("Share of Unmet Social Care")
-#        ax.set_xlabel("Populations")
-#        ax.set_title('Share of Unmet Social Care Distribution')
-#        fig.tight_layout()
-#        filename = folder + '/UnmetSocialCareDistributionChart.pdf'
-#        if not os.path.isdir(os.path.dirname(filename)):
-#            os.mkdir(os.path.dirname(filename))
-#        pp = PdfPages(filename)
-#        pp.savefig(fig)
-#        pp.close()
-        
-        # Chart 43: income distribution
-#        data = self.popHourlyWages
-#        fig, ax = plt.subplots()
-#        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-#        ax.set_ylabel("Density")
-#        ax.set_xlabel("Hourly Wage")
-#        ax.set_title('Hourly Wage Distribution')
-#        fig.tight_layout()
-#        sns.kdeplot(data, shade=True)
-#        fig.tight_layout()
-#        filename = folder + '/HourlyWageDistributionChart.pdf'
-#        if not os.path.isdir(os.path.dirname(filename)):
-#            os.mkdir(os.path.dirname(filename))
-#        pp = PdfPages(filename)
-#        pp.savefig(fig)
-#        pp.close()
-        
         # Chart 54: Public supply
-       
         fig, ax = plt.subplots()
         ax.plot(output['year'], output['publicSupply'], linewidth = 3)
         ax.set_xlim(left = self.p['statsCollectFrom'])
@@ -7972,10 +7845,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/PublicSocialCareSupplyChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'PublicSocialCareSupplyChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
       
@@ -7992,10 +7863,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/CostDirectFundingChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CostDirectFundingChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -8008,17 +7877,15 @@ class Sim:
         ax.set_ylabel('Hours of per week')
         # ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
-        ax.legend(loc = 'lower left')
+        ax.legend(loc = 'upper left')
         # ax.legend_.remove()
         ax.set_title('Credit Public Care Supply')
         ax.xaxis.set_major_locator(MaxNLocator(integer=True))
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/CreditPublicSocialCareSupplyChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CreditPublicSocialCareSupplyChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -8035,10 +7902,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/ShareSocialCreditTransferChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'ShareSocialCreditTransferChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -8055,10 +7920,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/CostCreditSocialCareChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'CostCreditSocialCareChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -8076,10 +7939,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/AggregateQALYChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'AggregateQALYChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -8097,10 +7958,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/AverageQALYChart.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'AverageQALYChart.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
         
@@ -8128,10 +7987,8 @@ class Sim:
         plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
-        filename = folder + '/RatioUnmetCareNeedTotalSupply.pdf'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
-        pp = PdfPages(filename)
+        path = os.path.join(folder, 'RatioUnmetCareNeedTotalSupply.pdf')
+        pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
 
