@@ -54,12 +54,15 @@ class Sim:
         self.periodCount = 0
         self.year = 0
         ###################### Demographic outputs ###################
-        self.Outputs = ['year', 'currentPop', 'taxPayers', 'numUnskilled', 'numSkilled', 'numLowClass', 'numMidClass', 'numUpClass', 'shareLoneParents',
+        self.Outputs = ['year', 'currentPop', 'taxPayers', 'numUnskilled', 'numSkilled', 'numLowClass', 'numMidClass', 'numUpClass', 'shareLoneParents', 'shareDistantParents',
                    'shareUnskilled', 'shareSkilled', 'shareLowClass', 'shareMidClass', 'shareUpClass', 'numOccupiedHouses', 'averageHouseholdSize', 
                    'marriageTally', 'divorceTally', 'averageHouseholdSize_1', 'averageHouseholdSize_2', 'averageHouseholdSize_3', 'averageHouseholdSize_4', 
                    'averageHouseholdSize_5', 'totalCareSupply', 'informalCareSupply', 'formalCareSupply', 'totalCareNeed', 'socialCareNeed', 'childCareNeed', 
                    'shareCareGivers', 'shareCareGivers_1', 'shareCareGivers_2', 'shareCareGivers_3', 'shareCareGivers_4', 'shareCareGivers_5', 
-                   'shareSocialCareTakers_N1', 'shareSocialCareTakers_N2', 'shareSocialCareTakers_N3', 'shareSocialCareTakers_N4', 'shareSocialCareDemand', 'shareSocialCare_1',
+                   'shareSocialCareTakers_N1', 'shareSocialCareTakers_N2', 'shareSocialCareTakers_N3', 'shareSocialCareTakers_N4', 
+                   'meanInformalSocialCareReceived_N1', 'meanFormalSocialCareReceived_N1', 'meanUnmetSocialCareNeed_N1', 'meanInformalSocialCareReceived_N2', 
+                   'meanFormalSocialCareReceived_N2', 'meanUnmetSocialCareNeed_N2', 'meanInformalSocialCareReceived_N3', 'meanFormalSocialCareReceived_N3', 'meanUnmetSocialCareNeed_N3', 
+                   'meanInformalSocialCareReceived_N4', 'meanFormalSocialCareReceived_N4', 'meanUnmetSocialCareNeed_N4', 'shareSocialCareDemand', 'shareSocialCare_1',
                    'shareSocialCare_2', 'shareSocialCare_3', 'shareSocialCare_4', 'shareSocialCare_5', 'perCapitaCareReceived', 'perCapitaUnmetCareDemand', 'perCapitaSocialCareReceived',
                    'perCapitaUnmetSocialCareDemand', 'perCapitaChildCareReceived', 'perCapitaUnmetChildCareDemand', 'informalCareReceived', 'formalCareReceived', 'totalCareReceived',
                    'totalUnnmetCareNeed', 'shareInformalCareReceived', 'shareInformalCareReceived_1',
@@ -238,12 +241,12 @@ class Sim:
         if self.p['noPolicySim'] == True:
                 
             folder  = self.p['rootFolder'] + '/Charts/NoPolicy_Sim/Repeat_' + str(policyParams)
-            if not os.path.isdir(os.path.dirname(folder)):
+            if not os.path.exists(folder):
                 os.makedirs(folder)
            
             filename = folder + '/parameterValues.csv'
-            if not os.path.isdir(os.path.dirname(filename)):
-                os.mkdir(os.path.dirname(filename))
+            if not os.path.exists(filename):
+                os.makedirs(filename)
             
             if self.p['numRepeats'] > 1:
                 rdTime = (int)(time.time())
@@ -264,7 +267,7 @@ class Sim:
             print('Policy Combination: ' + str(policyParams[-1]))
             
             folder  = self.p['rootFolder'] + '/Charts/SocPolicy_Sim/Policy_' + str(policyParams[-1]) #
-            if not os.path.isdir(os.path.dirname(folder)):
+            if not os.path.exists(folder):
                 os.makedirs(folder)
             
             policyParameters = [] 
@@ -273,8 +276,8 @@ class Sim:
                 policyParameters.append(policyParams[i])
             
             filename = folder + '/parameterValues.csv'
-            if not os.path.isdir(os.path.dirname(filename)):
-                os.mkdir(os.path.dirname(filename))
+            if not os.path.exists(filename):
+                os.makedirs(filename)
     
             values = zip(np.array([self.randomSeed, self.p['endYear'], self.p['statsCollectFrom'], 
                                    self.p['numRepeats'], self.p['numberPolicyParameters'], self.p['numberScenarios'],
@@ -1813,7 +1816,7 @@ class Sim:
         # First, select all the agents with care need in the population.
         careReceivers = [x for x in self.pop.livingPeople if x.residualNetNeed > 0 or x.age >= self.p['socialCareBankingAge']]
         for receiver in careReceivers:
-            self.kinshipNetwork(receiver)
+            self.kinshipNetwork(receiver, careReceivers.index(receiver))
             # receiver.networkSupplies = []
             # The total supply of informal care for the agent's kinship network is computed.
             # It includes all the informal care supply except the time-off-work infromal care supply (which is parte of the income-funded social care supply).
@@ -1850,7 +1853,11 @@ class Sim:
             receiver.totalDiscountedTime += 1
             receiver.averageShareUnmetNeed = receiver.totalDiscountedShareUnmetNeed/receiver.totalDiscountedTime
     
-    def kinshipNetwork(self, pin):
+    def kinshipNetwork(self, pin, index):
+
+        pin.careNetwork.clear()
+        pin.careNetwork.add_node(pin, name = 'receiver', color = 'red')
+        
         households = []
         for member in pin.house.occupants:
             if member.hoursDemand == 0 and member.house not in households:
@@ -1920,6 +1927,18 @@ class Sim:
             if uncle.dead == False and uncle.house not in households and uncle.house.town == pin.house.town:
                 pin.careNetwork.add_edge(pin, uncle, distance = 3)
                 households.append(uncle.house)
+        
+        if index == 0:
+            fig, ax = plt.subplots()
+            # pos=nx.spring_layout(pin.careNetwork)
+            nx.draw(pin.careNetwork)
+            # nx.draw_networkx_labels(pin.careNetwork, labels)
+            fig.tight_layout()
+            path = os.path.join(self.folder, 'Network.pdf')
+            pp = PdfPages(path)
+            pp.savefig(fig)
+            pp.close()
+            
     
     def totalSupply(self, receiver):
         totalSupply = 0
@@ -2346,7 +2365,14 @@ class Sim:
         for person in self.pop.livingPeople:
             person.age += 1
             # if self.year >= self.p['implementPoliciesFromYear']:
-            person.qaly = self.p['qalyIndexes'][person.careNeedLevel] #/math.pow(1+self.p['qalyDiscountRate'], person.yearAfterPolicy)
+            needLevel = float(person.careNeedLevel)
+            shareUnmetNeed = 0
+            if needLevel > 0:
+                shareUnmetNeed = float(person.residualNeed)/float(person.hoursDemand)
+                
+            person.qaly = 1/math.exp(self.p['qalyBeta']*pow(needLevel, self.p['qalyAlpha'])*(1.0+shareUnmetNeed))
+            
+            #person.qaly = self.p['qalyIndexes'][person.careNeedLevel]
                 # person.yearAfterPolicy += 1
             if person.status == 'child' and person.age >= self.p['ageTeenagers']:
                 person.status = 'teenager'
@@ -2486,7 +2512,7 @@ class Sim:
                     person.residualNeed = 0
                 
     def healthServiceCost(self):
-        self.hospitalizationCost = 0
+        
         peopleWithUnmetNeed = [x for x in self.pop.livingPeople if x.cumulativeUnmetNeed != 0 and x.careNeedLevel > 0]
         for person in peopleWithUnmetNeed:
             needLevelFactor = math.pow(self.p['needLevelParam'], person.careNeedLevel)
@@ -3380,7 +3406,7 @@ class Sim:
               #  print(relativeAttraction)
             # Check variable
             if self.year == self.p['getCheckVariablesAtYear']:
-                self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.03 - 0.00
+                self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.05 - 0.00
             
             attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
             rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
@@ -4726,6 +4752,12 @@ class Sim:
         numAdultPop = float(len(adultPop))
         currentPop = float(len(self.pop.livingPeople))
         
+        numParents = float(len([x for x in self.pop.livingPeople if len(x.children) > 0]))
+        numDistantParents = float(len([x for x in self.pop.livingPeople if len([y for y in x.children if y.house.town != x.house.town]) > 0]))
+        shareDistantParents = 0
+        if numParents> 0:
+            shareDistantParents = numDistantParents/numParents
+        
         totQALY = sum([x.qaly for x in self.pop.livingPeople])
         meanQALY = totQALY/currentPop
         
@@ -4888,14 +4920,58 @@ class Sim:
         numClass_5 = float(len(class_5))
         careGivers_5 = len([x for x in class_5 if x.hoursDemand == 0 and x.age >= self.p['ageTeenagers']])
         shareCareGivers_5 = float(careGivers_5)/numClass_5
-        
+
         # Graph 3
         socialCareReceivers = [x for x in self.pop.livingPeople if x.hoursDemand > 0 and x.status == 'inactive']
         totalSocialCareReceivers = float(len(socialCareReceivers))
         totalSocialCareReceivers_N1 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 1]))
+        informalSocialCareReceived_N1 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        formalSocialCareReceived_N1 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        unmetSocialCareNeed_N1 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        meanInformalSocialCareReceived_N1 = 0
+        meanFormalSocialCareReceived_N1 = 0
+        meanUnmetSocialCareNeed_N1 = 0
+        if totalSocialCareReceivers_N1 > 0:
+            meanInformalSocialCareReceived_N1 = informalSocialCareReceived_N1/totalSocialCareReceivers_N1
+            meanFormalSocialCareReceived_N1 = formalSocialCareReceived_N1/totalSocialCareReceivers_N1
+            meanUnmetSocialCareNeed_N1 = unmetSocialCareNeed_N1/totalSocialCareReceivers_N1
+        
         totalSocialCareReceivers_N2 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 2]))
+        informalSocialCareReceived_N2 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        formalSocialCareReceived_N2 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        unmetSocialCareNeed_N2 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        meanInformalSocialCareReceived_N2 = 0
+        meanFormalSocialCareReceived_N2 = 0
+        meanUnmetSocialCareNeed_N2 = 0
+        if totalSocialCareReceivers_N2 > 0:
+            meanInformalSocialCareReceived_N2 = informalSocialCareReceived_N2/totalSocialCareReceivers_N2
+            meanFormalSocialCareReceived_N2 = formalSocialCareReceived_N2/totalSocialCareReceivers_N2
+            meanUnmetSocialCareNeed_N2 = unmetSocialCareNeed_N2/totalSocialCareReceivers_N2
+        
         totalSocialCareReceivers_N3 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 3]))
+        informalSocialCareReceived_N3 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        formalSocialCareReceived_N3 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        unmetSocialCareNeed_N3 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        meanInformalSocialCareReceived_N3 = 0
+        meanFormalSocialCareReceived_N3 = 0
+        meanUnmetSocialCareNeed_N3 = 0
+        if totalSocialCareReceivers_N3 > 0:
+            meanInformalSocialCareReceived_N3 = informalSocialCareReceived_N3/totalSocialCareReceivers_N3
+            meanFormalSocialCareReceived_N3 = formalSocialCareReceived_N3/totalSocialCareReceivers_N3
+            meanUnmetSocialCareNeed_N3 = unmetSocialCareNeed_N3/totalSocialCareReceivers_N3
+            
         totalSocialCareReceivers_N4 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 4]))
+        informalSocialCareReceived_N4 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        formalSocialCareReceived_N4 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
+        unmetSocialCareNeed_N4 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        meanInformalSocialCareReceived_N4 = 0
+        meanFormalSocialCareReceived_N4 = 0
+        meanUnmetSocialCareNeed_N4 = 0
+        if totalSocialCareReceivers_N4 > 0:
+            meanInformalSocialCareReceived_N4 = informalSocialCareReceived_N4/totalSocialCareReceivers_N4
+            meanFormalSocialCareReceived_N4 = formalSocialCareReceived_N4/totalSocialCareReceivers_N4
+            meanUnmetSocialCareNeed_N4 = unmetSocialCareNeed_N4/totalSocialCareReceivers_N4
+            
         shareSocialCareTakers_N1 = 0
         shareSocialCareTakers_N2 = 0
         shareSocialCareTakers_N3 = 0
@@ -4905,6 +4981,7 @@ class Sim:
             shareSocialCareTakers_N2 = totalSocialCareReceivers_N2/totalSocialCareReceivers
             shareSocialCareTakers_N3 = totalSocialCareReceivers_N3/totalSocialCareReceivers
             shareSocialCareTakers_N4 = totalSocialCareReceivers_N4/totalSocialCareReceivers
+        
             
         # Graph 4
         shareSocialCareDemand = 0
@@ -5583,31 +5660,37 @@ class Sim:
                 
         # Graph 27
         informalCareSuppliedByFemales = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female'])
+        totalInformalCare = sum([x.socialWork for x in self.pop.livingPeople])
         shareInformalCareSuppliedByFemales = 0
         if informalCareReceived > 0:
-            shareInformalCareSuppliedByFemales = informalCareSuppliedByFemales/informalCareReceived
+            shareInformalCareSuppliedByFemales = informalCareSuppliedByFemales/totalInformalCare
         
         informalCareSuppliedByFemales_1 = sum([x.socialWork for x in class_1 if x.sex == 'female'])
+        totalInformalCare_1 = sum([x.socialWork for x in class_1])
         shareInformalCareSuppliedByFemales_1 = 0
         if totalInformalCare_1 > 0:
             shareInformalCareSuppliedByFemales_1 = informalCareSuppliedByFemales_1/totalInformalCare_1
         
         informalCareSuppliedByFemales_2 = sum([x.socialWork for x in class_2 if x.sex == 'female'])
+        totalInformalCare_2 = sum([x.socialWork for x in class_2])
         shareInformalCareSuppliedByFemales_2 = 0
         if totalInformalCare_2 > 0:
             shareInformalCareSuppliedByFemales_2 = informalCareSuppliedByFemales_2/totalInformalCare_2
         
         informalCareSuppliedByFemales_3 = sum([x.socialWork for x in class_3 if x.sex == 'female'])
+        totalInformalCare_3 = sum([x.socialWork for x in class_3])
         shareInformalCareSuppliedByFemales_3 = 0
         if totalInformalCare_3 > 0:
             shareInformalCareSuppliedByFemales_3 = informalCareSuppliedByFemales_3/totalInformalCare_3
         
         informalCareSuppliedByFemales_4 = sum([x.socialWork for x in class_4 if x.sex == 'female'])
+        totalInformalCare_4 = sum([x.socialWork for x in class_4])
         shareInformalCareSuppliedByFemales_4 = 0
         if totalInformalCare_4 > 0:
             shareInformalCareSuppliedByFemales_4 = informalCareSuppliedByFemales_4/totalInformalCare_4
         
         informalCareSuppliedByFemales_5 = sum([x.socialWork for x in class_5 if x.sex == 'female'])
+        totalInformalCare_5 = sum([x.socialWork for x in class_5])
         shareInformalCareSuppliedByFemales_5 = 0
         if totalInformalCare_5 > 0:
             shareInformalCareSuppliedByFemales_5 = informalCareSuppliedByFemales_5/totalInformalCare_5
@@ -5893,11 +5976,14 @@ class Sim:
         else:
             shareCreditsSpent = 0
        
-        outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass, shareLoneParents,
+        outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass, shareLoneParents, shareDistantParents,
                    shareUnskilled, shareSkilled, shareLowClass, shareMidClass, shareUpClass, numOccupiedHouses, averageHouseholdSize, self.marriageTally, self.divorceTally,
                    averageHouseholdSize_1, averageHouseholdSize_2, averageHouseholdSize_3, averageHouseholdSize_4, averageHouseholdSize_5, totalCareSupply, informalCareSupply,
                    formalCareSupply, totalCareNeed, socialCareNeed, childCareNeed, shareCareGivers, shareCareGivers_1, shareCareGivers_2, shareCareGivers_3, shareCareGivers_4, 
-                   shareCareGivers_5, shareSocialCareTakers_N1, shareSocialCareTakers_N2, shareSocialCareTakers_N3, shareSocialCareTakers_N4, shareSocialCareDemand, shareSocialCare_1,
+                   shareCareGivers_5, shareSocialCareTakers_N1, shareSocialCareTakers_N2, shareSocialCareTakers_N3, shareSocialCareTakers_N4, 
+                   meanInformalSocialCareReceived_N1, meanFormalSocialCareReceived_N1, meanUnmetSocialCareNeed_N1, meanInformalSocialCareReceived_N2, meanFormalSocialCareReceived_N2, 
+                   meanUnmetSocialCareNeed_N2, meanInformalSocialCareReceived_N3, meanFormalSocialCareReceived_N3, meanUnmetSocialCareNeed_N3, meanInformalSocialCareReceived_N4, 
+                   meanFormalSocialCareReceived_N4, meanUnmetSocialCareNeed_N4, shareSocialCareDemand, shareSocialCare_1,
                    shareSocialCare_2, shareSocialCare_3, shareSocialCare_4, shareSocialCare_5, perCapitaCareReceived, perCapitaUnmetCareDemand, perCapitaSocialCareReceived,
                    perCapitaUnmetSocialCareDemand, perCapitaChildCareReceived, perCapitaUnmetChildCareDemand, informalCareReceived, formalCareReceived, totalCareReceived,
                    totalUnnmetCareNeed, shareInformalCareReceived, shareInformalCareReceived_1, 
@@ -5957,6 +6043,7 @@ class Sim:
                    
         self.marriageTally = 0      
         self.divorceTally = 0 
+        self.hospitalizationCost = 0
         
         self.totalTaxRefund = 0
         self.publicSupply = 0
@@ -7746,6 +7833,21 @@ class Sim:
         plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
         fig.tight_layout()
         path = os.path.join(folder, 'LoneParentsShareChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Chart 49-bis: Proportion of Distant parents (1960-2020)
+        fig, ax = plt.subplots()
+        ax.plot(output['year'], output['shareDistantParents'], linewidth = 3, color = 'red')
+        ax.set_xlim(left = self.p['statsCollectFrom'])
+        # ax.set_ylabel('Proportion of married adult women')
+        ax.set_title('Share of distant parents')
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(self.p['statsCollectFrom'], self.p['endYear'])
+        plt.xticks(range(self.p['statsCollectFrom'], self.p['endYear']+1, 10))
+        fig.tight_layout()
+        path = os.path.join(folder, 'DistantParentsShareChart.pdf')
         pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()

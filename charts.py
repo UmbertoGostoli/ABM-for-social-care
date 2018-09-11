@@ -17,14 +17,14 @@ def init_params(output):
     """Set up the simulation parameters."""
     p = {}
 
-    p['endYear'] = output['endYear'].values[0]
-    p['statsCollectFrom'] = output['statCollectionYear'].values[0]
-    p['numberPolicyParameters'] = output['numParameters'].values[0]
-    p['numberScenarios'] = output['numScenarios'].values[0]
-    p['numRepeats'] = output['numRepeats'].values[0]
-    p['implementPoliciesFromYear'] = output['startPoliciesYear'].values[0]
+    p['endYear'] = int(output['endYear'].values[0])
+    p['statsCollectFrom'] = int(output['statCollectionYear'].values[0])
+    p['numberPolicyParameters'] = int(output['numParameters'].values[0])
+    p['numberScenarios'] = int(output['numScenarios'].values[0])
+    p['numRepeats'] = int(output['numRepeats'].values[0])
+    p['implementPoliciesFromYear'] = int(output['startPoliciesYear'].values[0])
     p['discountingFactor'] = output['discountingFactor'].values[0]
-    p['numberClasses'] = output['numberClasses'].values[0]
+    p['numberClasses'] = int(output['numberClasses'].values[0])
     
     return p
 
@@ -261,7 +261,9 @@ def createSensitivityGraphs(folder, singleRunsFolder, numFolders, p):
         outputsByParams[i].append(outputs[n])
         outputsByParams[i].append(outputs[n+1])
         n += 2
-        
+     
+    policyYears = (p['endYear']-p['implementPoliciesFromYear']) + 1
+    
     for r in range(p['numberPolicyParameters']):
         
         fig, ax = plt.subplots()
@@ -282,13 +284,32 @@ def createSensitivityGraphs(folder, singleRunsFolder, numFolders, p):
         pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
+        
+        fig, ax = plt.subplots()
+        p1, = ax.plot(outputs[0]['year'], outputs[0]['totalUnnmetCareNeed'], linewidth = 2, label = 'Benchmark')
+        p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['totalUnnmetCareNeed'], label = 'Policy A')
+        p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['totalUnnmetCareNeed'], label = 'Policy B')
+        ax.set_xlim(left = p['statsCollectFrom'])
+        ax.set_ylabel('Hours of Unmet Care')
+        ax.set_xlabel('Year')
+        handles, labels = ax.get_legend_handles_labels()
+        ax.legend(loc = 'lower left')
+        ax.set_title('Policy Lever ' + str(r))
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+        plt.xlim(p['statsCollectFrom'], p['endYear'])
+        plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalUnmetCareDemand_L' + str(r) + '_Chart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
     
         fig, ax = plt.subplots()
         p1, = ax.plot(outputs[0]['year'], outputs[0]['unmetCarePerRecipient'], linewidth = 2, label = 'Benchmark')
         p2, = ax.plot(outputsByParams[r][0]['year'], outputsByParams[r][0]['unmetCarePerRecipient'], label = 'Policy A')
         p3, = ax.plot(outputsByParams[r][1]['year'], outputsByParams[r][1]['unmetCarePerRecipient'], label = 'Policy B')
         ax.set_xlim(left = p['statsCollectFrom'])
-        ax.set_ylabel('Hours of Unmet Care Need')
+        ax.set_ylabel('Hours of Unmet Care')
         ax.set_xlabel('Year')
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(loc = 'lower left')
@@ -359,11 +380,142 @@ def createSensitivityGraphs(folder, singleRunsFolder, numFolders, p):
         pp = PdfPages(path)
         pp.savefig(fig)
         pp.close()
-    
-    # Grouped Bar Charts
-    
-    policyYears = (p['endYear']-p['implementPoliciesFromYear']) + 1
-    
+        
+        ## Bar Charts
+        # Bar charts of share of unmet care demand 
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(np.mean(outputs[0]['shareUnmetCareDemand'][-policyYears:]))
+        shareUnmetCareDemand.append(np.mean(outputsByParams[r][0]['shareUnmetCareDemand'][-policyYears:]))
+        shareUnmetCareDemand.append(np.mean(outputsByParams[r][1]['shareUnmetCareDemand'][-policyYears:]))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('Share of Total Demand')
+        ax.set_title('Share of Unmet Care Demand')
+        fig.tight_layout()
+        path = os.path.join(folder, 'SharesUnmetCareDemandBar_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Bar charts of total unmet care need
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(np.sum(outputs[0]['totalUnnmetCareNeed'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][0]['totalUnnmetCareNeed'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][1]['totalUnnmetCareNeed'][-policyYears:]))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('Hours of Unmet Care')
+        ax.set_title('Total Unmet Social Care Need')
+        fig.tight_layout()
+        path = os.path.join(folder, 'TotalUnmetCareNeed_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Bar charts of unmet Care Per Recipient
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(np.sum(outputs[0]['unmetCarePerRecipient'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][0]['unmetCarePerRecipient'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][1]['unmetCarePerRecipient'][-policyYears:]))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('Hours of Unmet Care')
+        ax.set_title('Unmet Social Care per Recipient')
+        fig.tight_layout()
+        path = os.path.join(folder, 'UnmetCarePerRecipient_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Bar charts of total qualy (not discounted)
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(np.sum(outputs[0]['totQALY'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][0]['totQALY'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][1]['totQALY'][-policyYears:]))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('QALY')
+        ax.set_title('Total QALY')
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalQALY_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Bar charts of total qualy (discounted)
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(discountedSum(outputs[0]['totQALY'][-policyYears:], p))
+        shareUnmetCareDemand.append(discountedSum(outputsByParams[r][0]['totQALY'][-policyYears:], p))
+        shareUnmetCareDemand.append(discountedSum(outputsByParams[r][1]['totQALY'][-policyYears:], p))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('QALY')
+        ax.set_title('Total Discounted QALY')
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalDiscountedQALY_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Bar charts of total hospitalization Cost (not discounted)
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(np.sum(outputs[0]['hospitalizationCost'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][0]['hospitalizationCost'][-policyYears:]))
+        shareUnmetCareDemand.append(np.sum(outputsByParams[r][1]['hospitalizationCost'][-policyYears:]))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('Hospitalization Cost')
+        ax.set_title('Total Hospitalization Cost')
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalHospitalizationCost_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+        # Bar charts of total hospitalization Cost (discounted)
+        fig, ax = plt.subplots()
+        objects = ('Policy 1', 'Policy 2', 'Benchmark')
+        y_pos = np.arange(len(objects))
+        shareUnmetCareDemand = []
+        shareUnmetCareDemand.append(discountedSum(outputs[0]['hospitalizationCost'][-policyYears:], p))
+        shareUnmetCareDemand.append(discountedSum(outputsByParams[r][0]['hospitalizationCost'][-policyYears:], p))
+        shareUnmetCareDemand.append(discountedSum(outputsByParams[r][1]['hospitalizationCost'][-policyYears:], p))
+        ax.bar(y_pos, shareUnmetCareDemand, align='center', alpha=0.5)
+        plt.xticks(y_pos, objects)
+        ax.xaxis.set_ticks_position('none')
+        ax.set_ylabel('Hospitalization Cost')
+        ax.set_title('Total Discounted Hospitalization Cost')
+        fig.tight_layout()
+        path = os.path.join(folder, 'totalDiscountedHospitalizationCost_L' + str(r) + '_BarChart.pdf')
+        pp = PdfPages(path)
+        pp.savefig(fig)
+        pp.close()
+        
+ 
     P1_M = []
     P2_M = []
     P0_M = []
@@ -718,20 +870,20 @@ def createSensitivityGraphs(folder, singleRunsFolder, numFolders, p):
     P2_SD = []
     P0_SD = []
     
-    P1_M.append(discountedSum(outputsByParams[1][0]['careCreditCost'][-policyYears:]))
-    P1_M.append(discountedSum(outputsByParams[1][0]['totalTaxRefund'][-policyYears:]))
-    P1_M.append(discountedSum(outputsByParams[2][0]['pensionBudget'][-policyYears:]))
-    P1_M.append(discountedSum(outputsByParams[3][0]['costDirectFunding'][-policyYears:]))
+    P1_M.append(discountedSum(outputsByParams[1][0]['careCreditCost'][-policyYears:], p))
+    P1_M.append(discountedSum(outputsByParams[1][0]['totalTaxRefund'][-policyYears:], p))
+    P1_M.append(discountedSum(outputsByParams[2][0]['pensionBudget'][-policyYears:], p))
+    P1_M.append(discountedSum(outputsByParams[3][0]['costDirectFunding'][-policyYears:], p))
     
-    P2_M.append(discountedSum(outputsByParams[1][1]['careCreditCost'][-policyYears:]))
-    P2_M.append(discountedSum(outputsByParams[1][1]['totalTaxRefund'][-policyYears:]))
-    P2_M.append(discountedSum(outputsByParams[2][1]['pensionBudget'][-policyYears:]))
-    P2_M.append(discountedSum(outputsByParams[3][1]['costDirectFunding'][-policyYears:]))
+    P2_M.append(discountedSum(outputsByParams[1][1]['careCreditCost'][-policyYears:], p))
+    P2_M.append(discountedSum(outputsByParams[1][1]['totalTaxRefund'][-policyYears:], p))
+    P2_M.append(discountedSum(outputsByParams[2][1]['pensionBudget'][-policyYears:], p))
+    P2_M.append(discountedSum(outputsByParams[3][1]['costDirectFunding'][-policyYears:], p))
     
-    P0_M.append(discountedSum(outputs[1]['careCreditCost'][-policyYears:]))
-    P0_M.append(discountedSum(outputs[1]['totalTaxRefund'][-policyYears:]))
-    P0_M.append(discountedSum(outputs[2]['pensionBudget'][-policyYears:]))
-    P0_M.append(discountedSum(outputs[3]['costDirectFunding'][-policyYears:]))
+    P0_M.append(discountedSum(outputs[1]['careCreditCost'][-policyYears:], p))
+    P0_M.append(discountedSum(outputs[1]['totalTaxRefund'][-policyYears:], p))
+    P0_M.append(discountedSum(outputs[2]['pensionBudget'][-policyYears:], p))
+    P0_M.append(discountedSum(outputs[3]['costDirectFunding'][-policyYears:], p))
         
 #    P1_SD.append(np.std(outputsByParams[r][0]['totalCost'][-policyYears:]))
 #    P2_SD.append(np.std(outputsByParams[r][1]['totalCost'][-policyYears:]))
@@ -875,7 +1027,7 @@ def createSensitivityGraphs(folder, singleRunsFolder, numFolders, p):
     pp.savefig(fig)
     pp.close()
 
-def discountedSum(timeSeries):
+def discountedSum(timeSeries, p):
     discountedSum = 0
     ts = np.array(timeSeries)
     for i in range(len(ts)):
@@ -885,7 +1037,9 @@ def discountedSum(timeSeries):
 def singleRunCharts(folder, inputFile, p):
     # Individual runs charts
     output = pd.read_csv(inputFile, sep=',',header=0)
-
+    
+    policyYears = (p['endYear']-p['implementPoliciesFromYear']) + 1
+    
     # Chart 1: total social and child care demand and potential supply (from 1960 to 2020)
     fig, ax = plt.subplots()
     ax.plot(output['year'], output['totalCareSupply'], linewidth=2, label = 'Potential Supply', color = 'green')
@@ -1134,6 +1288,45 @@ def singleRunCharts(folder, inputFile, p):
     pp.savefig(fig)
     pp.close()
     
+    # Informal and formal care and unmet care need per receiver by care need level.
+    
+    n_groups = p['numCareLevels']-1
+    meanInformalCareReceived_1 = np.mean(output['meanInformalSocialCareReceived_N1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['meanFormalSocialCareReceived_N1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['meanUnmetSocialCareNeed_N1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['meanInformalSocialCareReceived_N2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['meanFormalSocialCareReceived_N2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['meanUnmetSocialCareNeed_N2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['meanInformalSocialCareReceived_N3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['meanFormalSocialCareReceived_N3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['meanUnmetSocialCareNeed_N3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['meanInformalSocialCareReceived_N4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['meanFormalSocialCareReceived_N4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['meanUnmetSocialCareNeed_N4'][-policyYears:])
+    informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
+                    meanInformalCareReceived_4)
+    formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
+                  meanFormalCareReceived_4)
+    sumInformalFormalCare = [x + y for x, y in zip(informalCare, formalCare)]
+    unmetNeeds = (meanUnmetNeed_1, meanUnmetNeed_2, meanUnmetNeed_3, meanUnmetNeed_4)
+    ind = np.arange(n_groups)    # the x locations for the groups
+    width = 0.4       # the width of the bars: can also be len(x) sequence
+    fig, ax = plt.subplots()
+    p1 = ax.bar(ind, informalCare, width, label = 'Informal Care')
+    p2 = ax.bar(ind, formalCare, width, bottom = informalCare, label = 'Formal Care')
+    p3 = ax.bar(ind, unmetNeeds, width, bottom = sumInformalFormalCare, label = 'Unmet Care Needs')
+    ax.set_ylabel('Hours per week')
+    ax.set_xticks(ind)
+    plt.xticks(ind, ('NL 1', 'NL 2', 'NL 3', 'NL 4'))
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(loc = 'lower left')
+    ax.set_title('Mean Informal, Formal and Unmet Social Care by Care Need Level')
+    fig.tight_layout()
+    path = os.path.join(folder, 'SocialCarePerRecipientByNeedLevelStackedBarChart.pdf')
+    pp = PdfPages(path)
+    pp.savefig(fig)
+    pp.close()
+    
     # Chart 13: total informal and formal child care received and unmet child care needs (from 1960 to 2020)
     
     fig, ax = plt.subplots()
@@ -1274,21 +1467,21 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 19 
    
     n_groups = p['numberClasses']
-    meanInformalCareReceived_1 = np.mean(output['informalCareReceived_1'][-20:])
-    meanFormalCareReceived_1 = np.mean(output['formalCareReceived_1'][-20:])
-    meanUnmetNeed_1 = np.mean(output['unmetCareNeed_1'][-20:])
-    meanInformalCareReceived_2 = np.mean(output['informalCareReceived_2'][-20:])
-    meanFormalCareReceived_2 = np.mean(output['formalCareReceived_2'][-20:])
-    meanUnmetNeed_2 = np.mean(output['unmetCareNeed_2'][-20:])
-    meanInformalCareReceived_3 = np.mean(output['informalCareReceived_3'][-20:])
-    meanFormalCareReceived_3 = np.mean(output['formalCareReceived_3'][-20:])
-    meanUnmetNeed_3 = np.mean(output['unmetCareNeed_3'][-20:])
-    meanInformalCareReceived_4 = np.mean(output['informalCareReceived_4'][-20:])
-    meanFormalCareReceived_4 = np.mean(output['formalCareReceived_4'][-20:])
-    meanUnmetNeed_4 = np.mean(output['unmetCareNeed_4'][-20:])
-    meanInformalCareReceived_5 = np.mean(output['informalCareReceived_5'][-20:])
-    meanFormalCareReceived_5 = np.mean(output['formalCareReceived_5'][-20:])
-    meanUnmetNeed_5 = np.mean(output['unmetCareNeed_5'][-20:])
+    meanInformalCareReceived_1 = np.mean(output['informalCareReceived_1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['formalCareReceived_1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['unmetCareNeed_1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['informalCareReceived_2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['formalCareReceived_2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['unmetCareNeed_2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['informalCareReceived_3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['formalCareReceived_3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['unmetCareNeed_3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['informalCareReceived_4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['formalCareReceived_4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['unmetCareNeed_4'][-policyYears:])
+    meanInformalCareReceived_5 = np.mean(output['informalCareReceived_5'][-policyYears:])
+    meanFormalCareReceived_5 = np.mean(output['formalCareReceived_5'][-policyYears:])
+    meanUnmetNeed_5 = np.mean(output['unmetCareNeed_5'][-policyYears:])
     informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
                     meanInformalCareReceived_4, meanInformalCareReceived_5)
     formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
@@ -1411,21 +1604,21 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 24: informal and formal care received and unmet care needs per recipient by social class (mean of last 20 years)
    
     n_groups = p['numberClasses']
-    meanInformalCareReceived_1 = np.mean(output['informalCarePerRecipient_1'][-20:])
-    meanFormalCareReceived_1 = np.mean(output['formalCarePerRecipient_1'][-20:])
-    meanUnmetNeed_1 = np.mean(output['unmetCarePerRecipient_1'][-20:])
-    meanInformalCareReceived_2 = np.mean(output['informalCarePerRecipient_2'][-20:])
-    meanFormalCareReceived_2 = np.mean(output['formalCarePerRecipient_2'][-20:])
-    meanUnmetNeed_2 = np.mean(output['unmetCarePerRecipient_2'][-20:])
-    meanInformalCareReceived_3 = np.mean(output['informalCarePerRecipient_3'][-20:])
-    meanFormalCareReceived_3 = np.mean(output['formalCarePerRecipient_3'][-20:])
-    meanUnmetNeed_3 = np.mean(output['unmetCarePerRecipient_3'][-20:])
-    meanInformalCareReceived_4 = np.mean(output['informalCarePerRecipient_4'][-20:])
-    meanFormalCareReceived_4 = np.mean(output['formalCarePerRecipient_4'][-20:])
-    meanUnmetNeed_4 = np.mean(output['unmetCarePerRecipient_4'][-20:])
-    meanInformalCareReceived_5 = np.mean(output['informalCarePerRecipient_5'][-20:])
-    meanFormalCareReceived_5 = np.mean(output['formalCarePerRecipient_5'][-20:])
-    meanUnmetNeed_5 = np.mean(output['unmetCarePerRecipient_5'][-20:])
+    meanInformalCareReceived_1 = np.mean(output['informalCarePerRecipient_1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['formalCarePerRecipient_1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['unmetCarePerRecipient_1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['informalCarePerRecipient_2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['formalCarePerRecipient_2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['unmetCarePerRecipient_2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['informalCarePerRecipient_3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['formalCarePerRecipient_3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['unmetCarePerRecipient_3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['informalCarePerRecipient_4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['formalCarePerRecipient_4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['unmetCarePerRecipient_4'][-policyYears:])
+    meanInformalCareReceived_5 = np.mean(output['informalCarePerRecipient_5'][-policyYears:])
+    meanFormalCareReceived_5 = np.mean(output['formalCarePerRecipient_5'][-policyYears:])
+    meanUnmetNeed_5 = np.mean(output['unmetCarePerRecipient_5'][-policyYears:])
     informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
                     meanInformalCareReceived_4, meanInformalCareReceived_5)
     formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
@@ -1454,21 +1647,21 @@ def singleRunCharts(folder, inputFile, p):
    # Chart 25: informal and formal social care received and unmet social care needs by social class (mean of last 20 years)
    
     n_groups = p['numberClasses']
-    meanInformalCareReceived_1 = np.mean(output['informalSocialCareReceived_1'][-20:])
-    meanFormalCareReceived_1 = np.mean(output['formalSocialCareReceived_1'][-20:])
-    meanUnmetNeed_1 = np.mean(output['unmetSocialCareNeed_1'][-20:])
-    meanInformalCareReceived_2 = np.mean(output['informalSocialCareReceived_2'][-20:])
-    meanFormalCareReceived_2 = np.mean(output['formalSocialCareReceived_2'][-20:])
-    meanUnmetNeed_2 = np.mean(output['unmetSocialCareNeed_2'][-20:])
-    meanInformalCareReceived_3 = np.mean(output['informalSocialCareReceived_3'][-20:])
-    meanFormalCareReceived_3 = np.mean(output['formalSocialCareReceived_3'][-20:])
-    meanUnmetNeed_3 = np.mean(output['unmetSocialCareNeed_3'][-20:])
-    meanInformalCareReceived_4 = np.mean(output['informalSocialCareReceived_4'][-20:])
-    meanFormalCareReceived_4 = np.mean(output['formalSocialCareReceived_4'][-20:])
-    meanUnmetNeed_4 = np.mean(output['unmetSocialCareNeed_4'][-20:])
-    meanInformalCareReceived_5 = np.mean(output['informalSocialCareReceived_5'][-20:])
-    meanFormalCareReceived_5 = np.mean(output['formalSocialCareReceived_5'][-20:])
-    meanUnmetNeed_5 = np.mean(output['unmetSocialCareNeed_5'][-20:])
+    meanInformalCareReceived_1 = np.mean(output['informalSocialCareReceived_1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['formalSocialCareReceived_1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['unmetSocialCareNeed_1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['informalSocialCareReceived_2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['formalSocialCareReceived_2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['unmetSocialCareNeed_2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['informalSocialCareReceived_3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['formalSocialCareReceived_3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['unmetSocialCareNeed_3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['informalSocialCareReceived_4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['formalSocialCareReceived_4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['unmetSocialCareNeed_4'][-policyYears:])
+    meanInformalCareReceived_5 = np.mean(output['informalSocialCareReceived_5'][-policyYears:])
+    meanFormalCareReceived_5 = np.mean(output['formalSocialCareReceived_5'][-policyYears:])
+    meanUnmetNeed_5 = np.mean(output['unmetSocialCareNeed_5'][-policyYears:])
     informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
                     meanInformalCareReceived_4, meanInformalCareReceived_5)
     formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
@@ -1587,21 +1780,21 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 30
 
     n_groups = p['numberClasses']
-    meanInformalCareReceived_1 = np.mean(output['informalSocialCarePerRecipient_1'][-20:])
-    meanFormalCareReceived_1 = np.mean(output['formalSocialCarePerRecipient_1'][-20:])
-    meanUnmetNeed_1 = np.mean(output['unmetSocialCarePerRecipient_1'][-20:])
-    meanInformalCareReceived_2 = np.mean(output['informalSocialCarePerRecipient_2'][-20:])
-    meanFormalCareReceived_2 = np.mean(output['formalSocialCarePerRecipient_2'][-20:])
-    meanUnmetNeed_2 = np.mean(output['unmetSocialCarePerRecipient_2'][-20:])
-    meanInformalCareReceived_3 = np.mean(output['informalSocialCarePerRecipient_3'][-20:])
-    meanFormalCareReceived_3 = np.mean(output['formalSocialCarePerRecipient_3'][-20:])
-    meanUnmetNeed_3 = np.mean(output['unmetSocialCarePerRecipient_3'][-20:])
-    meanInformalCareReceived_4 = np.mean(output['informalSocialCarePerRecipient_4'][-20:])
-    meanFormalCareReceived_4 = np.mean(output['formalSocialCarePerRecipient_4'][-20:])
-    meanUnmetNeed_4 = np.mean(output['unmetSocialCarePerRecipient_4'][-20:])
-    meanInformalCareReceived_5 = np.mean(output['informalSocialCarePerRecipient_5'][-20:])
-    meanFormalCareReceived_5 = np.mean(output['formalSocialCarePerRecipient_5'][-20:])
-    meanUnmetNeed_5 = np.mean(output['unmetSocialCarePerRecipient_5'][-20:])
+    meanInformalCareReceived_1 = np.mean(output['informalSocialCarePerRecipient_1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['formalSocialCarePerRecipient_1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['unmetSocialCarePerRecipient_1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['informalSocialCarePerRecipient_2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['formalSocialCarePerRecipient_2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['unmetSocialCarePerRecipient_2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['informalSocialCarePerRecipient_3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['formalSocialCarePerRecipient_3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['unmetSocialCarePerRecipient_3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['informalSocialCarePerRecipient_4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['formalSocialCarePerRecipient_4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['unmetSocialCarePerRecipient_4'][-policyYears:])
+    meanInformalCareReceived_5 = np.mean(output['informalSocialCarePerRecipient_5'][-policyYears:])
+    meanFormalCareReceived_5 = np.mean(output['formalSocialCarePerRecipient_5'][-policyYears:])
+    meanUnmetNeed_5 = np.mean(output['unmetSocialCarePerRecipient_5'][-policyYears:])
     informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
                     meanInformalCareReceived_4, meanInformalCareReceived_5)
     formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
@@ -1630,21 +1823,21 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 31: informal and formal child care received and unmet child care needs by social class (mean of last 20 years)
    
     n_groups = p['numberClasses']
-    meanInformalCareReceived_1 = np.mean(output['informalChildCareReceived_1'][-20:])
-    meanFormalCareReceived_1 = np.mean(output['formalChildCareReceived_1'][-20:])
-    meanUnmetNeed_1 = np.mean(output['unmetChildCareNeed_1'][-20:])
-    meanInformalCareReceived_2 = np.mean(output['informalChildCareReceived_2'][-20:])
-    meanFormalCareReceived_2 = np.mean(output['formalChildCareReceived_2'][-20:])
-    meanUnmetNeed_2 = np.mean(output['unmetChildCareNeed_2'][-20:])
-    meanInformalCareReceived_3 = np.mean(output['informalChildCareReceived_3'][-20:])
-    meanFormalCareReceived_3 = np.mean(output['formalChildCareReceived_3'][-20:])
-    meanUnmetNeed_3 = np.mean(output['unmetChildCareNeed_3'][-20:])
-    meanInformalCareReceived_4 = np.mean(output['informalChildCareReceived_4'][-20:])
-    meanFormalCareReceived_4 = np.mean(output['formalChildCareReceived_4'][-20:])
-    meanUnmetNeed_4 = np.mean(output['unmetChildCareNeed_4'][-20:])
-    meanInformalCareReceived_5 = np.mean(output['informalChildCareReceived_5'][-20:])
-    meanFormalCareReceived_5 = np.mean(output['formalChildCareReceived_5'][-20:])
-    meanUnmetNeed_5 = np.mean(output['unmetChildCareNeed_5'][-20:])
+    meanInformalCareReceived_1 = np.mean(output['informalChildCareReceived_1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['formalChildCareReceived_1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['unmetChildCareNeed_1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['informalChildCareReceived_2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['formalChildCareReceived_2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['unmetChildCareNeed_2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['informalChildCareReceived_3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['formalChildCareReceived_3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['unmetChildCareNeed_3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['informalChildCareReceived_4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['formalChildCareReceived_4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['unmetChildCareNeed_4'][-policyYears:])
+    meanInformalCareReceived_5 = np.mean(output['informalChildCareReceived_5'][-policyYears:])
+    meanFormalCareReceived_5 = np.mean(output['formalChildCareReceived_5'][-policyYears:])
+    meanUnmetNeed_5 = np.mean(output['unmetChildCareNeed_5'][-policyYears:])
     informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
                     meanInformalCareReceived_4, meanInformalCareReceived_5)
     formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
@@ -1795,21 +1988,21 @@ def singleRunCharts(folder, inputFile, p):
     
     # Chart 37
     n_groups = p['numberClasses']
-    meanInformalCareReceived_1 = np.mean(output['informalChildCarePerRecipient_1'][-20:])
-    meanFormalCareReceived_1 = np.mean(output['formalChildCarePerRecipient_1'][-20:])
-    meanUnmetNeed_1 = np.mean(output['unmetChildCarePerRecipient_1'][-20:])
-    meanInformalCareReceived_2 = np.mean(output['informalChildCarePerRecipient_2'][-20:])
-    meanFormalCareReceived_2 = np.mean(output['formalChildCarePerRecipient_2'][-20:])
-    meanUnmetNeed_2 = np.mean(output['unmetChildCarePerRecipient_2'][-20:])
-    meanInformalCareReceived_3 = np.mean(output['informalChildCarePerRecipient_3'][-20:])
-    meanFormalCareReceived_3 = np.mean(output['formalChildCarePerRecipient_3'][-20:])
-    meanUnmetNeed_3 = np.mean(output['unmetChildCarePerRecipient_3'][-20:])
-    meanInformalCareReceived_4 = np.mean(output['informalChildCarePerRecipient_4'][-20:])
-    meanFormalCareReceived_4 = np.mean(output['formalChildCarePerRecipient_4'][-20:])
-    meanUnmetNeed_4 = np.mean(output['unmetChildCarePerRecipient_4'][-20:])
-    meanInformalCareReceived_5 = np.mean(output['informalChildCarePerRecipient_5'][-20:])
-    meanFormalCareReceived_5 = np.mean(output['formalChildCarePerRecipient_5'][-20:])
-    meanUnmetNeed_5 = np.mean(output['unmetChildCarePerRecipient_5'][-20:])
+    meanInformalCareReceived_1 = np.mean(output['informalChildCarePerRecipient_1'][-policyYears:])
+    meanFormalCareReceived_1 = np.mean(output['formalChildCarePerRecipient_1'][-policyYears:])
+    meanUnmetNeed_1 = np.mean(output['unmetChildCarePerRecipient_1'][-policyYears:])
+    meanInformalCareReceived_2 = np.mean(output['informalChildCarePerRecipient_2'][-policyYears:])
+    meanFormalCareReceived_2 = np.mean(output['formalChildCarePerRecipient_2'][-policyYears:])
+    meanUnmetNeed_2 = np.mean(output['unmetChildCarePerRecipient_2'][-policyYears:])
+    meanInformalCareReceived_3 = np.mean(output['informalChildCarePerRecipient_3'][-policyYears:])
+    meanFormalCareReceived_3 = np.mean(output['formalChildCarePerRecipient_3'][-policyYears:])
+    meanUnmetNeed_3 = np.mean(output['unmetChildCarePerRecipient_3'][-policyYears:])
+    meanInformalCareReceived_4 = np.mean(output['informalChildCarePerRecipient_4'][-policyYears:])
+    meanFormalCareReceived_4 = np.mean(output['formalChildCarePerRecipient_4'][-policyYears:])
+    meanUnmetNeed_4 = np.mean(output['unmetChildCarePerRecipient_4'][-policyYears:])
+    meanInformalCareReceived_5 = np.mean(output['informalChildCarePerRecipient_5'][-policyYears:])
+    meanFormalCareReceived_5 = np.mean(output['formalChildCarePerRecipient_5'][-policyYears:])
+    meanUnmetNeed_5 = np.mean(output['unmetChildCarePerRecipient_5'][-policyYears:])
     informalCare = (meanInformalCareReceived_1, meanInformalCareReceived_2, meanInformalCareReceived_3,
                     meanInformalCareReceived_4, meanInformalCareReceived_5)
     formalCare = (meanFormalCareReceived_1, meanFormalCareReceived_2, meanFormalCareReceived_3,
@@ -1840,16 +2033,16 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 38: informal and formal care supplied per carer by social class (mean of last 20 years)
     
     n_groups = p['numberClasses']
-    meanInformalCareSupplied_1 = np.mean(output['informalCarePerCarer_1'][-20:])
-    meanFormalCareSupplied_1 = np.mean(output['formalCarePerCarer_1'][-20:])
-    meanInformalCareSupplied_2 = np.mean(output['informalCarePerCarer_2'][-20:])
-    meanFormalCareSupplied_2 = np.mean(output['formalCarePerCarer_2'][-20:])
-    meanInformalCareSupplied_3 = np.mean(output['informalCarePerCarer_3'][-20:])
-    meanFormalCareSupplied_3 = np.mean(output['formalCarePerCarer_3'][-20:])
-    meanInformalCareSupplied_4 = np.mean(output['informalCarePerCarer_4'][-20:])
-    meanFormalCareSupplied_4 = np.mean(output['formalCarePerCarer_4'][-20:])
-    meanInformalCareSupplied_5 = np.mean(output['informalCarePerCarer_5'][-20:])
-    meanFormalCareSupplied_5 = np.mean(output['formalCarePerCarer_5'][-20:])
+    meanInformalCareSupplied_1 = np.mean(output['informalCarePerCarer_1'][-policyYears:])
+    meanFormalCareSupplied_1 = np.mean(output['formalCarePerCarer_1'][-policyYears:])
+    meanInformalCareSupplied_2 = np.mean(output['informalCarePerCarer_2'][-policyYears:])
+    meanFormalCareSupplied_2 = np.mean(output['formalCarePerCarer_2'][-policyYears:])
+    meanInformalCareSupplied_3 = np.mean(output['informalCarePerCarer_3'][-policyYears:])
+    meanFormalCareSupplied_3 = np.mean(output['formalCarePerCarer_3'][-policyYears:])
+    meanInformalCareSupplied_4 = np.mean(output['informalCarePerCarer_4'][-policyYears:])
+    meanFormalCareSupplied_4 = np.mean(output['formalCarePerCarer_4'][-policyYears:])
+    meanInformalCareSupplied_5 = np.mean(output['informalCarePerCarer_5'][-policyYears:])
+    meanFormalCareSupplied_5 = np.mean(output['formalCarePerCarer_5'][-policyYears:])
     informalCare = (meanInformalCareSupplied_1, meanInformalCareSupplied_2, meanInformalCareSupplied_3,
                     meanInformalCareSupplied_4, meanInformalCareSupplied_5)
     formalCare = (meanFormalCareSupplied_1, meanFormalCareSupplied_2, meanFormalCareSupplied_3,
@@ -1876,14 +2069,14 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 39: informal and formal care supplied by kinship network distance (mean of last 20 years) # Modified y lim
        
     n_groups = 4
-    meanInformalCareHousehold = np.mean(output['sumNoK_informalSupplies[0]'][-20:])
-    meanFormalCareHousehold = np.mean(output['sumNoK_formalSupplies[0]'][-20:])
-    meanInformalCare_K1 = np.mean(output['sumNoK_informalSupplies[1]'][-20:])
-    meanFormalCare_K1 = np.mean(output['sumNoK_formalSupplies[1]'][-20:])
-    meanInformalCare_K2 = np.mean(output['sumNoK_informalSupplies[2]'][-20:])
-    meanFormalCare_K2 = np.mean(output['sumNoK_formalSupplies[2]'][-20:])
-    meanInformalCare_K3 = np.mean(output['sumNoK_informalSupplies[3]'][-20:])
-    meanFormalCare_K3 = np.mean(output['sumNoK_formalSupplies[3]'][-20:])
+    meanInformalCareHousehold = np.mean(output['sumNoK_informalSupplies[0]'][-policyYears:])
+    meanFormalCareHousehold = np.mean(output['sumNoK_formalSupplies[0]'][-policyYears:])
+    meanInformalCare_K1 = np.mean(output['sumNoK_informalSupplies[1]'][-policyYears:])
+    meanFormalCare_K1 = np.mean(output['sumNoK_formalSupplies[1]'][-policyYears:])
+    meanInformalCare_K2 = np.mean(output['sumNoK_informalSupplies[2]'][-policyYears:])
+    meanFormalCare_K2 = np.mean(output['sumNoK_formalSupplies[2]'][-policyYears:])
+    meanInformalCare_K3 = np.mean(output['sumNoK_informalSupplies[3]'][-policyYears:])
+    meanFormalCare_K3 = np.mean(output['sumNoK_formalSupplies[3]'][-policyYears:])
     informalCare = (meanInformalCareHousehold, meanInformalCare_K1, meanInformalCare_K2, meanInformalCare_K3)
     formalCare = (meanFormalCareHousehold, meanFormalCare_K1, meanFormalCare_K2, meanFormalCare_K3)
     totCare = [sum(x) for x in zip(informalCare, formalCare)]
@@ -1908,11 +2101,11 @@ def singleRunCharts(folder, inputFile, p):
    
     fig, ax = plt.subplots()
     p1, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales'], linewidth = 3)
-#        p2, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_1'], label = 'Class I')
-#        p3, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_2'], label = 'Class II')
-#        p4, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_3'], label = 'Class III')
-#        p5, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_4'], label = 'Class IV')
-#        p6, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_5'], label = 'Class V')
+    p2, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_1'], label = 'Class I')
+    p3, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_2'], label = 'Class II')
+    p4, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_3'], label = 'Class III')
+    p5, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_4'], label = 'Class IV')
+    p6, = ax.plot(output['year'], output['shareInformalCareSuppliedByFemales_5'], label = 'Class V')
     ax.set_xlim(left = p['statsCollectFrom'])
     ax.set_ylabel('Share of care')
     ax.set_xlabel('Year')
@@ -1933,16 +2126,16 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 41: informal care provided by gender per social class (mean of last 20 years)
     
     n_groups = p['numberClasses']
-    informalCareMales_1 = np.mean(output['informalCareSuppliedByMales_1'][-20:])
-    informalCareMales_2 = np.mean(output['informalCareSuppliedByMales_2'][-20:])
-    informalCareMales_3 = np.mean(output['informalCareSuppliedByMales_3'][-20:])
-    informalCareMales_4 = np.mean(output['informalCareSuppliedByMales_4'][-20:])
-    informalCareMales_5 = np.mean(output['informalCareSuppliedByMales_5'][-20:])
-    informalCareFemales_1 = np.mean(output['informalCareSuppliedByFemales_1'][-20:])
-    informalCareFemales_2 = np.mean(output['informalCareSuppliedByFemales_2'][-20:])
-    informalCareFemales_3 = np.mean(output['informalCareSuppliedByFemales_3'][-20:])
-    informalCareFemales_4 = np.mean(output['informalCareSuppliedByFemales_4'][-20:])
-    informalCareFemales_5 = np.mean(output['informalCareSuppliedByFemales_5'][-20:])
+    informalCareMales_1 = np.mean(output['informalCareSuppliedByMales_1'][-policyYears:])
+    informalCareMales_2 = np.mean(output['informalCareSuppliedByMales_2'][-policyYears:])
+    informalCareMales_3 = np.mean(output['informalCareSuppliedByMales_3'][-policyYears:])
+    informalCareMales_4 = np.mean(output['informalCareSuppliedByMales_4'][-policyYears:])
+    informalCareMales_5 = np.mean(output['informalCareSuppliedByMales_5'][-policyYears:])
+    informalCareFemales_1 = np.mean(output['informalCareSuppliedByFemales_1'][-policyYears:])
+    informalCareFemales_2 = np.mean(output['informalCareSuppliedByFemales_2'][-policyYears:])
+    informalCareFemales_3 = np.mean(output['informalCareSuppliedByFemales_3'][-policyYears:])
+    informalCareFemales_4 = np.mean(output['informalCareSuppliedByFemales_4'][-policyYears:])
+    informalCareFemales_5 = np.mean(output['informalCareSuppliedByFemales_5'][-policyYears:])
     means_males = (informalCareMales_1, informalCareMales_2, informalCareMales_3, informalCareMales_4, informalCareMales_5)
     means_females = (informalCareFemales_1, informalCareFemales_2, informalCareFemales_3, informalCareFemales_4, informalCareFemales_5)
     fig, ax = plt.subplots()
@@ -1997,16 +2190,16 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 43: income by gender per social class (mean of last 20 years)
            
     n_groups = p['numberClasses']
-    WageMales_1 = np.mean(output['averageMalesWage_1'][-20:])
-    WageMales_2 = np.mean(output['averageMalesWage_2'][-20:])
-    WageMales_3 = np.mean(output['averageMalesWage_3'][-20:])
-    WageMales_4 = np.mean(output['averageMalesWage_4'][-20:])
-    WageMales_5 = np.mean(output['averageMalesWage_5'][-20:])
-    WageFemales_1 = np.mean(output['averageFemalesWage_1'][-20:])
-    WageFemales_2 = np.mean(output['averageFemalesWage_2'][-20:])
-    WageFemales_3 = np.mean(output['averageFemalesWage_3'][-20:])
-    WageFemales_4 = np.mean(output['averageFemalesWage_4'][-20:])
-    WageFemales_5 = np.mean(output['averageFemalesWage_5'][-20:])
+    WageMales_1 = np.mean(output['averageMalesWage_1'][-policyYears:])
+    WageMales_2 = np.mean(output['averageMalesWage_2'][-policyYears:])
+    WageMales_3 = np.mean(output['averageMalesWage_3'][-policyYears:])
+    WageMales_4 = np.mean(output['averageMalesWage_4'][-policyYears:])
+    WageMales_5 = np.mean(output['averageMalesWage_5'][-policyYears:])
+    WageFemales_1 = np.mean(output['averageFemalesWage_1'][-policyYears:])
+    WageFemales_2 = np.mean(output['averageFemalesWage_2'][-policyYears:])
+    WageFemales_3 = np.mean(output['averageFemalesWage_3'][-policyYears:])
+    WageFemales_4 = np.mean(output['averageFemalesWage_4'][-policyYears:])
+    WageFemales_5 = np.mean(output['averageFemalesWage_5'][-policyYears:])
     means_males = (WageMales_1, WageMales_2, WageMales_3, WageMales_4, WageMales_5)
     means_females = (WageFemales_1, WageFemales_2, WageFemales_3, WageFemales_4, WageFemales_5)
     fig, ax = plt.subplots()
@@ -2061,16 +2254,16 @@ def singleRunCharts(folder, inputFile, p):
     # Chart 45: income by gender per social class (mean of last 20 years)
     
     n_groups = p['numberClasses']
-    incomeMales_1 = np.mean(output['averageMalesIncome_1'][-20:])
-    incomeMales_2 = np.mean(output['averageMalesIncome_2'][-20:])
-    incomeMales_3 = np.mean(output['averageMalesIncome_3'][-20:])
-    incomeMales_4 = np.mean(output['averageMalesIncome_4'][-20:])
-    incomeMales_5 = np.mean(output['averageMalesIncome_5'][-20:])
-    incomeFemales_1 = np.mean(output['averageFemalesIncome_1'][-20:])
-    incomeFemales_2 = np.mean(output['averageFemalesIncome_2'][-20:])
-    incomeFemales_3 = np.mean(output['averageFemalesIncome_3'][-20:])
-    incomeFemales_4 = np.mean(output['averageFemalesIncome_4'][-20:])
-    incomeFemales_5 = np.mean(output['averageFemalesIncome_5'][-20:])
+    incomeMales_1 = np.mean(output['averageMalesIncome_1'][-policyYears:])
+    incomeMales_2 = np.mean(output['averageMalesIncome_2'][-policyYears:])
+    incomeMales_3 = np.mean(output['averageMalesIncome_3'][-policyYears:])
+    incomeMales_4 = np.mean(output['averageMalesIncome_4'][-policyYears:])
+    incomeMales_5 = np.mean(output['averageMalesIncome_5'][-policyYears:])
+    incomeFemales_1 = np.mean(output['averageFemalesIncome_1'][-policyYears:])
+    incomeFemales_2 = np.mean(output['averageFemalesIncome_2'][-policyYears:])
+    incomeFemales_3 = np.mean(output['averageFemalesIncome_3'][-policyYears:])
+    incomeFemales_4 = np.mean(output['averageFemalesIncome_4'][-policyYears:])
+    incomeFemales_5 = np.mean(output['averageFemalesIncome_5'][-policyYears:])
     means_males = (incomeMales_1, incomeMales_2, incomeMales_3, incomeMales_4, incomeMales_5)
     means_females = (incomeFemales_1, incomeFemales_2, incomeFemales_3, incomeFemales_4, incomeFemales_5)
     fig, ax = plt.subplots()
@@ -2233,6 +2426,21 @@ def singleRunCharts(folder, inputFile, p):
     plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
     fig.tight_layout()
     path = os.path.join(folder, 'LoneParentsShareChart.pdf')
+    pp = PdfPages(path)
+    pp.savefig(fig)
+    pp.close()
+    
+    # Chart 49-bis: Proportion of Distant parents (1960-2020)
+    fig, ax = plt.subplots()
+    ax.plot(output['year'], output['shareDistantParents'], linewidth = 3, color = 'red')
+    ax.set_xlim(left = p['statsCollectFrom'])
+    # ax.set_ylabel('Proportion of married adult women')
+    ax.set_title('Share of distant parents')
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.xlim(p['statsCollectFrom'], p['endYear'])
+    plt.xticks(range(p['statsCollectFrom'], p['endYear']+1, 10))
+    fig.tight_layout()
+    path = os.path.join(folder, 'DistantParentsShareChart.pdf')
     pp = PdfPages(path)
     pp.savefig(fig)
     pp.close()
@@ -2479,8 +2687,9 @@ def singleRunCharts(folder, inputFile, p):
     pp.savefig(fig)
     pp.close()
     
+
+rootFolder = 'N:/Social Care Model III'
 noPolicySim = True
-rootFolder = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model II'
 #rootFolder = 'N:/Social Care Model III'
 
-doGraphs(policyOnlySim)
+doGraphs(noPolicySim)
