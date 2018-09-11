@@ -21,13 +21,21 @@ def init_params():
     """Set up the simulation parameters."""
     p = {}
     
-    p['rootFolder'] = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model II'
-    #p['rootFolder'] = 'N:/Social Care Model III'
+    # p['rootFolder'] = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model II'
+    p['rootFolder'] = 'N:/Social Care Model III'
+    
     p['noPolicySim'] = True
     p['numRepeats'] = 1
     
     p['multiprocessing'] = False
     p['numberProcessors'] = 4
+    
+    p['startYear'] = 1860
+    p['endYear'] = 1960 # 2040
+    p['thePresent'] = 2012
+    p['statsCollectFrom'] = 1920 # 1990
+    p['regressionCollectFrom'] = 1880 # 1960 
+    p['implementPoliciesFromYear'] = 1940 # 2020
     
     p['favouriteSeed'] = 123
     p['loadFromFile'] = False
@@ -38,6 +46,7 @@ def init_params():
     # To change through command-line arguments
 
     p['numberPolicyParameters'] = 4
+    p['valuesPerParam'] = 2
     p['numberScenarios'] = 9
     
     ############  Policy Parameters    #######################
@@ -47,21 +56,14 @@ def init_params():
     p['socialSupportLevel'] = 5
     # p['educationCosts']
     #############################################################
-    p['socialCareCreditShare'] = 0.5
+    p['socialCareCreditShare'] = 0.0
     p['maxWtWChildAge'] = 5
      # The basics: starting population and year, etc.
     
     p['discountingFactor'] = 0.03
     
     
-    p['initialPop'] = 600
-    
-    p['startYear'] = 1860
-    p['endYear'] = 1960 # 2040
-    p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1920 # 1990
-    p['regressionCollectFrom'] = 1880 # 1960 
-    p['implementPoliciesFromYear'] = 1940 # 2020   
+    p['initialPop'] = 600   
     
     p['minStartAge'] = 24
     p['maxStartAge'] = 45
@@ -147,6 +149,8 @@ def init_params():
     p['careIncomeParam'] = 0.001
     
     # Hospitalization Costs
+    p['qalyBeta'] = 0.18
+    p['qalyAlpha'] = 1.5
     p['qalyDiscountRate'] = 0.035
     p['qalyIndexes'] = [1.0, 0.8, 0.6, 0.4, 0.2]
     p['unmetCareHealthParam'] = 0.1
@@ -411,7 +415,7 @@ if __name__ == "__main__":
             # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
-                for j in range(2):
+                for j in range(p['valuesPerParam']):
                     runParameters = [x for x in defaultValues]
                     runParameters[i] = parameters[i][j]
                     policies.append(runParameters)       
@@ -441,7 +445,7 @@ if __name__ == "__main__":
             # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
-                for j in range(2):
+                for j in range(p['valuesPerParam']):
                     runParameters = [x for x in defaultValues]
                     runParameters[i] = parameters[i][j]
                     policies.append(runParameters)       
