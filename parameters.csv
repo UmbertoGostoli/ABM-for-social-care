@@ -1,3 +1,2 @@
-socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel
-0.25,0.5,60,4
-0.5,1,70,3
+taxBreakRate,socialSupportLevel
+1,4

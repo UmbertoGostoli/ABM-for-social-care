@@ -54,7 +54,7 @@ class Sim:
         self.periodCount = 0
         self.year = 0
         ###################### Demographic outputs ###################
-        self.Outputs = ['year', 'currentPop', 'taxPayers', 'numUnskilled', 'numSkilled', 'numLowClass', 'numMidClass', 'numUpClass', 'shareLoneParents', 'shareDistantParents',
+        self.Outputs = ['year', 'currentPop', 'numReceivers', 'taxPayers', 'numUnskilled', 'numSkilled', 'numLowClass', 'numMidClass', 'numUpClass', 'shareLoneParents', 'shareDistantParents',
                    'shareUnskilled', 'shareSkilled', 'shareLowClass', 'shareMidClass', 'shareUpClass', 'numOccupiedHouses', 'averageHouseholdSize', 
                    'marriageTally', 'divorceTally', 'averageHouseholdSize_1', 'averageHouseholdSize_2', 'averageHouseholdSize_3', 'averageHouseholdSize_4', 
                    'averageHouseholdSize_5', 'totalCareSupply', 'informalCareSupply', 'formalCareSupply', 'totalCareNeed', 'socialCareNeed', 'childCareNeed', 
@@ -117,7 +117,7 @@ class Sim:
                    'shareUnmetSocialCareNeedGiniCoefficient_2', 'shareUnmetSocialCareNeedGiniCoefficient_3', 'shareUnmetSocialCareNeedGiniCoefficient_4', 'shareUnmetSocialCareNeedGiniCoefficient_5',
                    'publicSupply', 'costDirectFunding','totQALY', 'meanQALY', 'discountedQALY', 'averageDiscountedQALY', 'ratioUnmetNeed_CareSupply', 'ratioUnmetNeed_CareSupply_1', 'ratioUnmetNeed_CareSupply_2',
                    'ratioUnmetNeed_CareSupply_3', 'ratioUnmetNeed_CareSupply_4', 'ratioUnmetNeed_CareSupply_5', 'totalTaxRefund', 'pensionBudget', 'careCreditSupply', 'socialCareCredits', 'socialCreditSpent', 
-                   'shareCreditsSpent','careCreditCost', 'totalCost', 'perCapitaCost']
+                   'shareCreditsSpent','careCreditCost', 'totalCost', 'perCapitaCost', 'taxRevenue', 'shareCarers', 'shareWomenCarers', 'shareMenCarers']
         
 #        self.checkValues = ['perCapitaHouseholdIncome', 'socialCareMapValues', 'relativeEducationCost', 'probKeepStudying', 'stageStudent', 'changeJobRate', 'changeJobdIncome',
 #                            'relocationCareLoss', 'relocationCost', 'townRelocationAttractio', 'townRelativeAttraction', 'townsJobProb', 'townJobAttraction', 'unemployedIncomeDiscountingFactor',
@@ -164,6 +164,7 @@ class Sim:
         self.potentialHostSupply = []
         self.spousesTownSocialAttraction = []
         self.volunteersTotalSupply = []
+        self.numberSuppliers = []
         # Counters and storage
         
         self.check = False
@@ -174,6 +175,7 @@ class Sim:
         
         # Budget variables
         self.totalTaxRefund = 0
+        self.taxRevenue = 0
         self.publicSupply = 0
         self.pensionBudget = 0
         self.careCreditSupply = 0
@@ -217,7 +219,7 @@ class Sim:
                          self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction, self.houseScore, 
                          self.deltaHouseOccupants, self.careTransitionRate[0], self.careTransitionRate[1], 
                          self.careTransitionRate[2], self.careTransitionRate[3], self.careTransitionRate[4], 
-                         self.potentialHostSupply, self.spousesTownSocialAttraction, self.volunteersTotalSupply)
+                         self.potentialHostSupply, self.spousesTownSocialAttraction, self.volunteersTotalSupply, self.numberSuppliers)
             
         names = ('perCapitaHouseholdIncome, socialCareMapValues, '
                      'relativeEducationCost, probKeepStudying, stageStudent, changeJobRate, '
@@ -225,11 +227,10 @@ class Sim:
                      'townRelativeAttraction, townsJobProb, townJobAttraction, '
                      'unemployedIncomeDiscountingFactor, relativeTownAttraction, houseScore, '
                      'deltaHouseOccupants, careTransitionRate_I, careTransitionRate_II, careTransitionRate_III, '
-                     'careTransitionRate_IV, careTransitionRate_V, potentialHostSupply, spousesTownSocialAttraction, volunteersTotalSupply')
+                     'careTransitionRate_IV, careTransitionRate_V, potentialHostSupply, spousesTownSocialAttraction, '
+                     'volunteersTotalSupply, numberSuppliers')
             
         filename = folder + '/Check_Value.csv'
-        if not os.path.isdir(os.path.dirname(filename)):
-            os.mkdir(os.path.dirname(filename))
         np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
         
     def run(self, policyParams):
@@ -245,9 +246,7 @@ class Sim:
                 os.makedirs(folder)
            
             filename = folder + '/parameterValues.csv'
-            if not os.path.exists(filename):
-                os.makedirs(filename)
-            
+
             if self.p['numRepeats'] > 1:
                 rdTime = (int)(time.time())
                 self.randomSeed = rdTime
@@ -258,33 +257,26 @@ class Sim:
                                    self.p['numRepeats'], self.p['numberPolicyParameters'], self.p['numberScenarios'],
                                    self.p['numberClasses'], self.p['implementPoliciesFromYear'], self.p['discountingFactor'], 
                                    self.p['socialCareCreditShare'], self.p['taxBreakRate'], self.p['ageOfRetirement'], 
-                                   self.p['socialSupportLevel']]))
+                                   self.p['socialSupportLevel'], self.p['numCareLevels']]))
             names = ('randomSeed,endYear,statCollectionYear,numRepeats,numParameters,numScenarios,numberClasses,startPoliciesYear,'
-                     'discountingFactor,socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel')
+                     'discountingFactor,socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel,numCareLevels')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
 
         else:
             print('Policy Combination: ' + str(policyParams[-1]))
             
-            folder  = self.p['rootFolder'] + '/Charts/SocPolicy_Sim/Policy_' + str(policyParams[-1]) #
+            folder = self.p['rootFolder'] + '/Charts/SocPolicy_Sim/Policy_' + str(policyParams[-1]) #
             if not os.path.exists(folder):
                 os.makedirs(folder)
             
-            policyParameters = [] 
-            
-            for i in range(self.p['numberPolicyParameters']):
-                policyParameters.append(policyParams[i])
-            
             filename = folder + '/parameterValues.csv'
-            if not os.path.exists(filename):
-                os.makedirs(filename)
-    
+
             values = zip(np.array([self.randomSeed, self.p['endYear'], self.p['statsCollectFrom'], 
                                    self.p['numRepeats'], self.p['numberPolicyParameters'], self.p['numberScenarios'],
                                    self.p['numberClasses'], self.p['implementPoliciesFromYear'], self.p['discountingFactor'],
-                                   policyParams[0], policyParams[1], policyParams[2], policyParams[3]]))
+                                   policyParams[0], policyParams[1], self.p['numCareLevels']]))
             names = ('randomSeed,endYear,statCollectionYear,numRepeats,numParameters,numScenarios,numberClasses,startPoliciesYear,'
-                     'discountingFactor,socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel')
+                     'discountingFactor,taxBreakRate,socialSupportLevel,numCareLevels')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
         
         self.initializePop()
@@ -297,7 +289,7 @@ class Sim:
             print(year)
             
             if self.p['noPolicySim'] == False and year == self.p['implementPoliciesFromYear']:
-                self.updatePolicyParameters(policyParameters)
+                self.updatePolicyParameters(policyParams)
                 
             self.doOneYear(year) 
             
@@ -439,10 +431,10 @@ class Sim:
                     index = person.house.id
         
     def updatePolicyParameters(self, policyParameters):
-        self.p['socialCareCreditShare'] = policyParameters[0]
-        self.p['taxBreakRate'] = policyParameters[1]
-        self.p['ageOfRetirement'] = policyParameters[2] 
-        self.p['socialSupportLevel'] = policyParameters[3] 
+        # self.p['socialCareCreditShare'] = policyParameters[0]
+        self.p['taxBreakRate'] = policyParameters[0]
+        # self.p['ageOfRetirement'] = policyParameters[2] 
+        self.p['socialSupportLevel'] = policyParameters[1] 
                     
     def doOneYear(self, year):
         
@@ -1254,6 +1246,10 @@ class Sim:
             
             person.careNetwork.clear()
             person.careNetwork.add_node(person)
+            
+            person.supplyNetwork.clear()
+            person.supplyNetwork.add_node(person)
+            
             person.householdTotalSupply = 0
             
             person.volunteerCareSupply = 0
@@ -1271,7 +1267,7 @@ class Sim:
             
             if person.careNeedLevel >= self.p['socialSupportLevel']:
                 self.publicSupply += person.hoursDemand
-                person.residualNeed = 0 # person.hoursDemand
+                person.residualNeed = 0.0 # person.hoursDemand
                 
 #            person.hoursSocialCareDemand = careNeed
 #            person.residualSocialCareNeed = person.hoursDemand
@@ -1525,9 +1521,9 @@ class Sim:
                     member.household = household
                     
     def socialCareMap(self):
-        kinshipWeight_1 = 1/math.exp(self.p['networkDistanceParam']*1.0)
-        kinshipWeight_2 = 1/math.exp(self.p['networkDistanceParam']*2.0)
-        kinshipWeight_3 = 1/math.exp(self.p['networkDistanceParam']*3.0)   
+        kinshipWeight_1 = 1/math.pow(self.p['networkDistanceParam'], 0.0)
+        kinshipWeight_2 = 1/math.pow(self.p['networkDistanceParam'], 1.0)
+        kinshipWeight_3 = 1/math.pow(self.p['networkDistanceParam'], 2.0)   
         
         for household in self.householdsList:
             nok_1 = []
@@ -1598,23 +1594,39 @@ class Sim:
                             nok_2.append(nok)
                             visited.extend(nok.household)
     
+#            for town in self.map.towns:
+#                deltaNetworkCare = 0
+#                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
+#                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
+#                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
+#                
+#                if deltaHouseholdCare < 0:
+#                    networkSocialCareParam = self.p['excessNeedParam']
+#                else:
+#                    networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+#                
+#                # Check variable
+#                if self.year == self.p['getCheckVariablesAtYear'] and deltaHouseholdCare*deltaNetworkCare != 0:
+#                    self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
+#                    
+#                # Min-Max: -6000 - 3000
+#                townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
+#                for member in household:
+#                    member.socialCareMap.append(townSCI)
+                    
+                    
             for town in self.map.towns:
-                deltaNetworkCare = 0
-                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
-                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
-                deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
-                
-                if deltaHouseholdCare < 0:
-                    networkSocialCareParam = self.p['excessNeedParam']
-                else:
-                    networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+                networkPop = 0
+                networkPop += sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
+                networkPop += sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
+                networkPop += sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
                 
                 # Check variable
-                if self.year == self.p['getCheckVariablesAtYear'] and deltaHouseholdCare*deltaNetworkCare != 0:
-                    self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
+                if self.year == self.p['getCheckVariablesAtYear'] and networkPop != 0:
+                    self.socialCareMapValues.append(networkPop)
                     
                 # Min-Max: -6000 - 3000
-                townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare) # /math.exp(self.p['careIncomeParam']*potentialIncome)
+                townSCI = self.p['excessNeedParam']*networkPop # /math.exp(self.p['careIncomeParam']*potentialIncome)
                 for member in household:
                     member.socialCareMap.append(townSCI)
                     
@@ -1722,9 +1734,9 @@ class Sim:
      
         deltaHouseholdCare = householdSupply - householdDemand
         
-        kinshipWeight_1 = 1/math.exp(self.p['networkDistanceParam']*1.0)
-        kinshipWeight_2 = 1/math.exp(self.p['networkDistanceParam']*2.0)
-        kinshipWeight_3 = 1/math.exp(self.p['networkDistanceParam']*3.0)
+        kinshipWeight_1 = 1/math.pow(self.p['networkDistanceParam'], 0.0)
+        kinshipWeight_2 = 1/math.pow(self.p['networkDistanceParam'], 1.0)
+        kinshipWeight_3 = 1/math.pow(self.p['networkDistanceParam'], 2.0) 
         
         nok_1 = []
         nok_2 = []
@@ -1792,22 +1804,35 @@ class Sim:
                         nok_2.append(nok)
                         visited.extend(nok.household)
 
-        deltaNetworkCare = 0
-        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
-        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
-        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
+#        deltaNetworkCare = 0
+#        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
+#        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
+#        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
+#        
+#        if deltaHouseholdCare < 0:
+#            networkSocialCareParam = self.p['excessNeedParam']
+#        else:
+#            networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+#        
+#        # Check variable
+#        if self.year == self.p['endYear'] and deltaHouseholdCare*deltaNetworkCare != 0:
+#            self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
+#            
+#        # Min-Max: -6000 - 3000
+#        townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare)
+#        return(townSCI)
         
-        if deltaHouseholdCare < 0:
-            networkSocialCareParam = self.p['excessNeedParam']
-        else:
-            networkSocialCareParam = self.p['excessNeedParam']*self.p['careSupplyBias']
+        networkPop = 0
+        networkPop += sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
+        networkPop += sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
+        networkPop += sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
         
         # Check variable
-        if self.year == self.p['endYear'] and deltaHouseholdCare*deltaNetworkCare != 0:
-            self.socialCareMapValues.append(deltaHouseholdCare*deltaNetworkCare)
+        if self.year == self.p['endYear'] and networkPop != 0:
+            self.socialCareMapValues.append(networkPop)
             
         # Min-Max: -6000 - 3000
-        townSCI = (networkSocialCareParam*deltaHouseholdCare*deltaNetworkCare)
+        townSCI = self.p['excessNeedParam']*networkPop
         return(townSCI)
     
     def allocateCare(self):
@@ -1852,12 +1877,11 @@ class Sim:
             receiver.totalDiscountedShareUnmetNeed += receiver.residualNeed/receiver.hoursDemand
             receiver.totalDiscountedTime += 1
             receiver.averageShareUnmetNeed = receiver.totalDiscountedShareUnmetNeed/receiver.totalDiscountedTime
+            receiver.numSuppliers = receiver.supplyNetwork.degree(receiver)
+            if self.year == self.p['getCheckVariablesAtYear']:
+                self.numberSuppliers.append(receiver.numSuppliers)
     
     def kinshipNetwork(self, pin, index):
-
-        pin.careNetwork.clear()
-        pin.careNetwork.add_node(pin, name = 'receiver', color = 'red')
-        
         households = []
         for member in pin.house.occupants:
             if member.hoursDemand == 0 and member.house not in households:
@@ -1928,16 +1952,16 @@ class Sim:
                 pin.careNetwork.add_edge(pin, uncle, distance = 3)
                 households.append(uncle.house)
         
-        if index == 0:
-            fig, ax = plt.subplots()
-            # pos=nx.spring_layout(pin.careNetwork)
-            nx.draw(pin.careNetwork)
-            # nx.draw_networkx_labels(pin.careNetwork, labels)
-            fig.tight_layout()
-            path = os.path.join(self.folder, 'Network.pdf')
-            pp = PdfPages(path)
-            pp.savefig(fig)
-            pp.close()
+#        if index == 0:
+#            fig, ax = plt.subplots()
+#            # pos=nx.spring_layout(pin.careNetwork)
+#            nx.draw(pin.careNetwork)
+#            # nx.draw_networkx_labels(pin.careNetwork, labels)
+#            fig.tight_layout()
+#            path = os.path.join(self.folder, 'Network.pdf')
+#            pp = PdfPages(path)
+#            pp.savefig(fig)
+#            pp.close()
             
     
     def totalSupply(self, receiver):
@@ -1984,7 +2008,13 @@ class Sim:
         probCarers = self.probSuppliers(receiver)
         suppliers = [x for x in receiver.careNetwork.neighbors(receiver)]
         carer = np.random.choice(suppliers, p = probCarers)
-
+        
+        d = receiver.careNetwork[receiver][carer]['distance']
+        if receiver.supplyNetwork.has_edge(receiver, carer) == False:
+            receiver.supplyNetwork.add_edge(receiver, carer, weight = 0, distance = d)
+        totalCare = receiver.supplyNetwork[receiver][carer]['weight'] + self.p['quantumCare']
+        receiver.supplyNetwork[receiver][carer]['weight'] = totalCare
+        
         townCarer = carer.house.town
         household = carer.house.occupants
 
@@ -2420,6 +2450,7 @@ class Sim:
                 if income > self.p['taxBrackets'][i]:
                     bracket = income-self.p['taxBrackets'][i]
                     self.pensionBudget -= bracket*self.p['bandsTaxationRates'][i]
+                    self.taxRevenue += bracket*self.p['bandsTaxationRates'][i]
                     income -= bracket
         
             
@@ -3394,28 +3425,28 @@ class Sim:
         
         propensities = []
         index = 0
-        for town in self.map.towns:
-            relativeAttraction = relocationCost[index] # /perCapitaIncome
+        for rc in relocationCost:
             
-            if relativeAttraction > 5:
-                print('Relative Attraction: ' + str(relativeAttraction))
-                print('Per Capita Income: ' + str(perCapitaIncome))
-                relativeAttraction = 5
+            if rc > 15:
+                # print('Relative Attraction: ' + str(rc))
+                # print('Per Capita Income: ' + str(perCapitaIncome))
+                rc = 15
             #if relativeAttraction > 0.5:
               #  print('Relative Attraction is:')
               #  print(relativeAttraction)
             # Check variable
             if self.year == self.p['getCheckVariablesAtYear']:
-                self.relativeTownAttraction.append(relativeAttraction) # Min-Max: -0.05 - 0.00
+                self.relativeTownAttraction.append(rc) # Min-Max: -0.05 - 0.00
             
-            attractionFactor = math.exp(self.p['propensityRelocationParam']*relativeAttraction)
-            rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
+            attractionFactor = math.exp(self.p['propensityRelocationParam']*rc)
+            
+            # rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
             
             # Check variable
             if self.year == self.p['getCheckVariablesAtYear']:
-                self.townRelativeAttraction.append(rp) # 0.87 - 0.9
+                self.townRelativeAttraction.append(attractionFactor) # 0.87 - 0.9
             
-            propensities.append(rp)
+            propensities.append(attractionFactor)
             index += 1
         return(propensities)
     
@@ -4281,26 +4312,6 @@ class Sim:
         inactiveHouses = [h for h in self.map.occupiedHouses if len([i for i in h.occupants if i.status != 'inactive']) == 0]
         inactiveHouseholds = [list(h.occupants) for h in inactiveHouses]
         
-#        visited = []
-#        retiredHouseholds = []
-#        for person in self.pop.livingPeople:
-#            if person in visited:
-#                continue
-#            retiredHousehold = []
-#            relocationStatus1 = False
-#            if ( person.status == 'retired' or person.status == 'inactive') and len(person.house.occupants) == 1:
-#                retiredHousehold = [person]
-#            if (len(person.house.occupants) == 2 and person.partner != None and person.partner.house == person.house 
-#                and person.status == 'inactive' and person.partner.status == 'inactive'):
-#                retiredHousehold = [person, person.partner]
-#            if len(retiredHousehold) > 0 and len(retiredHousehold) != len(person.house.occupants):
-#                print('Error: not all persons in house are relocated')
-#                sys.exit()
-#            visited.extend(retiredHousehold)
-#            if len(retiredHousehold) > 0:
-#                retiredHouseholds.append(retiredHousehold)
-#            
-        
         for household in inactiveHouseholds:
             supplyingHouseholds = []
             supplyingHouses = []
@@ -4384,11 +4395,12 @@ class Sim:
 #                sys.exit()
         
         departureHouse = person.house
-        probHouses = self.houseProb(town, person.classRank)
+        # probHouses = self.houseProb(town, person.classRank)
         # print(sum(probHouses))
-        newHouse = np.random.choice(town.houses, p = probHouses)
+        availableHouses = [x for x in town.houses if len(x.occupants) == 0]
+        newHouse = np.random.choice(availableHouses) # np.random.choice(town.houses, p = probHouses)
         while newHouse == departureHouse:
-            newHouse = np.random.choice(town.houses, p = probHouses)
+            newHouse = np.random.choice(availableHouses) # np.random.choice(town.houses, p = probHouses)
         
         if person.house.town != newHouse.town:
             self.townChanges += 1
@@ -4749,8 +4761,20 @@ class Sim:
         
         # Population stats
         adultPop = [x for x in self.pop.livingPeople if x.age >= self.p['minWorkingAge'] and x.status != 'student']
+        receivers = [x for x in self.pop.livingPeople if x.age > 0 and x.careNeedLevel > 0]
+        numReceivers = float(len(receivers))
         numAdultPop = float(len(adultPop))
         currentPop = float(len(self.pop.livingPeople))
+        caringAgePop = [x for x in self.pop.livingPeople if x.age >= self.p['ageTeenagers']]
+        caringWomenPop = [x for x in caringAgePop if x.sex == 'female']
+        caringMenPop = [x for x in caringAgePop if x.sex == 'male']
+        
+        informalCarers = [x for x in self.pop.livingPeople if x.socialWork > 0]
+        womenCarers = [x for x in informalCarers if x.sex == 'female']
+        menCarers = [x for x in informalCarers if x.sex == 'male']
+        shareCarers = float(len(informalCarers))/float(len(caringAgePop))
+        shareWomenCarers = float(len(womenCarers))/float(len(caringWomenPop))
+        shareMenCarers = float(len(menCarers))/float(len(caringMenPop))
         
         numParents = float(len([x for x in self.pop.livingPeople if len(x.children) > 0]))
         numDistantParents = float(len([x for x in self.pop.livingPeople if len([y for y in x.children if y.house.town != x.house.town]) > 0]))
@@ -4758,7 +4782,12 @@ class Sim:
         if numParents> 0:
             shareDistantParents = numDistantParents/numParents
         
-        totQALY = sum([x.qaly for x in self.pop.livingPeople])
+        totQALY = sum([x.qaly for x in receivers])
+        meanQALY = 0
+        if numReceivers > 0:
+            meanQALY = totQALY/numReceivers
+        
+        
         meanQALY = totQALY/currentPop
         
         discountedQALY = 0
@@ -4937,9 +4966,9 @@ class Sim:
             meanUnmetSocialCareNeed_N1 = unmetSocialCareNeed_N1/totalSocialCareReceivers_N1
         
         totalSocialCareReceivers_N2 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 2]))
-        informalSocialCareReceived_N2 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
-        formalSocialCareReceived_N2 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
-        unmetSocialCareNeed_N2 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        informalSocialCareReceived_N2 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 2])
+        formalSocialCareReceived_N2 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 2])
+        unmetSocialCareNeed_N2 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 2])
         meanInformalSocialCareReceived_N2 = 0
         meanFormalSocialCareReceived_N2 = 0
         meanUnmetSocialCareNeed_N2 = 0
@@ -4949,9 +4978,9 @@ class Sim:
             meanUnmetSocialCareNeed_N2 = unmetSocialCareNeed_N2/totalSocialCareReceivers_N2
         
         totalSocialCareReceivers_N3 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 3]))
-        informalSocialCareReceived_N3 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
-        formalSocialCareReceived_N3 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
-        unmetSocialCareNeed_N3 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        informalSocialCareReceived_N3 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 3])
+        formalSocialCareReceived_N3 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 3])
+        unmetSocialCareNeed_N3 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 3])
         meanInformalSocialCareReceived_N3 = 0
         meanFormalSocialCareReceived_N3 = 0
         meanUnmetSocialCareNeed_N3 = 0
@@ -4961,9 +4990,9 @@ class Sim:
             meanUnmetSocialCareNeed_N3 = unmetSocialCareNeed_N3/totalSocialCareReceivers_N3
             
         totalSocialCareReceivers_N4 = float(len([x for x in socialCareReceivers if x.careNeedLevel == 4]))
-        informalSocialCareReceived_N4 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 1])
-        formalSocialCareReceived_N4 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 1])
-        unmetSocialCareNeed_N4 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 1])
+        informalSocialCareReceived_N4 = sum([x.informalCare for x in socialCareReceivers if x.careNeedLevel == 4])
+        formalSocialCareReceived_N4 = sum([x.formalCare for x in socialCareReceivers if x.careNeedLevel == 4])
+        unmetSocialCareNeed_N4 = sum([x.residualNeed for x in socialCareReceivers if x.careNeedLevel == 4])
         meanInformalSocialCareReceived_N4 = 0
         meanFormalSocialCareReceived_N4 = 0
         meanUnmetSocialCareNeed_N4 = 0
@@ -5976,7 +6005,7 @@ class Sim:
         else:
             shareCreditsSpent = 0
        
-        outputs = [self.year, currentPop, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass, shareLoneParents, shareDistantParents,
+        outputs = [self.year, currentPop, numReceivers, taxPayers, numUnskilled, numSkilled, numLowClass, numMidClass, numUpClass, shareLoneParents, shareDistantParents,
                    shareUnskilled, shareSkilled, shareLowClass, shareMidClass, shareUpClass, numOccupiedHouses, averageHouseholdSize, self.marriageTally, self.divorceTally,
                    averageHouseholdSize_1, averageHouseholdSize_2, averageHouseholdSize_3, averageHouseholdSize_4, averageHouseholdSize_5, totalCareSupply, informalCareSupply,
                    formalCareSupply, totalCareNeed, socialCareNeed, childCareNeed, shareCareGivers, shareCareGivers_1, shareCareGivers_2, shareCareGivers_3, shareCareGivers_4, 
@@ -6038,13 +6067,14 @@ class Sim:
                    unmetSocialCareNeedGiniCoefficient_4, unmetSocialCareNeedGiniCoefficient_5, shareUnmetSocialCareNeedGiniCoefficient, shareUnmetSocialCareNeedGiniCoefficient_1, 
                    shareUnmetSocialCareNeedGiniCoefficient_2, shareUnmetSocialCareNeedGiniCoefficient_3, shareUnmetSocialCareNeedGiniCoefficient_4, shareUnmetSocialCareNeedGiniCoefficient_5, 
                    self.publicSupply, costDirectFunding, totQALY, meanQALY, discountedQALY, averageDiscountedQALY, ratioUnmetNeed_CareSupply, ratioUnmetNeed_CareSupply_1, ratioUnmetNeed_CareSupply_2, 
-                   ratioUnmetNeed_CareSupply_3, ratioUnmetNeed_CareSupply_4, ratioUnmetNeed_CareSupply_5, self.totalTaxRefund, self.pensionBudget, 
-                   self.careCreditSupply, self.socialCareCredits, self.socialCreditSpent, shareCreditsSpent, careCreditCost, totalCost, perCapitaCost]
+                   ratioUnmetNeed_CareSupply_3, ratioUnmetNeed_CareSupply_4, ratioUnmetNeed_CareSupply_5, self.totalTaxRefund, self.pensionBudget, self.careCreditSupply, 
+                   self.socialCareCredits, self.socialCreditSpent, shareCreditsSpent, careCreditCost, totalCost, perCapitaCost, self.taxRevenue,
+                   shareCarers, shareWomenCarers, shareMenCarers]
                    
         self.marriageTally = 0      
         self.divorceTally = 0 
         self.hospitalizationCost = 0
-        
+        self.taxRevenue = 0
         self.totalTaxRefund = 0
         self.publicSupply = 0
         self.pensionBudget = 0
