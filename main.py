@@ -22,32 +22,32 @@ def init_params():
     p = {}
     
     # p['rootFolder'] = 'C:/Users/Umberto Gostoli/SPHSU/Social Care Model II'
-    p['rootFolder'] = 'N:/Social Care Model III'
+    p['rootFolder'] = 'N:/Social Care Model Paper I'
     
-    p['noPolicySim'] = True
+    p['noPolicySim'] = False
     p['numRepeats'] = 1
     
-    p['multiprocessing'] = False
-    p['numberProcessors'] = 4
+    p['multiprocessing'] = True
+    p['numberProcessors'] = 3
     
     p['startYear'] = 1860
-    p['endYear'] = 1960 # 2040
+    p['endYear'] = 2040
     p['thePresent'] = 2012
-    p['statsCollectFrom'] = 1920 # 1990
-    p['regressionCollectFrom'] = 1880 # 1960 
-    p['implementPoliciesFromYear'] = 1940 # 2020
+    p['statsCollectFrom'] = 1990
+    p['regressionCollectFrom'] = 1960 
+    p['implementPoliciesFromYear'] = 2020
     
     p['favouriteSeed'] = 123
     p['loadFromFile'] = False
     p['verboseDebugging'] = False
     p['singleRunGraphs'] = False
-    p['saveChecks'] = False
-    p['getCheckVariablesAtYear'] = 1950
+    p['saveChecks'] = True
+    p['getCheckVariablesAtYear'] = 2015
     # To change through command-line arguments
 
-    p['numberPolicyParameters'] = 4
-    p['valuesPerParam'] = 2
-    p['numberScenarios'] = 9
+    p['numberPolicyParameters'] = 2
+    p['valuesPerParam'] = 1
+    p['numberScenarios'] = 3
     
     ############  Policy Parameters    #######################
     p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
@@ -136,14 +136,14 @@ def init_params():
     p['teenAgersHours'] = 8.0
     p['unemployedHours'] = 30.0
     p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
-    p['networkDistanceParam'] = 1.0
+    p['networkDistanceParam'] = 2.0
     p['employedHours'] = 16.0
     p['socialCareWeightBias'] = 1.0
     p['unmetCareNeedDiscountParam'] = 0.5
     p['shareUnmetNeedDiscountParam'] = 0.5
     # p['pastShareUnmetNeedWeight'] = 0.5
     
-    p['excessNeedParam'] = 0.01 #1.0 #[0.005 - 0.02]
+    p['excessNeedParam'] = 10.0 # 0.01 #[0.005 - 0.02]
     
     p['careSupplyBias'] = 0.5
     p['careIncomeParam'] = 0.001
@@ -236,7 +236,7 @@ def init_params():
     p['deltaIncomeExp'] = 0.05
     p['unemployedCareBurdernParam'] = 0.025
     # Potential key parameter
-    p['relocationCareLossExp'] = 40.0 # 0.05
+    p['relocationCareLossExp'] = 1.0 # 40.0 # 
     p['incomeSocialCostRelativeWeight'] = 0.5
     
     p['firingParam'] = 0.2
@@ -251,7 +251,7 @@ def init_params():
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
     p['variableMoveBack'] = 0.1
-    p['retiredRelocationParam'] = 0.01
+    p['retiredRelocationParam'] = 0.004 # 0.01
     
     # houseMap function parameters
     p['geoDistanceSensitivityParam'] = 2.0
@@ -272,14 +272,14 @@ def init_params():
     p['relocationCostParam'] = 2.0 # [1 -4]
     
     ########   Key parameter 6  ##############
-    p['propensityRelocationParam'] = 5.0 #0.002 # [10 - 40]
+    p['propensityRelocationParam'] = 1.0 # 5.0 
     p['denRelocationWeight'] = 0.5
     
     
      ## Description of the map, towns, and houses
     p['mapGridXDimension'] = 8
     p['mapGridYDimension'] = 12    
-    p['townGridDimension'] = 35
+    p['townGridDimension'] = 70
     p['cdfHouseClasses'] = [ 0.6, 0.9, 5.0 ]
     p['ukMap'] = [[ 0.0, 0.1, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0 ],
                   [ 0.1, 0.1, 0.2, 0.2, 0.3, 0.0, 0.0, 0.0 ],
@@ -408,17 +408,17 @@ if __name__ == "__main__":
             pool.join()
            
         else:
-            parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
-            parameters = map(list, zip(*parameters))
+            params = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
+            parameters = np.array(zip(*[iter(params)]*1))
             policies = []
-            defaultValues = [p['socialCareCreditShare'], p['taxBreakRate'], p['ageOfRetirement'], p['socialSupportLevel']]
+            defaultValues = [p['taxBreakRate'], p['socialSupportLevel']]
             # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
                 for j in range(p['valuesPerParam']):
                     runParameters = [x for x in defaultValues]
                     runParameters[i] = parameters[i][j]
-                    policies.append(runParameters)       
+                    policies.append(runParameters)     
             for p in policies:
                 p.append(policies.index(p))
             
@@ -438,17 +438,17 @@ if __name__ == "__main__":
                 b.run(i)
 
         else:
-            parameters = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
-            parameters = map(list, zip(*parameters))
+            params = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
+            parameters = np.array(zip(*[iter(params)]*1))
             policies = []
-            defaultValues = [p['socialCareCreditShare'], p['taxBreakRate'], p['ageOfRetirement'], p['socialSupportLevel']]
+            defaultValues = [p['taxBreakRate'], p['socialSupportLevel']]
             # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
                 for j in range(p['valuesPerParam']):
                     runParameters = [x for x in defaultValues]
                     runParameters[i] = parameters[i][j]
-                    policies.append(runParameters)       
+                    policies.append(runParameters)     
             for n in policies:
                 n.append(policies.index(n))
             

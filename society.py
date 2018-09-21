@@ -180,6 +180,8 @@ class Person:
         self.socialNetwork = []
         
         self.careNetwork = nx.Graph()
+        self.numSuppliers = 0
+        self.supplyNetwork = nx.Graph()
         
         self.householdSupply = 0
         
