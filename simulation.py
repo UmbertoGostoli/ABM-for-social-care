@@ -33,6 +33,7 @@ import numpy as np
 import operator
 import networkx as nx
 import csv
+from itertools import izip_longest
 
 # from careMap import updateCareMaps
 # from PIL import ImageTk         
@@ -211,27 +212,33 @@ class Sim:
             print "Entering main loop to hold graphics up there."
             self.window.mainloop()
             
-    def saveChecks(self, folder):            
-        values = zip(self.perCapitaHouseholdIncome, self.socialCareMapValues, 
+    def saveChecks(self, folder):     
+        
+        values = izip_longest(self.perCapitaHouseholdIncome, self.socialCareMapValues, 
                          self.relativeEducationCost, self.probKeepStudying, self.stageStudent, self.changeJobRate, 
                          self.changeJobdIncome, self.relocationCareLoss, self.relocationCost, self.townRelocationAttraction, 
                          self.townRelativeAttraction, self.townsJobProb, self.townJobAttraction, 
                          self.unemployedIncomeDiscountingFactor, self.relativeTownAttraction, self.houseScore, 
                          self.deltaHouseOccupants, self.careTransitionRate[0], self.careTransitionRate[1], 
                          self.careTransitionRate[2], self.careTransitionRate[3], self.careTransitionRate[4], 
-                         self.potentialHostSupply, self.spousesTownSocialAttraction, self.volunteersTotalSupply, self.numberSuppliers)
+                         self.potentialHostSupply, self.spousesTownSocialAttraction, self.volunteersTotalSupply, self.numberSuppliers, 
+                         fillvalue='')
             
-        names = ('perCapitaHouseholdIncome, socialCareMapValues, '
-                     'relativeEducationCost, probKeepStudying, stageStudent, changeJobRate, '
-                     'changeJobdIncome, relocationCareLoss, relocationCost, townRelocationAttraction, '
-                     'townRelativeAttraction, townsJobProb, townJobAttraction, '
-                     'unemployedIncomeDiscountingFactor, relativeTownAttraction, houseScore, '
-                     'deltaHouseOccupants, careTransitionRate_I, careTransitionRate_II, careTransitionRate_III, '
-                     'careTransitionRate_IV, careTransitionRate_V, potentialHostSupply, spousesTownSocialAttraction, '
-                     'volunteersTotalSupply, numberSuppliers')
+        headers = ['perCapitaHouseholdIncome', 'socialCareMapValues', 
+                     'relativeEducationCost', 'probKeepStudying', 'stageStudent', 'changeJobRate',
+                     'changeJobdIncome', 'relocationCareLoss', 'relocationCost', 'townRelocationAttraction',
+                     'townRelativeAttraction', 'townsJobProb', 'townJobAttraction',
+                     'unemployedIncomeDiscountingFactor', 'relativeTownAttraction', 'houseScore',
+                     'deltaHouseOccupants', 'careTransitionRate_I', 'careTransitionRate_II', 'careTransitionRate_III',
+                     'careTransitionRate_IV', 'careTransitionRate_V', 'potentialHostSupply', 'spousesTownSocialAttraction',
+                     'volunteersTotalSupply', 'numberSuppliers']
             
-        filename = folder + '/Check_Value.csv'
-        np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
+#        filename = folder + '/Check_Value.csv'
+#        np.savetxt(filename, values, delimiter=',', fmt='%f', header=names, comments="")
+        
+        with open(folder + "check_Values.csv", "wb") as f:
+            csv.writer(f).writerow([g for g in headers])
+            csv.writer(f).writerows(values)  
         
     def run(self, policyParams):
         
@@ -274,12 +281,12 @@ class Sim:
             values = zip(np.array([self.randomSeed, self.p['endYear'], self.p['statsCollectFrom'], 
                                    self.p['numRepeats'], self.p['numberPolicyParameters'], self.p['numberScenarios'],
                                    self.p['numberClasses'], self.p['implementPoliciesFromYear'], self.p['discountingFactor'],
-                                   policyParams[0], policyParams[1], self.p['numCareLevels']]))
+                                   policyParams[0], policyParams[1], policyParams[2], policyParams[3], self.p['numCareLevels']]))
             names = ('randomSeed,endYear,statCollectionYear,numRepeats,numParameters,numScenarios,numberClasses,startPoliciesYear,'
-                     'discountingFactor,taxBreakRate,socialSupportLevel,numCareLevels')
+                     'discountingFactor,networkSizeParam,retiredRelocationParam,taxBreakRate,socialSupportLevel,numCareLevels')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
         
-        self.initializePop()
+        self.initializePop(policyParams)
         
         self.folder = folder
         
@@ -302,7 +309,10 @@ class Sim:
         self.interactiveGraphics()
             
         
-    def initializePop(self):
+    def initializePop(self, policyParams):
+        
+        self.p['networkSizeParam'] = policyParams[0]
+        self.p['retiredRelocationParam'] = policyParams[1]
         
         if self.p['interactiveGraphics']:
                 self.initializeCanvas()
@@ -432,9 +442,9 @@ class Sim:
         
     def updatePolicyParameters(self, policyParameters):
         # self.p['socialCareCreditShare'] = policyParameters[0]
-        self.p['taxBreakRate'] = policyParameters[0]
+        self.p['taxBreakRate'] = policyParameters[2]
         # self.p['ageOfRetirement'] = policyParameters[2] 
-        self.p['socialSupportLevel'] = policyParameters[1] 
+        self.p['socialSupportLevel'] = policyParameters[3] 
                     
     def doOneYear(self, year):
         
@@ -1626,7 +1636,7 @@ class Sim:
                     self.socialCareMapValues.append(networkPop)
                     
                 # Min-Max: -6000 - 3000
-                townSCI = self.p['excessNeedParam']*networkPop # /math.exp(self.p['careIncomeParam']*potentialIncome)
+                townSCI = self.p['networkSizeParam']*networkPop # /math.exp(self.p['careIncomeParam']*potentialIncome)
                 for member in household:
                     member.socialCareMap.append(townSCI)
                     
@@ -1832,7 +1842,7 @@ class Sim:
             self.socialCareMapValues.append(networkPop)
             
         # Min-Max: -6000 - 3000
-        townSCI = self.p['excessNeedParam']*networkPop
+        townSCI = self.p['networkSizeParam']*networkPop
         return(townSCI)
     
     def allocateCare(self):

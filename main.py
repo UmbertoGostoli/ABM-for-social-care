@@ -143,7 +143,7 @@ def init_params():
     p['shareUnmetNeedDiscountParam'] = 0.5
     # p['pastShareUnmetNeedWeight'] = 0.5
     
-    p['excessNeedParam'] = 10.0 # 0.01 #[0.005 - 0.02]
+    p['networkSizeParam'] = 10.0 # 0.01 #[0.005 - 0.02]
     
     p['careSupplyBias'] = 0.5
     p['careIncomeParam'] = 0.001
@@ -251,7 +251,7 @@ def init_params():
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
     p['variableMoveBack'] = 0.1
-    p['retiredRelocationParam'] = 0.004 # 0.01
+    p['retiredRelocationParam'] = 0.01 # 0.01
     
     # houseMap function parameters
     p['geoDistanceSensitivityParam'] = 2.0
@@ -408,22 +408,49 @@ if __name__ == "__main__":
             pool.join()
            
         else:
+#            params = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
+#            parameters = np.array(zip(*[iter(params)]*1))
+#            policies = []
+#            defaultValues = [p['taxBreakRate'], p['socialSupportLevel']]
+#            # Policies' combinations
+#            policies.append(defaultValues)
+#            for i in range(len(parameters)):
+#                for j in range(p['valuesPerParam']):
+#                    runParameters = [x for x in defaultValues]
+#                    runParameters[i] = parameters[i][j]
+#                    policies.append(runParameters)     
+#            for p in policies:
+#                p.append(policies.index(p))
+            
+            parameters = np.genfromtxt('structuralParameters.csv', skip_header = 1, delimiter=',')
+            parameters = map(list, zip(*parameters))
+            scenarios = []
+            for i in range(len(parameters[0])):
+                combinations = []
+                for j in range(len(parameters)):
+                    combinations.append(parameters[j][i])
+                scenarios.append(combinations)
+                
             params = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
             parameters = np.array(zip(*[iter(params)]*1))
             policies = []
             defaultValues = [p['taxBreakRate'], p['socialSupportLevel']]
-            # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
-                for j in range(p['valuesPerParam']):
+                for j in range(1):
                     runParameters = [x for x in defaultValues]
                     runParameters[i] = parameters[i][j]
-                    policies.append(runParameters)     
-            for p in policies:
-                p.append(policies.index(p))
+                    policies.append(runParameters)
+            combinations = []
+            for z in scenarios:
+                for p in policies: 
+                    combinations.append(z+p)
+                    
+            for p in combinations:
+                p.append(combinations.index(p))
             
-            numPolicies = range(len(policies))
-            pool.map(simulation, policies)
+            numPolicies = range(len(combinations))
+            pool.map(simulation, combinations)
             pool.close()
             pool.join()
             
@@ -438,19 +465,46 @@ if __name__ == "__main__":
                 b.run(i)
 
         else:
+#            params = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
+#            parameters = np.array(zip(*[iter(params)]*1))
+#            policies = []
+#            defaultValues = [p['taxBreakRate'], p['socialSupportLevel']]
+#            # Policies' combinations
+#            policies.append(defaultValues)
+#            for i in range(len(parameters)):
+#                for j in range(p['valuesPerParam']):
+#                    runParameters = [x for x in defaultValues]
+#                    runParameters[i] = parameters[i][j]
+#                    policies.append(runParameters)     
+#            for n in policies:
+#                n.append(policies.index(n))
+            
+            parameters = np.genfromtxt('structuralParameters.csv', skip_header = 1, delimiter=',')
+            parameters = map(list, zip(*parameters))
+            scenarios = []
+            for i in range(len(parameters[0])):
+                combinations = []
+                for j in range(len(parameters)):
+                    combinations.append(parameters[j][i])
+                scenarios.append(combinations)
+                
             params = np.genfromtxt('parameters.csv', skip_header = 1, delimiter=',')
             parameters = np.array(zip(*[iter(params)]*1))
             policies = []
             defaultValues = [p['taxBreakRate'], p['socialSupportLevel']]
-            # Policies' combinations
             policies.append(defaultValues)
             for i in range(len(parameters)):
-                for j in range(p['valuesPerParam']):
+                for j in range(1):
                     runParameters = [x for x in defaultValues]
                     runParameters[i] = parameters[i][j]
-                    policies.append(runParameters)     
-            for n in policies:
-                n.append(policies.index(n))
+                    policies.append(runParameters)
+            combinations = []
+            for z in scenarios:
+                for p in policies: 
+                    combinations.append(z+p)
+                    
+            for d in combinations:
+                d.append(combinations.index(d))
             
             numPolicies = len(policies)
             
