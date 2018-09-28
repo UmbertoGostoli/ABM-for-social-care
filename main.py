@@ -28,7 +28,7 @@ def init_params():
     p['numRepeats'] = 1
     
     p['multiprocessing'] = True
-    p['numberProcessors'] = 3
+    p['numberProcessors'] = 9
     
     p['startYear'] = 1860
     p['endYear'] = 2040
@@ -143,7 +143,7 @@ def init_params():
     p['shareUnmetNeedDiscountParam'] = 0.5
     # p['pastShareUnmetNeedWeight'] = 0.5
     
-    p['networkSizeParam'] = 10.0 # 0.01 #[0.005 - 0.02]
+    p['networkSizeParam'] = 5.0 # 0.01 #[0.005 - 0.02]
     
     p['careSupplyBias'] = 0.5
     p['careIncomeParam'] = 0.001
@@ -219,11 +219,11 @@ def init_params():
     p['incomeMarriageParam'] = 0.025
     p['studentFactorParam'] = 0.5
     ########   Key parameter 4  ##############
-    p['betaGeoExp'] = 2.0 #[1.0 - 4.0]
+    p['betaGeoExp'] = 3.0 #[1.0 - 4.0]
     
     p['betaSocExp'] = 2.0
     p['rankGenderBias'] = 0.5
-    p['basicMaleMarriageProb'] =  0.85
+    p['basicMaleMarriageProb'] =  0.9
     p['maleMarriageModifierByDecade'] = [ 0.0, 0.16, 0.5, 1.0, 0.8, 0.7, 0.66, 0.5, 0.4, 0.2, 0.1, 0.05, 0.01, 0.0, 0.0, 0.0, 0.0 ]
     
     # jobMarket, updateWork and unemploymentRate functions parameters
@@ -251,7 +251,7 @@ def init_params():
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
     p['variableMoveBack'] = 0.1
-    p['retiredRelocationParam'] = 0.01 # 0.01
+    p['retiredRelocationParam'] = 0.004 # 0.01
     
     # houseMap function parameters
     p['geoDistanceSensitivityParam'] = 2.0
@@ -449,8 +449,8 @@ if __name__ == "__main__":
             for p in combinations:
                 p.append(combinations.index(p))
             
-            numPolicies = range(len(combinations))
-            pool.map(simulation, combinations)
+            numPolicies = range(len(policies))
+            pool.map(simulation, policies)
             pool.close()
             pool.join()
             
