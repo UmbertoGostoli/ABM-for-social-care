@@ -266,7 +266,7 @@ class Sim:
                                    self.p['socialCareCreditShare'], self.p['taxBreakRate'], self.p['ageOfRetirement'], 
                                    self.p['socialSupportLevel'], self.p['numCareLevels']]))
             names = ('randomSeed,endYear,statCollectionYear,numRepeats,numParameters,numScenarios,numberClasses,startPoliciesYear,'
-                     'discountingFactor,socialCareCreditShare,taxBreakRate,ageOfRetirement,socialSupportLevel,numCareLevels')
+                     'discountingFactor,taxBreakRate,socialSupportLevel,numCareLevels')
             np.savetxt(filename, np.transpose(values), delimiter=',', fmt='%f', header=names, comments="")
 
         else:
@@ -1627,9 +1627,9 @@ class Sim:
                     
             for town in self.map.towns:
                 networkPop = 0
-                networkPop += sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
-                networkPop += sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
-                networkPop += sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
+                networkPop += sum([float(len(x.household)) for x in nok_1 if x.house.town == town])*kinshipWeight_1
+                networkPop += sum([float(len(x.household)) for x in nok_2 if x.house.town == town])*kinshipWeight_2
+                networkPop += sum([float(len(x.household)) for x in nok_3 if x.house.town == town])*kinshipWeight_3
                 
                 # Check variable
                 if self.year == self.p['getCheckVariablesAtYear'] and networkPop != 0:
@@ -1833,9 +1833,9 @@ class Sim:
 #        return(townSCI)
         
         networkPop = 0
-        networkPop += sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
-        networkPop += sum([x.netHouseholdCare for x in nok_2 if x.house.town == town])*kinshipWeight_2
-        networkPop += sum([x.netHouseholdCare for x in nok_3 if x.house.town == town])*kinshipWeight_3
+        networkPop += sum([float(len([y for y in x.house.occupants if y not in household])) for x in nok_1 if x.house.town == town])*kinshipWeight_1
+        networkPop += sum([float(len([y for y in x.house.occupants if y not in household])) for x in nok_2 if x.house.town == town])*kinshipWeight_2
+        networkPop += sum([float(len([y for y in x.house.occupants if y not in household])) for x in nok_3 if x.house.town == town])*kinshipWeight_3
         
         # Check variable
         if self.year == self.p['endYear'] and networkPop != 0:
@@ -3411,9 +3411,12 @@ class Sim:
         index = 0
         for town in self.map.towns:
             if town == agent.house.town:
-                townAttraction = agent.socialCareMap[index]/perCapitaIncome # Min-Max: -60 - +30 (*networkSocialCareParam)
+                townAttraction = (agent.socialCareMap[index]+rcA)/perCapitaIncome # Min-Max: -60 - +30 (*networkSocialCareParam)
             else:
-                townAttraction = (agent.socialCareMap[index] - rcA)/perCapitaIncome
+                townAttraction = agent.socialCareMap[index]/perCapitaIncome
+                
+#            if townAttraction > 10.0:
+#                townAttraction = 10.0
                 
             # Check variable
             if self.year == self.p['getCheckVariablesAtYear']:
@@ -3435,23 +3438,22 @@ class Sim:
         
         propensities = []
         index = 0
+        # totalAttractionFactor = sum([math.exp(self.p['propensityRelocationParam']*x) for x in relocationCost])
         for rc in relocationCost:
-            
-            if rc > 15:
-                # print('Relative Attraction: ' + str(rc))
-                # print('Per Capita Income: ' + str(perCapitaIncome))
-                rc = 15
-            #if relativeAttraction > 0.5:
-              #  print('Relative Attraction is:')
-              #  print(relativeAttraction)
-            # Check variable
+
             if self.year == self.p['getCheckVariablesAtYear']:
                 self.relativeTownAttraction.append(rc) # Min-Max: -0.05 - 0.00
+                
+            if rc > 10.0:
+                rc = 10.0
+                
+#            if totalAttractionFactor > 0:
+#                attractionFactor = math.exp(self.p['propensityRelocationParam']*rc)/totalAttractionFactor
+#            else:
+#                attractionFactor = 0
             
+            #rp = (attractionFactor-1)/attractionFactor
             attractionFactor = math.exp(self.p['propensityRelocationParam']*rc)
-            
-            # rp = attractionFactor/(attractionFactor + self.p['denRelocationWeight'])
-            
             # Check variable
             if self.year == self.p['getCheckVariablesAtYear']:
                 self.townRelativeAttraction.append(attractionFactor) # 0.87 - 0.9
