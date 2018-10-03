@@ -272,7 +272,7 @@ class Sim:
         else:
             print('Policy Combination: ' + str(policyParams[-1]))
             
-            folder = self.p['rootFolder'] + '/Charts/SocPolicy_Sim/Policy_' + str(policyParams[-1]) #
+            folder = self.p['rootFolder'] + '/Charts_2/SocPolicy_Sim/Policy_' + str(policyParams[-1]) #
             if not os.path.exists(folder):
                 os.makedirs(folder)
             
@@ -1300,10 +1300,10 @@ class Sim:
                     child.residualNeed = child.hoursDemand
 
             if child.age == 0 and child.mother.status != 'inactive':
-                child.mother.socialWork = self.p['zeroYearCare']
-                child.mother.income = 0
-                child.mother.disposableIncome = child.mother.income
-                child.mother.netIncome = child.mother.income
+                child.mother.socialWork = 0 # self.p['zeroYearCare']
+                # child.mother.income = 0
+                # child.mother.disposableIncome = child.mother.income
+                # child.mother.netIncome = child.mother.income
                 child.mother.status = 'maternity'
                 child.mother.babyCarer = True
                 child.residualNeed = 0
@@ -1414,7 +1414,7 @@ class Sim:
             for member in household:
                 member.visitedCarer = True
                 
-            householdCarers = [x for x in household if x.hoursDemand == 0]
+            householdCarers = [x for x in household if x.hoursDemand == 0 and x.status != 'maternity']
             notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
             for member in notWorking:
                 if member.status == 'teenager':
@@ -1508,7 +1508,7 @@ class Sim:
                     else:
                         householdDemand += self.p['zeroYearCare']
     
-                householdCarers = [x for x in household if x.hoursDemand == 0]
+                householdCarers = [x for x in household if x.hoursDemand == 0 and x.status != 'maternity']
                 # notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
                 for member in householdCarers:
                     if member.status == 'teenager':
@@ -1553,7 +1553,14 @@ class Sim:
                     if nok.dead == False and nok not in household and nok not in visited:
                         nok_1.append(nok)
                         visited.extend(nok.household)
-                    uncles = []
+                for child in i.children:
+                    nok = child
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_1.append(nok)
+                        visited.extend(nok.household)
+                            
+            for i in household:
+                if i.father != None:
                     if i.father.father != None:
                         nok = i.father.father
                         if nok.dead == False and nok not in household and nok not in visited:
@@ -1563,8 +1570,6 @@ class Sim:
                         if nok.dead == False and nok not in household and nok not in visited:
                             nok_2.append(nok)
                             visited.extend(nok.household)
-                        uncles = list(set(i.father.father.children + i.father.mother.children))
-                        uncles.remove(i.father)
                     if i.mother.father != None:
                         nok = i.mother.father
                         if nok.dead == False and nok not in household and nok not in visited:
@@ -1574,6 +1579,27 @@ class Sim:
                         if nok.dead == False and nok not in household and nok not in visited:
                             nok_2.append(nok)
                             visited.extend(nok.household)
+                    brothers = list(set(i.father.children + i.mother.children))
+                    brothers.remove(i)
+                    for brother in brothers:
+                        nok = brother
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                for child in i.children:
+                    for grandchild in child.children:
+                        nok = grandchild
+                        if nok.dead == False and nok not in household and nok not in visited:
+                            nok_2.append(nok)
+                            visited.extend(nok.household)
+                            
+            for i in household:
+                uncles = []
+                if i.father != None:
+                    if i.father.father != None:
+                        uncles = list(set(i.father.father.children + i.father.mother.children))
+                        uncles.remove(i.father)
+                    if i.mother.father != None:
                         uncles.extend(list(set(i.mother.father.children + i.mother.mother.children)))
                         uncles.remove(i.mother)
                     for uncle in uncles:
@@ -1584,25 +1610,11 @@ class Sim:
                     brothers = list(set(i.father.children + i.mother.children))
                     brothers.remove(i)
                     for brother in brothers:
-                        nok = brother
-                        if nok.dead == False and nok not in household and nok not in visited:
-                            nok_2.append(nok)
-                            visited.extend(nok.household)
                         for child in brother.children:
                             nok = child
                             if nok.dead == False and nok not in household and nok not in visited:
                                 nok_3.append(nok)
                                 visited.extend(nok.household)
-                for child in i.children:
-                    nok = child
-                    if nok.dead == False and nok not in household and nok not in visited:
-                        nok_1.append(nok)
-                        visited.extend(nok.household)
-                    for grandchild in child.children:
-                        nok = grandchild
-                        if nok.dead == False and nok not in household and nok not in visited:
-                            nok_2.append(nok)
-                            visited.extend(nok.household)
     
 #            for town in self.map.towns:
 #                deltaNetworkCare = 0
@@ -1666,7 +1678,7 @@ class Sim:
     
     def householdCareSupply(self, household, kinshipDistance):
         householdSupply = 0
-        householdCarers = [x for x in household if x.hoursDemand == 0]
+        householdCarers = [x for x in household if x.hoursDemand == 0 and x.status != 'maternity']
         notWorking = [x for x in household if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
         for member in notWorking:
             if member.status == 'teenager':
@@ -1754,6 +1766,7 @@ class Sim:
         visited = []
         for i in household:
             i.socialCareMap = []
+        for i in household:
             if i.father != None:
                 nok = i.father
                 if nok.dead == False and nok not in household and nok not in visited:
@@ -1763,7 +1776,14 @@ class Sim:
                 if nok.dead == False and nok not in household and nok not in visited:
                     nok_1.append(nok)
                     visited.extend(nok.household)
-                uncles = []
+            for child in i.children:
+                nok = child
+                if nok.dead == False and nok not in household and nok not in visited:
+                    nok_1.append(nok)
+                    visited.extend(nok.household)
+                        
+        for i in household:
+            if i.father != None:
                 if i.father.father != None:
                     nok = i.father.father
                     if nok.dead == False and nok not in household and nok not in visited:
@@ -1773,8 +1793,6 @@ class Sim:
                     if nok.dead == False and nok not in household and nok not in visited:
                         nok_2.append(nok)
                         visited.extend(nok.household)
-                    uncles = list(set(i.father.father.children + i.father.mother.children))
-                    uncles.remove(i.father)
                 if i.mother.father != None:
                     nok = i.mother.father
                     if nok.dead == False and nok not in household and nok not in visited:
@@ -1784,6 +1802,27 @@ class Sim:
                     if nok.dead == False and nok not in household and nok not in visited:
                         nok_2.append(nok)
                         visited.extend(nok.household)
+                brothers = list(set(i.father.children + i.mother.children))
+                brothers.remove(i)
+                for brother in brothers:
+                    nok = brother
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+            for child in i.children:
+                for grandchild in child.children:
+                    nok = grandchild
+                    if nok.dead == False and nok not in household and nok not in visited:
+                        nok_2.append(nok)
+                        visited.extend(nok.household)
+                        
+        for i in household:
+            uncles = []
+            if i.father != None:
+                if i.father.father != None:
+                    uncles = list(set(i.father.father.children + i.father.mother.children))
+                    uncles.remove(i.father)
+                if i.mother.father != None:
                     uncles.extend(list(set(i.mother.father.children + i.mother.mother.children)))
                     uncles.remove(i.mother)
                 for uncle in uncles:
@@ -1794,25 +1833,11 @@ class Sim:
                 brothers = list(set(i.father.children + i.mother.children))
                 brothers.remove(i)
                 for brother in brothers:
-                    nok = brother
-                    if nok.dead == False and nok not in household and nok not in visited:
-                        nok_2.append(nok)
-                        visited.extend(nok.household)
                     for child in brother.children:
                         nok = child
                         if nok.dead == False and nok not in household and nok not in visited:
                             nok_3.append(nok)
                             visited.extend(nok.household)
-            for child in i.children:
-                nok = child
-                if nok.dead == False and nok not in household and nok not in visited:
-                    nok_1.append(nok)
-                    visited.extend(nok.household)
-                for grandchild in child.children:
-                    nok = grandchild
-                    if nok.dead == False and nok not in household and nok not in visited:
-                        nok_2.append(nok)
-                        visited.extend(nok.household)
 
 #        deltaNetworkCare = 0
 #        deltaNetworkCare += -1*sum([x.netHouseholdCare for x in nok_1 if x.house.town == town])*kinshipWeight_1
@@ -1982,7 +2007,7 @@ class Sim:
             townCarer = carer.house.town
             household = [x for x in carer.house.occupants]
             formalSupplyHours = household[0].residualFormalSupply
-            householdCarers = [x for x in household if x.hoursDemand == 0]
+            householdCarers = [x for x in household if x.hoursDemand == 0 and x.status != 'maternity']
             notWorking = [x for x in householdCarers if x.status == 'teenager' or x.status == 'retired' or x.status == 'student' or x.status == 'unemployed']
             employed = [x for x in householdCarers if x.status == 'employed']
             # employed.sort(key=operator.attrgetter("wage"))
@@ -2031,7 +2056,7 @@ class Sim:
         residualIncomeForCare = household[0].residualIncomeCare
         residualFormalSupplyHours = household[0].residualFormalSupply
         
-        householdCarers = [x for x in household if x.hoursDemand == 0]
+        householdCarers = [x for x in household if x.hoursDemand == 0 and x.status != 'maternity']
         notWorking = [x for x in householdCarers if x.residualInformalSupply > 0]
         
         householdsGroups = []
@@ -2601,9 +2626,11 @@ class Sim:
                     if person.house == self.displayHouse:
                         self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
                 else:
+                    if random.random < self.p['leaveHomeStudentsProb']:
+                        person.status = 'outOfTownStudent'
                     person.temporaryClassRank = 2
                     person.yearOfSchoolLeft = 2
-            if person.age >= 20 and person.status == 'student' and person.yearOfSchoolLeft == 0 and person.temporaryClassRank == 2:
+            if person.age >= 20 and (person.status == 'student' or person.status == 'outOfTownStudent') and person.yearOfSchoolLeft == 0 and person.temporaryClassRank == 2:
             # With a certain probability p the person enters the workforce, 
             # with a probability 1-p goes to the next educational level
                 probStudy = self.transitionProb(person, 2)
@@ -2617,7 +2644,7 @@ class Sim:
                 else:
                     person.temporaryClassRank = 3
                     person.yearOfSchoolLeft = 2
-            if person.age >= 22 and person.status == 'student' and person.yearOfSchoolLeft == 0 and person.temporaryClassRank == 3:
+            if person.age >= 22 and (person.status == 'student' or person.status == 'outOfTownStudent') and person.yearOfSchoolLeft == 0 and person.temporaryClassRank == 3:
             # With a certain probability p the person enters the workforce, 
             # with a probability 1-p goes to the next educational level
                 probStudy = self.transitionProb(person, 3)
@@ -2631,7 +2658,7 @@ class Sim:
                 else:
                     person.temporaryClassRank = 4
                     person.yearOfSchoolLeft = 2
-            if person.age >= 24 and person.status == 'student' and person.yearOfSchoolLeft == 0 and person.temporaryClassRank == 4:
+            if person.age >= 24 and (person.status == 'student' or person.status == 'outOfTownStudent') and person.yearOfSchoolLeft == 0 and person.temporaryClassRank == 4:
                 # person.classRank = 4
                 person.yearOfSchoolLeft = 0
                 person.classRank = person.temporaryClassRank
@@ -2639,7 +2666,7 @@ class Sim:
                 if person.house == self.displayHouse:
                     self.textUpdateList.append(str(self.year) + ": #" + str(person.id) + " is now looking for a job.")
          
-            if person.status == 'student' and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
+            if (person.status == 'student' or person.status == 'outOfTownStudent') and len([x for x in person.house.occupants if x.independentStatus == True]) == 0:
                 person.independentStatus = True
                 self.enterWorkForce(person)
                 if person.house == self.displayHouse:
@@ -2787,7 +2814,7 @@ class Sim:
                 bridesWeights = []
                 for woman in potentialBrides:
                     studentFactor = 1.0
-                    if woman.status == 'student':
+                    if woman.status == 'student' or woman.status == 'outOfTownStudent':
                         studentFactor = self.p['studentFactorParam']
                     womanTown = woman.house.town
                     geoDistance = self.manhattanDistance(manTown, womanTown)/float(self.p['mapGridXDimension'] + self.p['mapGridYDimension'])
@@ -3340,9 +3367,10 @@ class Sim:
         perCapitaIncome = potentialIncome/float(numHousehold)
         
         rcA = 0
-        for member in householdOutOfTown:
+        for member in householdInTown:
             rcA += math.pow(float(member.yearsInTown), self.p['yearsInTownSensitivityParam'])
         rcA *= self.p['relocationCostParam']
+        
         
 #        if perCapitaIncome == 0:
 #            print('Error: per capita income equal to zero')
@@ -3368,15 +3396,18 @@ class Sim:
                 print(i.age)
         
         household = householdInTown + householdOutOfTown
-        socialAttraction = (self.spousesCareLocation(agent, household) - rcA)/perCapitaIncome
+        socialAttraction = (self.spousesCareLocation(agent, household) + rcA)/perCapitaIncome
         
         # Check variable
         if self.year == self.p['getCheckVariablesAtYear']:
             self.spousesTownSocialAttraction.append(socialAttraction) 
         
+        if socialAttraction > 10.0:
+            socialAttraction = 10.0
+        
         attractionFactor = math.exp(self.p['propensityRelocationParam']*socialAttraction)
-        relativeAttraction = attractionFactor/(attractionFactor + 1)
-        return (relativeAttraction)
+        # relativeAttraction = attractionFactor/(attractionFactor + 1)
+        return (attractionFactor)
     
     def computeRelocationsCost(self, agent):
         
@@ -4777,11 +4808,11 @@ class Sim:
         numReceivers = float(len(receivers))
         numAdultPop = float(len(adultPop))
         currentPop = float(len(self.pop.livingPeople))
-        caringAgePop = [x for x in self.pop.livingPeople if x.age >= self.p['ageTeenagers']]
+        caringAgePop = [x for x in self.pop.livingPeople if x.age >= self.p['minWorkingAge']]
         caringWomenPop = [x for x in caringAgePop if x.sex == 'female']
         caringMenPop = [x for x in caringAgePop if x.sex == 'male']
         
-        informalCarers = [x for x in self.pop.livingPeople if x.socialWork > 0]
+        informalCarers = [x for x in self.pop.livingPeople if x.socialWork > 0 and x.age >= self.p['minWorkingAge']]
         womenCarers = [x for x in informalCarers if x.sex == 'female']
         menCarers = [x for x in informalCarers if x.sex == 'male']
         shareCarers = float(len(informalCarers))/float(len(caringAgePop))
@@ -5698,12 +5729,17 @@ class Sim:
             for i in range(4):
                 sumNoK_informalSupplies[i] += person.informalSupplyByKinship[i]
                 sumNoK_formalSupplies[i] += person.formalSupplyByKinship[i]
+        
+        outOfHouseholdInformalSupply = sumNoK_informalSupplies[1] + sumNoK_informalSupplies[2] + sumNoK_informalSupplies[3]
+        
+        if outOfHouseholdInformalSupply > 0:
+            print 'Ratio household/out-of-household informal supply: ' + str(sumNoK_informalSupplies[0]/outOfHouseholdInformalSupply)
                 
         # Graph 27
         informalCareSuppliedByFemales = sum([x.socialWork for x in self.pop.livingPeople if x.sex == 'female'])
         totalInformalCare = sum([x.socialWork for x in self.pop.livingPeople])
         shareInformalCareSuppliedByFemales = 0
-        if informalCareReceived > 0:
+        if totalInformalCare > 0:
             shareInformalCareSuppliedByFemales = informalCareSuppliedByFemales/totalInformalCare
         
         informalCareSuppliedByFemales_1 = sum([x.socialWork for x in class_1 if x.sex == 'female'])

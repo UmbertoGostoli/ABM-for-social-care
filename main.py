@@ -131,19 +131,21 @@ def init_params():
     ########   Key parameter 2  ##############
      # 5: No public supply 
     
-    p['retiredHours'] = 60.0
-    p['studentHours'] = 16.0
+    p['retiredHours'] = 40 # 60.0
+    p['studentHours'] = 12.0
     p['teenAgersHours'] = 8.0
-    p['unemployedHours'] = 30.0
+    p['unemployedHours'] = 24.0
     p['socialNetworkDistances'] = [0.0, 1.0, 2.0, 1.0, 2.0, 2.0, 3.0, 3.0]
     p['networkDistanceParam'] = 2.0
-    p['employedHours'] = 16.0
+    p['employedHours'] = 12.0
     p['socialCareWeightBias'] = 1.0
     p['unmetCareNeedDiscountParam'] = 0.5
     p['shareUnmetNeedDiscountParam'] = 0.5
     # p['pastShareUnmetNeedWeight'] = 0.5
     
-    p['networkSizeParam'] = 5.0 # 0.01 #[0.005 - 0.02]
+     
+    
+    p['networkSizeParam'] = 10.0 # 0.01 #[0.005 - 0.02]
     
     p['careSupplyBias'] = 0.5
     p['careIncomeParam'] = 0.001
@@ -198,11 +200,15 @@ def init_params():
     p['incomeGrowthRate'] = [0.4, 0.35, 0.35, 0.3, 0.25]
     
     # SES inter-generational mobility parameters
+    p['leaveHomeStudentsProb'] = 0.5
+    
     p['eduWageSensitivity'] = 0.2 # 0.5
     p['eduRankSensitivity'] = 3.0 # 5.0
     p['costantIncomeParam'] = 80.0 # 20.0
     p['costantEduParam'] = 10.0 #  10.0
     p['careEducationParam'] = 0.005        # 0.04
+    
+    
     
     # p['incEduExp'] = 0.25
     p['educationLevels'] = ['GCSE', 'A-Level', 'HND', 'Degree', 'Higher Degree']
@@ -219,7 +225,7 @@ def init_params():
     p['incomeMarriageParam'] = 0.025
     p['studentFactorParam'] = 0.5
     ########   Key parameter 4  ##############
-    p['betaGeoExp'] = 3.0 #[1.0 - 4.0]
+    p['betaGeoExp'] = 2.0 #[1.0 - 4.0]
     
     p['betaSocExp'] = 2.0
     p['rankGenderBias'] = 0.5
@@ -251,7 +257,7 @@ def init_params():
     # relocationPensioners function parameters
     p['agingParentsMoveInWithKids'] = 0.1
     p['variableMoveBack'] = 0.1
-    p['retiredRelocationParam'] = 0.004 # 0.01
+    p['retiredRelocationParam'] = 0.01 # 0.005
     
     # houseMap function parameters
     p['geoDistanceSensitivityParam'] = 2.0
@@ -269,10 +275,10 @@ def init_params():
     p['yearsInTownSensitivityParam'] = 0.5
     
      ########   Key parameter 5  ##############
-    p['relocationCostParam'] = 2.0 # [1 -4]
+    p['relocationCostParam'] = 1.0 # 2.0 [1 -4]
     
     ########   Key parameter 6  ##############
-    p['propensityRelocationParam'] = 1.0 # 5.0 
+    p['propensityRelocationParam'] = 2.0 # 1.0 
     p['denRelocationWeight'] = 0.5
     
     
@@ -449,8 +455,8 @@ if __name__ == "__main__":
             for p in combinations:
                 p.append(combinations.index(p))
             
-            numPolicies = range(len(policies))
-            pool.map(simulation, policies)
+            numPolicies = range(len(combinations))
+            pool.map(simulation, combinations)
             pool.close()
             pool.join()
             
