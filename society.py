@@ -140,10 +140,10 @@ class Person:
         self.netHouseholdCare = 0
         self.householdName = 0
         self.netIndividualCare = 0
-        # self.hoursInformalSupply = 0
-        # self.hoursFormalSupply = 0
+        
+       
         self.hoursSupply = 0
-        self.extraworkCare = 0
+        
         
         self.socialWork = 0
         self.workToCare = 0
@@ -162,13 +162,20 @@ class Person:
         self.informalSupplyByKinship = []
         self.formalSupplyByKinship = []
         self.networkSupply = 0
-        self.residualInformalSupply = 0
         
-        self.residualFormalSupply = 0
+        self.maxInformalSupply = 0
+        self.residualInformalSupply = [0.0, 0.0, 0.0, 0.0]
+        self.hoursInformalSupply = [0.0, 0.0, 0.0, 0.0]
+        self.extraworkCare = [0.0, 0.0, 0.0, 0.0]
+        self.residualFormalSupply = [0.0, 0.0, 0.0, 0.0]
+        self.hoursFormalSupply = [0.0, 0.0, 0.0, 0.0]
+        self.residualIncomeCare = 0
+        self.offWorkCare = 0
+        
         self.hoursCareSupply = 0
         self.mortalityRate = 0
         self.fertilityRate = 0
-        self.residualIncomeCare = 0
+        
         self.residualWorkingHours = 0
         self.incomeByTaxBands = []
         self.maxFormalCareSupply = 0
