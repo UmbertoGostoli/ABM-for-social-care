@@ -386,7 +386,12 @@ class Sim:
             remainingHouses = []
             remainingHouses.extend(self.map.allHouses)
             for man in men:
+                
+                if len(remainingHouses) < 1:
+                    print 'Error in relocateOrphans: the list remainingHouses is empty!'
+                
                 man.house = random.choice(remainingHouses)
+                
                 if (man.status == 'employed'):
                     man.jobLocation = man.house.town
                 else:
@@ -850,12 +855,21 @@ class Sim:
                     hosts.append(i)
                     weights.append(self.weightedIncome(i, distance))
                 probs = [x/sum(weights) for x in weights]
+                
+                if len(hosts) < 1:
+                    print 'Error in relocateOrphans: the list hosts is empty!'
+                
                 host = np.random.choice(hosts, p = probs)
                 self.movePeopleIntoChosenHouse(host.house, household[0].house, household, 'relocateOrphans')
             else:
                 # if household[0].partner == None:
                 adoptiveMothers = [x for x in self.pop.livingPeople if x.sex == 'female' and x.partner != None and x.independentStatus == True and self.householdIncome(x.house.occupants) > 0]
+                
+                if len(adoptiveMothers) < 1:
+                    print 'Error in relocateOrphans: the list adoptiveMothers is empty!'
+                
                 adoptiveMother = random.choice(adoptiveMothers)
+                
                 for person in household:
                     if person.status == 'child' or person.status == 'teenager':
                         person.mother = adoptiveMother
@@ -1763,6 +1777,10 @@ class Sim:
             
             careList = [x.residualNeed for x in residualReceivers]
             probReceivers = [i/sum(careList) for i in careList]
+            
+            if len(residualReceivers) < 1:
+                print 'Error in allocateCare: the list residualReceivers is empty!'
+            
             receiver = np.random.choice(residualReceivers, p = probReceivers)
             
             self.getCare(receiver)
@@ -1914,6 +1932,10 @@ class Sim:
 
         probCarers = self.probSuppliers(receiver)
         suppliers = [x for x in receiver.careNetwork.neighbors(receiver)]
+        
+        if len(suppliers) < 1:
+            print 'Error in getCare: the list suppliers is empty!'
+        
         carer = np.random.choice(suppliers, p = probCarers)
         
         d = receiver.careNetwork[receiver][carer]['distance']
@@ -1993,6 +2015,10 @@ class Sim:
         supplier = 'none'
         if distance == 0 or distance == 1:
             if townCarer == townReceiver:
+                
+                if len(householdsGroups) < 1:
+                    print 'Error in getCare: the list householdsGroups is empty!'
+                
                 carers = np.random.choice(householdsGroups, p = groupsProbabilities) 
                 if carers == 'Out-of-Income Supply':
                     residualFormalSupplyHours -= self.p['quantumCare']
@@ -2156,6 +2182,10 @@ class Sim:
             if townCarer == townReceiver: 
                 groupsAvailability[-1] = 0.0
                 groupsProbabilities = [x/sum(groupsAvailability) for x in groupsAvailability]
+                
+                if len(householdsGroups) < 1:
+                    print 'Error in getCare: the list householdsGroups is empty!'
+                    
                 carers = np.random.choice(householdsGroups, p = groupsProbabilities)
                 if carers[0].status == 'employed':
                     for i in range(4):
@@ -2435,11 +2465,19 @@ class Sim:
                 # Select receiver by residual need
                 careList = [x.residualNeed for x in residualReceivers]
                 probReceivers = [i/sum(careList) for i in careList]
+                
+                if len(residualReceivers) < 1:
+                    print 'Error in careBankingAllocation: the list residualReceivers is empty!'
+                
                 receiver = np.random.choice(residualReceivers, p = probReceivers)
                 # Select receiver's volunteer by residual supply
                 availableVolunteers = [x for x in receiver.careNetwork.neighbors(receiver) if x.potentialVolunteer == True and x.house.town == receiver.house.town and x.volunteerCareSupply > 0]
                 supplyList = [x.volunteerCareSupply for x in availableVolunteers]
                 probSuppliers = [i/sum(supplyList) for i in supplyList]
+                
+                if len(availableVolunteers) < 1:
+                    print 'Error in careBankingAllocation: the list availableVolunteers is empty!'
+                
                 supplier = np.random.choice(availableVolunteers, p = probSuppliers)
                 # Transfer supply and social credit
                 supplier.volunteerCareSupply -= 1
@@ -2465,11 +2503,19 @@ class Sim:
             while len(residualReceivers):
                 careList = [x.residualNeed for x in residualReceivers]
                 probReceivers = [i/sum(careList) for i in careList]
+                
+                if len(residualReceivers) < 1:
+                    print 'Error in careBankingAllocation: the list residualReceivers is empty!'
+                
                 receiver = np.random.choice(residualReceivers, p = probReceivers)
                 # Select receiver's volunteer by residual supply
                 availableVolunteers = [x for x in self.pop.livingPeople if x.potentialVolunteer == True and x.house.town == receiver.house.town and x.volunteerCareSupply > 0]
                 supplyList = [x.volunteerCareSupply for x in availableVolunteers]
                 probSuppliers = [i/sum(supplyList) for i in supplyList]
+                
+                if len(availableVolunteers) < 1:
+                    print 'Error in careBankingAllocation: the list availableVolunteers is empty!'
+                
                 supplier = np.random.choice(availableVolunteers, p = probSuppliers)
                 # Transfer supply and social credit
                 supplier.volunteerCareSupply -= 1
@@ -2705,8 +2751,6 @@ class Sim:
                 wife.partner = None
                 self.divorceTally += 1
                 
-                # Find a new house: the choice should be based on social class
-                # distance = random.choice(['near','far'])
                 if man.house == self.displayHouse:
                     messageString = str(self.year) + ": #" + str(man.id) + " splits with #" + str(wife.id) + "."
                     self.textUpdateList.append(messageString)
@@ -2782,8 +2826,16 @@ class Sim:
                     bridesWeights.append(marriageProb)
                 if sum(bridesWeights) > 0:
                     bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
+                    # Empty list error check
+                    if len(potentialBrides) < 1:
+                        print 'Error in doMarriages: the list of potential brides is empty!'
+                   
                     woman = np.random.choice(potentialBrides, p = bridesProb)
                 else:
+                    
+                    if len(potentialBrides) < 1:
+                        print 'Error in doMarriages: the list of potential brides is empty!'
+                    
                     woman = np.random.choice(potentialBrides)
                 man.partner = woman
                 man.yearMarried = self.year
@@ -2867,8 +2919,16 @@ class Sim:
                         bridesWeights.append(marriageProb)
                     if sum(bridesWeights) > 0:
                         bridesProb = [i/sum(bridesWeights) for i in bridesWeights]
+                        
+                        if len(potentialBrides) < 1:
+                            print 'Error in doMarriages: the list of potential brides is empty!'
+                        
                         woman = np.random.choice(potentialBrides, p = bridesProb)
                     else:
+                        
+                        if len(potentialBrides) < 1:
+                            print 'Error in doMarriages: the list of potential brides is empty!'
+                        
                         woman = np.random.choice(potentialBrides)
                     man.partner = woman
                     man.yearMarried = self.year
@@ -3100,9 +3160,17 @@ class Sim:
                             person.searchJob = False
                         changeProbs = [i/sum(changeWeights) for i in changeWeights]
                         if len([x for x in changeProbs if x != 0]) >= jobChanges:
+                            
+                            if len(employed) < 1:
+                                print 'Error in jobMarket: list employed (1) is empty!'
+                            
                             peopleToChange = np.random.choice(employed, jobChanges, replace = False, p = changeProbs)
                         else:
                             jobChanges = len([x for x in changeProbs if x != 0])
+                            
+                            if len(employed) < 1:
+                                print 'Error in jobMarket: list employed (2) is empty!'
+                            
                             peopleToChange = np.random.choice(employed, jobChanges, replace = False, p = changeProbs)
                         for person in peopleToChange:
                             self.changeJob(person)
@@ -3155,6 +3223,7 @@ class Sim:
                             propensityToRelocate = self.relocationPropensity(relocationCost, person)
                             probTowns = self.townsProb(person.classRank, propensityToRelocate)
                             # Job opportunity location is sampled
+        
                             town = np.random.choice(self.map.towns, p = probTowns)
                             if person.partner != None:
                                 if person.partner.status == 'employed':
@@ -3170,6 +3239,10 @@ class Sim:
                         # The parameter which 'weights' this penalization is: p['unemployedCareBurdernParam']
                         unemployedWeights = [math.exp(self.p['unemployedCareBurdernParam']*x.workingTime) for x in unemployed]
                         unemployedProbs = [x/sum(unemployedWeights) for x in unemployedWeights]
+                        
+                        if len(unemployed) < 1:
+                            print 'Error in jobMarket: list unemployed is empty!'
+                        
                         peopleToHire = np.random.choice(unemployed, peopleToHire, replace = False, p = unemployedProbs)
                         for person in peopleToHire:
                             self.changeJob(person)
@@ -3181,7 +3254,12 @@ class Sim:
                             tenures = [1/math.exp(self.p['firingParam']*x.jobTenure) for x in peopleAtRisk]
                             sumTenures = sum(tenures)
                             probFired = [i/sumTenures for i in tenures]
+                            
+                            if len(peopleAtRisk) < 1:
+                                print 'Error in jobMarket: list peopleAtRisk is empty!'
+                            
                             person = np.random.choice(peopleAtRisk, p = probFired)
+                            
                             self.leaveJob(person)
                             peopleToFire -= 1
                             
@@ -4339,7 +4417,10 @@ class Sim:
                 
                 if sum(careSupplied) > 0:
                     probs = [x/sum(careSupplied) for x in careSupplied]
-    
+                    
+                    if len(supplyingHouseholds) < 1:
+                        print 'Error in relocatingPensioners: list supplyingHouseholds is empty!'
+                    
                     potentialHost = np.random.choice(supplyingHouseholds, p = probs)
                     hostSupply = potentialHost.totalCareSupplied[potentialHost.careReceivers.index(household[0])]
                     relocationFactor = math.exp(self.p['retiredRelocationParam']*hostSupply)
@@ -4398,8 +4479,14 @@ class Sim:
         # probHouses = self.houseProb(town, person.classRank)
         # print(sum(probHouses))
         availableHouses = [x for x in town.houses if len(x.occupants) == 0]
+        
+        if len(availableHouses) < 1:
+            print 'Error in findNewHouse: list availableHouses is empty!'
+        
         newHouse = np.random.choice(availableHouses) # np.random.choice(town.houses, p = probHouses)
+        
         while newHouse == departureHouse:
+       
             newHouse = np.random.choice(availableHouses) # np.random.choice(town.houses, p = probHouses)
         
         if person.house.town != newHouse.town:
