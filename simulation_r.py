@@ -309,7 +309,12 @@ class Sim:
                     # Save outputs
                     self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
                     self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
-                    # Save simulation
+                    self.inputsMortality.to_csv(policyFolder + '/tempInputsMortality.csv', index=False)
+                    self.outputMortality.to_csv(policyFolder + '/tempOutputMortality.csv', index=False)
+                    self.inputsFertility.to_csv(policyFolder + '/tempInputsFertility.csv', index=False)
+                    self.outputFertility.to_csv(policyFolder + '/tempOutputFertility.csv', index=False)
+                    self.unemploymentRateClasses.to_csv(policyFolder + '/tempUnemploymentRateClasses.csv', index=False)
+                                # Save simulation
                     pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
                     pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
                 
@@ -325,6 +330,12 @@ class Sim:
                 if policy != 0:
                     self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
                     self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
+                    self.inputsMortality = pd.read_csv(self.folder + '/Policy_0/tempInputsMortality.csv')
+                    self.outputMortality = pd.read_csv(self.folder + '/Policy_0/tempOutputMortality.csv')
+                    self.inputsFertility = pd.read_csv(self.folder + '/Policy_0/tempInputsFertility.csv')
+                    self.outputFertility = pd.read_csv(self.folder + '/Policy_0/tempOutputFertility.csv')
+                    self.unemploymentRateClasses = pd.read_csv(self.folder + '/Policy_0/tempUnemploymentRateClasses.csv')
+                    
       
             self.doOneYear(policyFolder)
           
