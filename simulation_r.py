@@ -3435,6 +3435,8 @@ class Sim:
                 potentialIncome += self.expectedIncome(member, agent.house.town)
         perCapitaIncome = potentialIncome/float(numHousehold)
         
+        incomeFactor = 1/math.exp(self.p['incomeRelocationFactor']*perCapitaIncome)
+        
         rcA = 0
         for member in householdInTown:
             rcA += math.pow(float(member.yearsInTown), self.p['yearsInTownSensitivityParam'])
@@ -3465,7 +3467,9 @@ class Sim:
                 print(i.age)
         
         household = householdInTown + householdOutOfTown
-        socialAttraction = (self.spousesCareLocation(agent, household) + rcA)/perCapitaIncome
+        totalAttraction = self.spousesCareLocation(agent, household) + rcA
+        socialAttraction = (math.exp(incomeFactor*totalAttraction)-1.0)/math.exp(incomeFactor*totalAttraction)
+        # socialAttraction = (self.spousesCareLocation(agent, household) + rcA)/perCapitaIncome
         
         # Check variable
         if self.year == self.p['getCheckVariablesAtYear']:
