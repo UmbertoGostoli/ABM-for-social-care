@@ -3052,11 +3052,12 @@ class Sim:
                 h.rank = max(ranks)
         for c in range(int(self.p['numberClasses'])):
             townJobProb = []
-            n = len([x for x in self.map.occupiedHouses if x.rank == c])
+            # n = len([x for x in self.map.occupiedHouses if x.rank == c])
             for t in self.map.towns:
                 townHouses = len([x for x in t.houses])
                 townRelativeDimension = float(townHouses)/float(totalHouseholds)
                 j = len([x for x in t.houses if len(x.occupants) > 0 and x.rank == c])
+                n = len([x for x in t.houses if len(x.occupants) > 0])
                 classRelativeDimension = float(j + self.p['minClassWeightParam'])/float(n + self.p['minClassWeightParam'])
                 sizeFactor =  math.pow(townRelativeDimension, self.p['sizeWeightParam'])
                 classFactor = math.pow(classRelativeDimension, 1-self.p['sizeWeightParam'])
@@ -3624,12 +3625,13 @@ class Sim:
         townDensity = []
         index = 0
         for t in self.map.towns:
-            townSocialAttraction = relocPropensity[index]
-            townDensity.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
+            townFactor = math.pow(self.jobMarketMap[classRank][index], self.p['townRelocationWeight'])
+            householdFactor = math.pow(relocPropensity[index], 1.0-self.p['townRelocationWeight'])
+            townDensity.append(townFactor*householdFactor)
             
             # Check
             if self.year == self.p['getCheckVariablesAtYear']:
-                self.townsJobProb.append(self.jobMarketMap[classRank][index]*townSocialAttraction)
+                self.townsJobProb.append(townFactor*householdFactor)
             
             index += 1
         sumDensity = sum(townDensity)
