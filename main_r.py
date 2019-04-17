@@ -1,25 +1,16 @@
  
 #from simulation import Sim
 from simulation_r import Sim
-import cProfile
-import pylab
-import math
-import matplotlib.pyplot as plt
-import random
-import numpy as np
 import multiprocessing
-import matplotlib.pyplot as plt
-from matplotlib.ticker import MaxNLocator
-from matplotlib.backends.backend_pdf import PdfPages
 import itertools
-from itertools import izip_longest
 from collections import OrderedDict
 import time
 import datetime
 import os
-import pandas as pd
 import csv
 
+import pandas as pd
+import numpy as np
 
 
 def init_params():
@@ -206,9 +197,9 @@ def init_params():
     
     p['eduWageSensitivity'] = 0.4 # 0.5
     p['eduRankSensitivity'] = 4.0 # 4.0
-    p['costantIncomeParam'] = 50.0 # 40.0
+    p['costantIncomeParam'] = 40.0 # 40.0
     p['costantEduParam'] = 5.0 #  5.0
-    p['careEducationParam'] = 0.05       # 0.05
+    p['careEducationParam'] = 0.1       # 0.05
     
     # p['eduWageSensitivity'] = 0.4 
     # p['eduRankSensitivity'] = 4.0 
@@ -282,12 +273,13 @@ def init_params():
     
     # computeRelocationCost and relocation Propensity functions parameters
     p['yearsInTownSensitivityParam'] = 0.5
+    p['incomeRelocationFactor'] = 0.01
     
      ########   Key parameter 5  ##############
     p['relocationCostParam'] = 0.5 # 1.0 
     
     ########   Key parameter 6  ##############
-    p['propensityRelocationParam'] = 2.0 # 2.0 
+    p['propensityRelocationParam'] = 1.0 # 2.0 
     
     
      ## Description of the map, towns, and houses
@@ -611,7 +603,7 @@ if __name__ == "__main__":
         graphsDummy.to_csv("graphsParams.csv", index=False)
         
     
-    parametersFromFiles = False
+    parametersFromFiles = True
     
     scenariosParams = []
     policiesParams = [[[]]]
