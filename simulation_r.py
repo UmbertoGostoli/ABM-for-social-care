@@ -309,12 +309,18 @@ class Sim:
                     # Save outputs
                     self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
                     self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
-                    self.inputsMortality.to_csv(policyFolder + '/tempInputsMortality.csv', index=False)
-                    self.outputMortality.to_csv(policyFolder + '/tempOutputMortality.csv', index=False)
-                    self.inputsFertility.to_csv(policyFolder + '/tempInputsFertility.csv', index=False)
-                    self.outputFertility.to_csv(policyFolder + '/tempOutputFertility.csv', index=False)
-                    self.unemploymentRateClasses.to_csv(policyFolder + '/tempUnemploymentRateClasses.csv', index=False)
-                                # Save simulation
+                    im = pd.DataFrame(self.inputsMortality)
+                    im.to_csv(policyFolder + '/tempInputsMortality.csv', index=False)
+                    om = pd.DataFrame(self.outputMortality)
+                    om.to_csv(policyFolder + '/tempOutputMortality.csv', index=False)
+                    inpf = pd.DataFrame(self.inputsFertility)
+                    inpf.to_csv(policyFolder + '/tempInputsFertility.csv', index=False)
+                    outf = pd.DataFrame(self.outputFertility)
+                    outf.to_csv(policyFolder + '/tempOutputFertility.csv', index=False)
+                    unrc = pd.DataFrame(self.unemploymentRateClasses)
+                    unrc.to_csv(policyFolder + '/tempUnemploymentRateClasses.csv', index=False)
+                    
+                    # Save simulation
                     pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
                     pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
                 
@@ -330,11 +336,12 @@ class Sim:
                 if policy != 0:
                     self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
                     self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
-                    self.inputsMortality = pd.read_csv(self.folder + '/Policy_0/tempInputsMortality.csv')
-                    self.outputMortality = pd.read_csv(self.folder + '/Policy_0/tempOutputMortality.csv')
-                    self.inputsFertility = pd.read_csv(self.folder + '/Policy_0/tempInputsFertility.csv')
-                    self.outputFertility = pd.read_csv(self.folder + '/Policy_0/tempOutputFertility.csv')
-                    self.unemploymentRateClasses = pd.read_csv(self.folder + '/Policy_0/tempUnemploymentRateClasses.csv')
+                    
+                    self.inputsMortality = pd.read_csv(self.folder + '/Policy_0/tempInputsMortality.csv').values.tolist()
+                    self.outputMortality = pd.read_csv(self.folder + '/Policy_0/tempOutputMortality.csv').values.tolist()
+                    self.inputsFertility = pd.read_csv(self.folder + '/Policy_0/tempInputsFertility.csv').values.tolist()
+                    self.outputFertility = pd.read_csv(self.folder + '/Policy_0/tempOutputFertility.csv').values.tolist()
+                    self.unemploymentRateClasses = pd.read_csv(self.folder + '/Policy_0/tempUnemploymentRateClasses.csv').values.tolist()
                     
       
             self.doOneYear(policyFolder)
@@ -1672,8 +1679,8 @@ class Sim:
         nok_2 = []
         nok_3 = []
         visited = []
-        for i in household:
-            i.socialCareMap = []
+#        for i in household:
+#            i.socialCareMap = []
         for i in household:
             if i.father != None:
                 nok = i.father
@@ -3285,30 +3292,30 @@ class Sim:
         
     def expectedIncome(self, person, town):
         marketWage = self.marketWage(person)
-        # return marketWage
+        return marketWage
     
-        income = marketWage*self.p['weeklyHours']
-        townIndex = self.map.towns.index(town)
-        townJobDensity = self.jobMarketMap[person.classRank][townIndex]
-        
-        # Check variable
-        if self.year == self.p['getCheckVariablesAtYear']:
-            self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.006 - 0.05
-        
-        townFactor = math.exp(self.p['incomeDiscountingExponent']*townJobDensity) # + self.p['incomeDiscountingParam']))
-        discountingFactor = person.unemploymentRate/townFactor
-        
-        if np.isnan(person.unemploymentRate):
-            print('Error: unemploymentRate is NAN!')
-            
-        # Check variable
-        if self.year == self.p['getCheckVariablesAtYear']:
-            self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.009 - 0.07
-        
-        expIncome = income*math.exp(-1*discountingFactor*self.p['discountingMultiplier'])#discountingFactor
-        if np.isnan(expIncome):
-            print('Error: expIncome is NAN!')
-        return (expIncome)
+#        income = marketWage*self.p['weeklyHours']
+#        townIndex = self.map.towns.index(town)
+#        townJobDensity = self.jobMarketMap[person.classRank][townIndex]
+#        
+#        # Check variable
+#        if self.year == self.p['getCheckVariablesAtYear']:
+#            self.townJobAttraction.append(townJobDensity) # MIn-Max: 0.006 - 0.05
+#        
+#        townFactor = math.exp(self.p['incomeDiscountingExponent']*townJobDensity) # + self.p['incomeDiscountingParam']))
+#        discountingFactor = person.unemploymentRate/townFactor
+#        
+#        if np.isnan(person.unemploymentRate):
+#            print('Error: unemploymentRate is NAN!')
+#            
+#        # Check variable
+#        if self.year == self.p['getCheckVariablesAtYear']:
+#            self.unemployedIncomeDiscountingFactor.append(discountingFactor) # Min-Max: 0.009 - 0.07
+#        
+#        expIncome = income*math.exp(-1*discountingFactor*self.p['discountingMultiplier'])#discountingFactor
+#        if np.isnan(expIncome):
+#            print('Error: expIncome is NAN!')
+#        return (expIncome)
     
         
     def statusQuo(self, agent):
@@ -3481,6 +3488,8 @@ class Sim:
                 potentialIncome += self.expectedIncome(member, member.house.town)
         perCapitaIncome = potentialIncome/float(len(agent.house.occupants))
         
+        incomeFactor = 1/math.exp(self.p['incomeRelocationFactor']*perCapitaIncome)
+        
         rcA = math.pow(float(agent.yearsInTown), self.p['yearsInTownSensitivityParam'])
         if agent.partner == None:
             children = [x for x in agent.children if x.dead == False and x.house == agent.house]
@@ -3503,10 +3512,11 @@ class Sim:
         townAttractions = []
         index = 0
         for town in self.map.towns:
+            totalAttraction = agent.socialCareMap[index]+rcA
             if town == agent.house.town:
-                townAttraction = (agent.socialCareMap[index]+rcA)/perCapitaIncome # Min-Max: -60 - +30 (*networkSocialCareParam)
+                townAttraction = (math.exp(incomeFactor*totalAttraction)-1.0)/math.exp(incomeFactor*totalAttraction) # Min-Max: -60 - +30 (*networkSocialCareParam)
             else:
-                townAttraction = agent.socialCareMap[index]/perCapitaIncome
+                townAttraction = (math.exp(incomeFactor*agent.socialCareMap[index])-1.0)/math.exp(incomeFactor*agent.socialCareMap[index])
                 
 #            if townAttraction > 10.0:
 #                townAttraction = 10.0
