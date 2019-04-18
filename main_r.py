@@ -43,7 +43,7 @@ def init_params():
     p['numberScenarios'] = 3
     
     ############  Policy Parameters    #######################
-    p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
+    p['incomeCareParam'] = 0.00025 #[0.00025 - 0.001]
     p['taxBreakRate'] = 0.0
     p['ageOfRetirement'] = 65
     p['socialSupportLevel'] = 4 # 5: No public support
