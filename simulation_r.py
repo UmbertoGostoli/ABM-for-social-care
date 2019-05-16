@@ -309,26 +309,36 @@ class Sim:
                     # Save outputs
                     self.outputData = pd.read_csv(policyFolder + '/Outputs.csv')
                     self.outputData.to_csv(policyFolder + '/tempOutputs.csv', index=False)
-                    im = pd.DataFrame(self.inputsMortality)
-                    im.to_csv(policyFolder + '/tempInputsMortality.csv', index=False)
-                    om = pd.DataFrame(self.outputMortality)
-                    om.to_csv(policyFolder + '/tempOutputMortality.csv', index=False)
-                    inpf = pd.DataFrame(self.inputsFertility)
-                    inpf.to_csv(policyFolder + '/tempInputsFertility.csv', index=False)
-                    outf = pd.DataFrame(self.outputFertility)
-                    outf.to_csv(policyFolder + '/tempOutputFertility.csv', index=False)
-                    unrc = pd.DataFrame(self.unemploymentRateClasses)
-                    unrc.to_csv(policyFolder + '/tempUnemploymentRateClasses.csv', index=False)
+                    
+#                    im = pd.DataFrame(self.inputsMortality)
+#                    im.to_csv(policyFolder + '/tempInputsMortality.csv', index=False)
+#                    om = pd.DataFrame(self.outputMortality)
+#                    om.to_csv(policyFolder + '/tempOutputMortality.csv', index=False)
+#                    inpf = pd.DataFrame(self.inputsFertility)
+#                    inpf.to_csv(policyFolder + '/tempInputsFertility.csv', index=False)
+#                    outf = pd.DataFrame(self.outputFertility)
+#                    outf.to_csv(policyFolder + '/tempOutputFertility.csv', index=False)
+#                    unrc = pd.DataFrame(self.unemploymentRateClasses)
+#                    unrc.to_csv(policyFolder + '/tempUnemploymentRateClasses.csv', index=False)
                     
                     # Save simulation
                     pickle.dump(self.pop, open(policyFolder + '/save.p', 'wb'))
                     pickle.dump(self.map, open(policyFolder + '/save.m', 'wb'))
+                    
+                    pickle.dump(self.regressionModels_M, open(policyFolder + '/save.rmm', 'wb'))
+                    pickle.dump(self.regressionModels_F, open(policyFolder + '/save.rmf', 'wb'))
+                    pickle.dump(self.unemploymentRateClasses, open(policyFolder + '/save.urc', 'wb'))
+                    
                 
                 # Upload simulation
                 print 'Uploading the simulation....'
                 
                 self.pop = pickle.load(open(self.folder + '/Policy_0/save.p', 'rb'))
                 self.map = pickle.load(open(self.folder + '/Policy_0/save.m', 'rb'))
+                
+                self.regressionModels_M = pickle.load(open(self.folder + '/Policy_0/save.rmm', 'rb'))
+                self.regressionModels_F = pickle.load(open(self.folder + '/Policy_0/save.rmf', 'rb'))
+                self.unemploymentRateClasses = pickle.load(open(self.folder + '/Policy_0/save.urc', 'rb'))
                 
                 self.from_IDs_to_Agents()
                 
@@ -337,14 +347,14 @@ class Sim:
                     self.outputData = pd.read_csv(self.folder + '/Policy_0/tempOutputs.csv')
                     self.outputData.to_csv(policyFolder + '/Outputs.csv', index=False)
                     
-                    self.inputsMortality = pd.read_csv(self.folder + '/Policy_0/tempInputsMortality.csv').values.tolist()
-                    self.outputMortality = pd.read_csv(self.folder + '/Policy_0/tempOutputMortality.csv').values.tolist()
-                    self.inputsFertility = pd.read_csv(self.folder + '/Policy_0/tempInputsFertility.csv').values.tolist()
-                    self.outputFertility = pd.read_csv(self.folder + '/Policy_0/tempOutputFertility.csv').values.tolist()
-                    self.unemploymentRateClasses = pd.read_csv(self.folder + '/Policy_0/tempUnemploymentRateClasses.csv').values.tolist()
+#                    self.inputsMortality = pd.read_csv(self.folder + '/Policy_0/tempInputsMortality.csv').values.tolist()
+#                    self.outputMortality = pd.read_csv(self.folder + '/Policy_0/tempOutputMortality.csv').values.tolist()
+#                    self.inputsFertility = pd.read_csv(self.folder + '/Policy_0/tempInputsFertility.csv').values.tolist()
+#                    self.outputFertility = pd.read_csv(self.folder + '/Policy_0/tempOutputFertility.csv').values.tolist()
+#                    self.unemploymentRateClasses = pd.read_csv(self.folder + '/Policy_0/tempUnemploymentRateClasses.csv').values.tolist()
                     
       
-            self.doOneYear(policyFolder)
+            self.doOneYear(policyFolder, policy)
           
             print ''
             
@@ -541,7 +551,7 @@ class Sim:
             if person in self.pop.livingPeople:
                 person.house.occupants.append(person)
                     
-    def doOneYear(self, policyFolder):
+    def doOneYear(self, policyFolder, policy):
         
         
         """Run one year of simulated time."""
@@ -556,7 +566,8 @@ class Sim:
         
         self.updateUnemploymentRates()
         
-        self.doRegressions()
+        if policy == 0:
+            self.doRegressions()
         
         self.doDeaths()
         
@@ -1209,38 +1220,44 @@ class Sim:
 
             person.hoursDemand = careNeed
             person.residualNeed = person.hoursDemand
+            preStateInterventionNeed = person.residualNeed
+            postStateInterventionNeed = preStateInterventionNeed
+            stateContribution = 0.0
             
-            if person.careNeedLevel >= self.p['socialSupportLevel'] and person.age >= self.p['publicCareAgeLimit'] and person.independentStatus == True:
+            if person.careNeedLevel >= self.p['socialSupportLevel'] and person.age >= self.p['publicCareAgeLimit'] and person.wealth < self.p['maxWealthMeansTest']:
                 socialCareCost = person.residualNeed*self.p['priceSocialCare']
-                # The state pays for all the social care need that cannot be satisfied by the person with his income (leaving him a minimum income)
+                stateContribution = socialCareCost
                 if socialCareCost > person.income - self.p['minimumIncomeGuarantee']:
-                    if person.income > self.p['minimumIncomeGuarantee']:
-                        stateShare = 0.0
-                        if person.wealth <= self.p['minWealthMeansTest']:
-                            stateShare = 1.0
-                        elif  person.wealth > self.p['minWealthMeansTest'] and person.wealth < self.p['maxWealthMeansTest']:
-                            stateShare = self.p['partialContributionRate']
-                        stateContribution = (socialCareCost - (person.income - self.p['minimumIncomeGuarantee']))*stateShare
-                        stateCare = int(stateContribution/self.p['priceSocialCare'])
-                        stateCare = int((stateCare+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-                        self.publicSupply += stateCare
-                        person.residualNeed -= stateCare   
-                        person.residualNeed = max(person.residualNeed, 0)
-                    else:
-                        stateShare = 0.0
-                        if person.wealth <= self.p['minWealthMeansTest']:
-                            stateShare = 1.0
-                        elif  person.wealth > self.p['minWealthMeansTest'] and person.wealth < self.p['maxWealthMeansTest']:
-                            stateShare = self.p['partialContributionRate']
-                        stateContribution = socialCareCost*stateShare
-                        stateCare = int(stateContribution/self.p['priceSocialCare'])
-                        stateCare = int((stateCare+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
-                        self.publicSupply += stateCare
-                        person.residualNeed -= stateCare
-                        person.residualNeed = max(person.residualNeed, 0)
-#            person.hoursSocialCareDemand = careNeed
-#            person.residualSocialCareNeed = person.hoursDemand
-                
+                    stateContribution = (socialCareCost - (person.income - self.p['minimumIncomeGuarantee']))
+                if person.wealth > self.p['minWealthMeansTest'] and person.wealth < self.p['maxWealthMeansTest']:
+                    stateContribution -= int(person.wealth/self.p['wealthToPoundReduction'])
+                    stateContribution = max(stateContribution, 0)
+                stateCare = stateContribution/self.p['priceSocialCare']
+                stateCare = int((stateCare+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+                self.publicSupply += stateCare
+                person.residualNeed -= stateCare
+                person.residualNeed = max(person.residualNeed, 0)
+            
+            
+#            if person.careNeedLevel >= 3 and person.age >= self.p['publicCareAgeLimit'] and person.wealth < self.p['maxWealthMeansTest']:
+#                socialCareCost = postStateInterventionNeed*self.p['priceSocialCare']
+#                stateContribution = socialCareCost
+#                if socialCareCost > person.income - self.p['minimumIncomeGuarantee']:
+#                    stateContribution = (socialCareCost - (person.income - self.p['minimumIncomeGuarantee']))
+#                if person.wealth > self.p['minWealthMeansTest'] and person.wealth < self.p['maxWealthMeansTest']:
+#                    stateContribution -= int(person.wealth/self.p['wealthToPoundReduction'])
+#                    stateContribution = max(stateContribution, 0)
+#                stateCare = stateContribution/self.p['priceSocialCare']
+#                stateCare = int((stateCare+self.p['quantumCare']/2)/self.p['quantumCare'])*self.p['quantumCare']
+#                # self.publicSupply += stateCare
+#                postStateInterventionNeed -= stateCare
+#                postStateInterventionNeed = max(postStateInterventionNeed, 0)
+#                
+#            if person.careNeedLevel == 3 and person.age >= self.p['publicCareAgeLimit'] and person.wealth < self.p['maxWealthMeansTest']:
+#                print 'Person care need level: ' + str(person.careNeedLevel)
+#                print person.residualNeed
+#                print postStateInterventionNeed
+#                
             if person.house == self.displayHouse:
                 messageString = str(self.year) + ": #" + str(person.id) + " now has "
                 messageString += self.p['careLevelNames'][person.careNeedLevel] + " care needs." 
