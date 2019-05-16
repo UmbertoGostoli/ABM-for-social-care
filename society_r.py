@@ -30,33 +30,31 @@ class Population:
             fab = self.ageBand(ageFemale)
             maleBirthYear = startYear - ageMale
             femaleBirthYear = startYear - ageFemale
-            classeRanks = range(nc)
-            numClass = ranks[i] #np.random.choice(classeRanks, p = ics)
             classes = [0, 1, 2, 3, 4]
             probClasses = [0.2, 0.35, 0.25, 0.15, 0.05]
             classRank = np.random.choice(classes, p = probClasses)
             um = self.unemploymentRate(mab, classRank, iu, up)
             uf = self.unemploymentRate(fab, classRank, iu, up)
-            socialClass = soc[numClass]
-            eduLevel = edu[numClass]
+            socialClass = soc[classRank]
+            eduLevel = edu[classRank]
             
             workingTimeMale = 0
-            for i in range(int(ageMale-wa[numClass])):
+            for i in range(int(ageMale-wa[classRank])):
                 workingTimeMale *= wdt
                 workingTimeMale += 1
             workingTimeFemale = 0
-            for i in range(int(ageFemale-wa[numClass])):
+            for i in range(int(ageFemale-wa[classRank])):
                 workingTimeFemale *= wdt
                 workingTimeFemale += 1
             dK = np.random.normal(0, wv)
-            newK = fl[numClass]*math.exp(dK)    
-            c = np.math.log(il[numClass]/newK)
-            maleWage = newK*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeMale))
-            femaleWage = newK*np.math.exp(c*np.math.exp(-1*gr[numClass]*workingTimeFemale))
+            newK = fl[classRank]*math.exp(dK)    
+            c = np.math.log(il[classRank]/newK)
+            maleWage = newK*np.math.exp(c*np.math.exp(-1*gr[classRank]*workingTimeMale))
+            femaleWage = newK*np.math.exp(c*np.math.exp(-1*gr[classRank]*workingTimeFemale))
             maleIncome = maleWage*40.0
             femaleIncome = femaleWage*40.0
             manStatus = 'employed'
-            finalIncome = fl[numClass]
+            finalIncome = fl[classRank]
             if random.random() < um :
                 manStatus = 'unemployed'
                 maleIncome = 0
@@ -67,7 +65,7 @@ class Population:
                             None, classRank, socialClass, eduLevel, maleWage, 
                             maleIncome, 0, finalIncome, workingTimeMale, yearsInTown, tenure, 0.02)
             status = 'employed'
-            finalIncome = fl[numClass]
+            finalIncome = fl[classRank]
             if random.random() < uf and manStatus == 'employed':
                 status = 'unemployed'
                 femaleIncome = 0

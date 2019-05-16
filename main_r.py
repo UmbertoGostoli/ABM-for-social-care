@@ -43,15 +43,18 @@ def init_params():
     p['numberScenarios'] = 3
     
     ############  Policy Parameters    #######################
-    p['incomeCareParam'] = 0.00025 #[0.00025 - 0.001]
+    
+    # 5th sensitivity parameter - values: [0.00025, 0.0005, 0.001]
+    p['incomeCareParam'] = 0.0005 #[0.00025 - 0.001]
+    
     p['taxBreakRate'] = 0.0
     p['ageOfRetirement'] = 65
-    p['socialSupportLevel'] = 4 # 5: No public support
-    p['publicCareAgeLimit'] = 0 # 1000
+    p['socialSupportLevel'] = 5 # 5: No public support
+    p['publicCareAgeLimit'] = 18 # 1000
     p['minWealthMeansTest'] = 14250
     p['maxWealthMeansTest'] = 23250
-    p['partialContributionRate'] = 0.5
-    p['minimumIncomeGuarantee'] = 163
+    p['wealthToPoundReduction'] = 250.0
+    p['minimumIncomeGuarantee'] = 189.0
     # p['educationCosts']
     #############################################################
     p['socialCareCreditShare'] = 0.0
@@ -128,8 +131,8 @@ def init_params():
     ########   Key parameter 2  ##############
      # 5: No public supply 
     
-    p['retiredHours'] = [48.0, 32.0, 16.0, 8.0] # 60.0
-    p['studentHours'] = [24.0, 12.0, 4.0, 0.0]
+    p['retiredHours'] = [56.0, 32.0, 16.0, 8.0] # 60.0
+    p['studentHours'] = [16.0, 8.0, 4.0, 0.0]
     p['teenAgersHours'] = [16.0, 0.0, 0.0, 0.0]
     p['unemployedHours'] = [28.0, 16.0, 8.0, 4.0]
     p['employedHours'] = [16.0, 8.0, 4.0, 0.0]
@@ -195,7 +198,7 @@ def init_params():
     # SES inter-generational mobility parameters
     p['leaveHomeStudentsProb'] = 0.5
     
-    p['eduWageSensitivity'] = 0.4 # 0.5
+    p['eduWageSensitivity'] = 0.5 # 0.5
     p['eduRankSensitivity'] = 4.0 # 4.0
     p['costantIncomeParam'] = 40.0 # 40.0
     p['costantEduParam'] = 5.0 #  5.0
@@ -275,12 +278,13 @@ def init_params():
     p['yearsInTownSensitivityParam'] = 0.5
     p['incomeRelocationFactor'] = 0.01
     
+    
      ########   Key parameter 5  ##############
     p['relocationCostParam'] = 0.5 # 1.0 
     
     ########   Key parameter 6  ##############
     p['propensityRelocationParam'] = 1.0 # 2.0 
-    
+    p['townRelocationWeight'] = 0.5
     
      ## Description of the map, towns, and houses
     p['mapGridXDimension'] = 8
@@ -685,7 +689,7 @@ if __name__ == "__main__":
         processors = int(p['numberProcessors'])
         if processors > multiprocessing.cpu_count():
             processors = multiprocessing.cpu_count()
-            
+        
         pool = multiprocessing.Pool(processors)
         # Create a list of dictionaries (number repetitions times number of scenarios), adding repeat index for folders' creation
         params = multiprocessParams(scenariosParams, policiesParams, p['numRepeats'], fSeed, folder, 0)
